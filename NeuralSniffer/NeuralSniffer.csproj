@@ -72,6 +72,60 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="charting_library\charting_library.min.js" />
+    <Content Include="charting_library\customization.txt" />
+    <Content Include="charting_library\datafeed\udf\datafeed.js" />
+    <Content Include="charting_library\static\chart-client\css\chartclient_full.compiled.css" />
+    <Content Include="charting_library\static\chart-client\css\images\bartype-icons.png" />
+    <Content Include="charting_library\static\chart-client\css\images\checkbox_off.png" />
+    <Content Include="charting_library\static\chart-client\css\images\checkbox_on.png" />
+    <Content Include="charting_library\static\chart-client\css\images\combo_icon.png" />
+    <Content Include="charting_library\static\chart-client\css\images\lines.png" />
+    <Content Include="charting_library\static\chart-client\css\images\submenu.png" />
+    <Content Include="charting_library\static\chart-client\css\images\undo-redo.png" />
+    <Content Include="charting_library\static\chart-client\css\light\cursor_closed_hand.cur" />
+    <Content Include="charting_library\static\chart-client\css\light\cursor_cross.cur" />
+    <Content Include="charting_library\static\chart-client\css\light\cursor_dot.cur" />
+    <Content Include="charting_library\static\chart-client\css\light\cursor_pointinghand.cur" />
+    <Content Include="charting_library\static\chart-client\css\light\cursor_size_horizontal.cur" />
+    <Content Include="charting_library\static\chart-client\css\light\cursor_size_vertical.cur" />
+    <Content Include="charting_library\static\chart-client\css\light\zoom.cur" />
+    <Content Include="charting_library\static\css\site.compiled.css" />
+    <Content Include="charting_library\static\css\widget.css" />
+    <Content Include="charting_library\static\fonts\fontawesome-webfont.svg" />
+    <Content Include="charting_library\static\images\balloon.png" />
+    <Content Include="charting_library\static\images\bar-loader.gif" />
+    <Content Include="charting_library\static\images\button-bg.png" />
+    <Content Include="charting_library\static\images\controlll.png" />
+    <Content Include="charting_library\static\images\dialogs\close-flat.png" />
+    <Content Include="charting_library\static\images\dialogs\large-slider-handle.png" />
+    <Content Include="charting_library\static\images\dialogs\linewidth-slider.png" />
+    <Content Include="charting_library\static\images\dialogs\objects-tree.png" />
+    <Content Include="charting_library\static\images\dialogs\opacity-slider.png" />
+    <Content Include="charting_library\static\images\dialogs\spread-actions.png" />
+    <Content Include="charting_library\static\images\icons.png" />
+    <Content Include="charting_library\static\images\legend-icons.png" />
+    <Content Include="charting_library\static\images\linetool-properties\colorpicker-icons.png" />
+    <Content Include="charting_library\static\images\linetool-properties\drag-handle-bg.png" />
+    <Content Include="charting_library\static\images\linetool-properties\icons.png" />
+    <Content Include="charting_library\static\images\loading-small.gif" />
+    <Content Include="charting_library\static\images\loading.gif" />
+    <Content Include="charting_library\static\images\logo-widget-copyright-faded.png" />
+    <Content Include="charting_library\static\images\logo-widget-copyright.png" />
+    <Content Include="charting_library\static\images\prediction-clock-black.png" />
+    <Content Include="charting_library\static\images\prediction-clock-white.png" />
+    <Content Include="charting_library\static\images\prediction-failure-white.png" />
+    <Content Include="charting_library\static\images\prediction-success-white.png" />
+    <Content Include="charting_library\static\images\select-bg.png" />
+    <Content Include="charting_library\static\images\sidetoolbar\instruments.png" />
+    <Content Include="charting_library\static\images\sidetoolbar\toolgroup.png" />
+    <Content Include="charting_library\static\images\ticker-icons.png" />
+    <Content Include="charting_library\static\images\tvcolorpicker-bg.png" />
+    <Content Include="charting_library\static\images\tvcolorpicker-check.png" />
+    <Content Include="charting_library\static\images\tvcolorpicker-sprite.png" />
+    <Content Include="charting_library\static\images\warning-icon.png" />
+    <Content Include="charting_library\static\tv-chart.html" />
+    <Content Include="charting_library\static\tv-chart.min.js" />
     <Content Include="Global.asax" />
     <Content Include="index.htm" />
     <Content Include="indexNeuralSniffer.htm" />
@@ -88,6 +142,25 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="packages.config" />
+    <Content Include="charting_library\static\chart-client\css\chartclient_full.compiled.css.map" />
+    <Content Include="charting_library\static\chart-client\css\chartclient_full.less" />
+    <Content Include="charting_library\static\css\site.compiled.css.map" />
+    <Content Include="charting_library\static\fonts\fontawesome-webfont.ttf" />
+    <Content Include="charting_library\static\fonts\fontawesome-webfont.woff" />
+    <Content Include="charting_library\static\localization\translations\cs_CZ.json" />
+    <Content Include="charting_library\static\localization\translations\de_DE.json" />
+    <Content Include="charting_library\static\localization\translations\en.json" />
+    <Content Include="charting_library\static\localization\translations\es.json" />
+    <Content Include="charting_library\static\localization\translations\fr.json" />
+    <Content Include="charting_library\static\localization\translations\it.json" />
+    <Content Include="charting_library\static\localization\translations\ja.json" />
+    <Content Include="charting_library\static\localization\translations\ko.json" />
+    <Content Include="charting_library\static\localization\translations\pt.json" />
+    <Content Include="charting_library\static\localization\translations\ru.json" />
+    <Content Include="charting_library\static\localization\translations\th.json" />
+    <Content Include="charting_library\static\localization\translations\tr.json" />
+    <Content Include="charting_library\static\localization\translations\zh.json" />
+    <Content Include="charting_library\static\localization\translations\zh_TW.json" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>
