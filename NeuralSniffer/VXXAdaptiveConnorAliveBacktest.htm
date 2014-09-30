@@ -74,6 +74,36 @@
     </style>
 </head>
 <body>
+    <script type="text/javascript" src="charting_library/charting_library.min.js"></script>
+    <script type="text/javascript" src="charting_library/datafeed/udf/datafeed.js"></script>
+    <!--<script type="text/javascript" src="//code.jquery.com/jquery-2.1.0.min.js"></script>-->
+
+
+    <script type="text/javascript">
+
+    TradingView.onready(function () {
+        var widget = new TradingView.widget({
+            fullscreen: true,
+            symbol: 'AA',
+            interval: 'D',
+            toolbar_bg: '#f4f7f9',
+            allow_symbol_change: true,
+            container_id: "tv_chart_container",
+            //	BEWARE: no trailing slash is expected in feed URL
+            datafeed: new Datafeeds.UDFCompatibleDatafeed("http://demo_feed.tradingview.com"),
+            library_path: "charting_library/",
+            locale: "en",
+            //	Regression Trend-related functionality is not implemented yet, so it's hidden for a while
+            disabled_drawings: ["Regression Trend"]
+        });
+
+        widget.onChartReady(function () {
+
+        });
+    })
+
+    </script>
+
     <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
     <script src="http://www.flotcharts.org/flot/jquery.flot.js"></script>
     <script src="http://www.flotcharts.org/flot/jquery.flot.time.js"></script>
@@ -96,6 +126,9 @@
     <div id="idOutputPVChart"></div>
     <p class="chartTitleStyle">FT regimes</p>
     <div id="idOutputRegimeChart"></div>
+
+
+    <div id="tv_chart_container"></div>
 
     <small>
         <b>Strategy summary: </b> For every day, determine if it is a FollowThrough (FT) day (if up day is followed by up day or down day followed by down day). Otherwise it is a Mean Reversion (MR) day.
