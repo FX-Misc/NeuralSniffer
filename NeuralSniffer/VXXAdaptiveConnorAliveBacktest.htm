@@ -1,0 +1,339 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>VXX Adaptive Connor Alive Backtest</title>
+    <style type="text/css">
+
+        h2 {
+            font-size: 16pt;
+        }
+
+        h3 {
+            font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;
+            font-size: 12pt;
+            color: #990099;
+            padding-top: 10px;
+            padding-bottom: 3px;
+        }
+
+        .labelStyle {
+            /*font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;*/
+            font-size: 12pt;
+            color: #0000ff;
+            padding-top: 10px;
+            padding-bottom: 3px;
+            display: inline;
+        }
+
+        .chartTitleStyle {
+            text-align: center;
+            font-weight: bold;
+        }
+
+        #idOutputPVChart {
+            box-sizing: border-box;
+            /*width: 100%;*/
+            width: 900px;
+            height: 450px;
+            padding: 20px 15px 15px 15px;
+            margin: 15px auto 30px auto;
+            border: 1px solid #ddd;
+            background: #fff;
+            background: linear-gradient(#f6f6f6 0, #fff 50px);
+            background: -o-linear-gradient(#f6f6f6 0, #fff 50px);
+            background: -ms-linear-gradient(#f6f6f6 0, #fff 50px);
+            background: -moz-linear-gradient(#f6f6f6 0, #fff 50px);
+            background: -webkit-linear-gradient(#f6f6f6 0, #fff 50px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+            -o-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            -ms-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            -moz-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            -webkit-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+
+        #idOutputRegimeChart {
+            box-sizing: border-box;
+            /*width: 100%;*/
+            width: 900px;
+            height: 450px;
+            padding: 20px 15px 15px 15px;
+            margin: 15px auto 30px auto;
+            border: 1px solid #ddd;
+            background: #fff;
+            background: linear-gradient(#f6f6f6 0, #fff 50px);
+            background: -o-linear-gradient(#f6f6f6 0, #fff 50px);
+            background: -ms-linear-gradient(#f6f6f6 0, #fff 50px);
+            background: -moz-linear-gradient(#f6f6f6 0, #fff 50px);
+            background: -webkit-linear-gradient(#f6f6f6 0, #fff 50px);
+            box-shadow: 0 3px 10px rgba(0,0,0,0.15);
+            -o-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            -ms-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            -moz-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+            -webkit-box-shadow: 0 3px 10px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/2.1.0/jquery.min.js"></script>
+    <script src="http://www.flotcharts.org/flot/jquery.flot.js"></script>
+    <script src="http://www.flotcharts.org/flot/jquery.flot.time.js"></script>
+
+
+
+
+    <h2>Adaptive Connor-Autocorrelation: VXX 'FT Direction Probability' strategy. <small style="font-size: 0.6em; font-weight: normal">Alive Backtest (forever up-to-date)</small></h2>
+    <p class="labelStyle">Lookback Days [1-200]:</p> <input type="text" id="idLookbackDays" value="100" min="1" max="200" size="3" /><br>
+    <p class="labelStyle">ProbDailyFT Threshold [0%-100%]</p> <input type="text" id="idThreshold" value="48" min="0" max="100" size="3" /> <small>%  (exactly this and under this is MR regime; =100 means full MR; =0 means full FT)</small> <br>
+    <p class="labelStyle">Short VXX Leverage: [0.00-2.00]</p> <input type="text" id="idShortLeverage" value="1" min="0" max="2" size="2" />
+
+    <!--<input id="startButton" type="submit" value="Start alive backtest">   don't do Form Submit, because that Submits the page, which reload the page -->
+    <button id="startButton">Start alive backtest</button>
+
+    <p style="font-size: 0.8em; font-weight: normal" id="idRealTimeInfoText"></p>
+
+  <pre style="font-size: 1.2em; font-weight: bold" id="idOutputImportantText"></pre>
+    <p class="chartTitleStyle">Portfolio Value (PV)</p>
+    <div id="idOutputPVChart"></div>
+    <p class="chartTitleStyle">FT regimes</p>
+    <div id="idOutputRegimeChart"></div>
+
+    <small>
+        <b>Strategy summary: </b> For every day, determine if it is a FollowThrough (FT) day (if up day is followed by up day or down day followed by down day). Otherwise it is a Mean Reversion (MR) day.
+        Calculate the 'FT day probability' by the frequency of occurence in the last X days (lookback days = 50, 100, 200).
+        Define a threshold (like p=48% probability) that separates FT and MR regimes.
+        In FT regime, play FT, in MR regime play MR for the next day.
+    </small>
+    <br><br>
+    <small>
+        <b>Backtest notes: </b><br>
+        -StartDate is 2009-12-31 (about 200 days after VXX was born), so different lookbacks can be compared fairly. EndDate is today using the realtime price.<br>
+        -Portfolio Value (PV) starts at $1.0.<br>
+        -ProbDailyFT Threshold: <i>if 48% is specified, the >48.001% is good FT regime (for example 49% is still a good regime); but exact 48.00% is a bad MR regime.</i> We call FT regime good regime because that was the dominant regime historically.
+    </small>
+
+    <pre id="idOutputNotImportantText"></pre>
+
+
+    <script>
+        $(window).load(function () {
+
+            // create a script here, with the today date in the URL
+            var today = new Date();
+            var dd = today.getDate();   // day of the month
+            var mm = today.getMonth(); //January is 0!
+            var yyyy = today.getFullYear();
+
+            var head = document.getElementsByTagName('head')[0];
+            var script = document.createElement('script');
+            script.type = 'text/javascript';
+            script.src = "http://hqacompute.cloudapp.net/q/yff?yffOutFormat=json&yffOutVar=histVXXPriceOrig&yffUri=ichart.finance.yahoo.com/table.csv&s=VXX&a=0&b=30&c=2009&d=" + mm + "&e=" + dd + "&f=" + yyyy + "&g=d&ignore=.csv";
+            head.appendChild(script);
+
+
+            $('#idLookbackDays').keypress(function (e) {
+                if (e.keyCode == 13)
+                    $('#startButton').click();
+            });
+            $('#idThreshold').keypress(function (e) {
+                if (e.keyCode == 13)
+                    $('#startButton').click();
+            });
+            $('#idShortLeverage').keypress(function (e) {
+                if (e.keyCode == 13)
+                    $('#startButton').click();
+            });
+        });
+
+
+        Date.prototype.yyyymmdd = function () {
+
+            var yyyy = this.getFullYear().toString();
+            var mm = (this.getMonth() + 1).toString(); // getMonth() is zero-based
+            var dd = this.getDate().toString();
+
+            return yyyy + '-' + (mm[1] ? mm : "0" + mm[0]) + '-' + (dd[1] ? dd : "0" + dd[0]);
+        };
+
+        document.getElementById("startButton").onclick = function () {
+            if (typeof histVXXPriceOrig === 'undefined') {
+                alert('VXX historical data is not yet downloaded. Wait 2 seconds and try it again.');
+                return;
+            }
+            var lookbackDays = Number(document.getElementById("idLookbackDays").value);
+            if (lookbackDays < 1 || lookbackDays > 200) {
+                alert('Please consider: lookbackDays in [1..200]');
+                return;
+            }
+            //in real life I used: double m_probDailyFTGoodFtRegimeThreshold = 0.480001;-->
+            var regimeFTthresholdPct = Number(document.getElementById("idThreshold").value) / 100 + 0.000001;
+            var shortLeverage = Number(document.getElementById("idShortLeverage").value);
+
+
+            var histVXXPriceWithDate = ([]).concat(histVXXPriceOrig);    // deep copy is needed for reverse
+            histVXXPriceWithDate.reverse();
+            // if last Date in historical is not today, add today with real time price
+            if (typeof realtimePriceVXXOrig !== 'undefined') {  // if we have proper realtime price
+                var today = new Date();
+                var lastDate = new Date(histVXXPriceWithDate[histVXXPriceWithDate.length - 1][0])
+                if (lastDate.getFullYear() != today.getFullYear || lastDate.getMonth() != today.getMonth() || lastDate.getDate == today.getDate()) {
+                    histVXXPriceWithDate[histVXXPriceWithDate.length] = [];
+                    histVXXPriceWithDate[histVXXPriceWithDate.length - 1][0] = today.valueOf();
+                    histVXXPriceWithDate[histVXXPriceWithDate.length - 1][1] = realtimePriceVXXOrig;
+                }
+            }
+
+            // [0]: Date
+            // [1]: AdjustedClose
+            // [2]: pctChange
+            // [3]: VXXisFT
+            // [4]: ProbDailyFT (using 100 lookbackDays)
+            // [5]: PV (Portfolio Value)
+
+            //var pctChange = [];
+            for (var i = 1; i < histVXXPriceWithDate.length; i++) {
+                histVXXPriceWithDate[i][2] = histVXXPriceWithDate[i][1] / histVXXPriceWithDate[i - 1][1] - 1;
+            }
+
+            // [3]: VXXisFT
+            //‘VXXisFT’ is 1 when the close prices of VXX satisfy either:  (from Robert's email)
+            //adjustedClose(T-2) ≤ adjustedClose(T-1) ≤ adjustedClose(T)     (follow-through after an up day)
+            //or adjustedClose(T-2) > adjustedClose(T-1) > adjustedClose(T)     (follow-through after a down day)
+            for (var i = 2; i < histVXXPriceWithDate.length; i++) {
+                if (((histVXXPriceWithDate[i - 2][1] <= histVXXPriceWithDate[i - 1][1]) && (histVXXPriceWithDate[i - 1][1] <= histVXXPriceWithDate[i][1]))
+                    || ((histVXXPriceWithDate[i - 2][1] > histVXXPriceWithDate[i - 1][1]) && (histVXXPriceWithDate[i - 1][1] > histVXXPriceWithDate[i][1])))
+                    histVXXPriceWithDate[i][3] = 1;
+                else
+                    histVXXPriceWithDate[i][3] = 0;
+            }
+
+            // [4]: ProbDailyFT (using 100 lookbackDays)
+            var nFTdays = 0;
+            for (var i = 2; i < 2 + lookbackDays; i++) {
+                nFTdays += histVXXPriceWithDate[i][3];
+            }
+            histVXXPriceWithDate[2 + lookbackDays - 1][4] = nFTdays;
+            for (var i = 2 + lookbackDays; i < histVXXPriceWithDate.length; i++) {
+                nFTdays -= histVXXPriceWithDate[i - lookbackDays][3];
+                nFTdays += histVXXPriceWithDate[i][3];
+                histVXXPriceWithDate[i][4] = nFTdays;
+            }
+            for (var i = 2 + lookbackDays - 1; i < histVXXPriceWithDate.length; i++) {
+                histVXXPriceWithDate[i][4] = histVXXPriceWithDate[i][4] / lookbackDays;
+            }
+
+            var startDateInd = -1;      // do a fix StartDate, so different lookback days all start from the same Date
+            //var startDateToFind = new Date(2009, 12 - 1, 31, 0, 0, 0, 0).getTime(); // new Date() is always in the Local computer time zone, so it can be different, so always use Date.UTC() instead
+            var startDateToFind = Date.UTC(2009, 12 - 1, 31, 0, 0, 0, 0); // new Date() is always in the Local computer time zone, so it can be different, so always use Date.UTC() instead
+            for (var i = 2 + lookbackDays - 1; i < histVXXPriceWithDate.length; i++) {
+                if (histVXXPriceWithDate[i][0] == startDateToFind) {        // 200 days is 2009-11-13, so start with 2009-12-31
+                    startDateInd = i;
+                    break;
+                }
+            }
+            if (startDateInd == -1) {
+                alert('StartDate was not found');
+                return;
+            }
+            histVXXPriceWithDate[startDateInd][5] = 1;
+            for (var i = startDateInd + 1; i < histVXXPriceWithDate.length; i++) {
+                var isFTRegimeYesterday = histVXXPriceWithDate[i - 1][4] > regimeFTthresholdPct;
+                var shortLongSignPlayed = -1;   // prefer shorting (if %change = 0);
+                if (isFTRegimeYesterday) {
+                    if (histVXXPriceWithDate[i - 1][2] > 0)
+                        shortLongSignPlayed = 1;
+                    else
+                        shortLongSignPlayed = -1;
+                } else {    // MR regime
+                    if (histVXXPriceWithDate[i - 1][2] < 0)
+                        shortLongSignPlayed = 1;
+                    else
+                        shortLongSignPlayed = -1;
+                }
+
+                var leverage = 1;
+                if (shortLongSignPlayed < 0)
+                    leverage = shortLeverage;
+
+                histVXXPriceWithDate[i][5] = histVXXPriceWithDate[i - 1][5] * (1 + shortLongSignPlayed * histVXXPriceWithDate[i][2] * leverage);
+            }
+
+            var finalPV = histVXXPriceWithDate[histVXXPriceWithDate.length - 1][5];
+            var nDaysTraded = histVXXPriceWithDate.length - startDateInd;
+            var nYears = nDaysTraded / 255;     // 260 minus the holidays
+            var cagr = Math.pow(finalPV, 1.0 / nYears) - 1;
+
+
+            var pvForPlot = [];
+            var regimeForPlot = [];
+            for (var i = startDateInd; i < histVXXPriceWithDate.length; i++) {
+                pvForPlot[i - startDateInd] = [];
+                pvForPlot[i - startDateInd][0] = histVXXPriceWithDate[i][0];
+                pvForPlot[i - startDateInd][1] = histVXXPriceWithDate[i][5];
+
+                regimeForPlot[i - startDateInd] = [];
+                regimeForPlot[i - startDateInd][0] = histVXXPriceWithDate[i][0];
+                var isFTRegimeYesterday = histVXXPriceWithDate[i][4] > regimeFTthresholdPct;
+                regimeForPlot[i - startDateInd][1] = isFTRegimeYesterday;
+            }
+
+            document.getElementById("idOutputImportantText").innerText = "PortfolioValue: $" + finalPV.toFixed(2) + "\n"
+            + "Years: " + nYears.toFixed(2) + "\n"
+            + "CAGR: " + (cagr * 100).toFixed(2) + "%\n";
+
+            $.plot("#idOutputPVChart", [pvForPlot], {
+                xaxis: { mode: "time" },
+            });
+
+            $.plot("#idOutputRegimeChart", [regimeForPlot], {
+                xaxis: { mode: "time" },
+            });
+
+
+            var histVXXPriceWithDateUpsideDown = ([]);    // deep copy is needed for reverse and for Date change from Number to String
+            for (var i = 0; i < histVXXPriceWithDate.length; i++) {
+                histVXXPriceWithDateUpsideDown[i] = [];
+                for (var j = 0; j < histVXXPriceWithDate[i].length; j++) {
+                    histVXXPriceWithDateUpsideDown[i][j] = histVXXPriceWithDate[i][j];
+                }
+
+                var isFTRegime = histVXXPriceWithDateUpsideDown[i][4] > regimeFTthresholdPct;
+
+                histVXXPriceWithDateUpsideDown[i][0] = new Date(histVXXPriceWithDateUpsideDown[i][0]).yyyymmdd();
+                histVXXPriceWithDateUpsideDown[i][1] = "$" + histVXXPriceWithDateUpsideDown[i][1];
+                histVXXPriceWithDateUpsideDown[i][2] = (histVXXPriceWithDateUpsideDown[i][2] * 100).toFixed(2) + "%";
+                histVXXPriceWithDateUpsideDown[i][4] = (histVXXPriceWithDateUpsideDown[i][4] * 100).toFixed(2) + "%";
+                histVXXPriceWithDateUpsideDown[i][5] = "$" + (histVXXPriceWithDateUpsideDown[i][5] * 1.0).toFixed(2);
+
+                histVXXPriceWithDateUpsideDown[i][6] = isFTRegime;
+                
+            }
+            histVXXPriceWithDateUpsideDown.reverse();
+
+            document.getElementById("idOutputNotImportantText").innerText = "Debug info for only developers: \n" + "Date, VXX Adj.Close $, VXX daily %change, isFT day, ProbDailyFT, PortfolioValue, isFT Regime" + "\n" + histVXXPriceWithDateUpsideDown.join("\n");
+
+        }
+
+    </script>
+
+
+
+
+
+        <script>
+            function realtimepriceCallback(rtpVXXJson) {    // this should be definet when the interpreter executes <script src="http://hqacompute.cloudapp.net/q/rtp?s=VXX&f=l&jsonp=realtimepriceCallback">
+                realtimePriceVXXOrig = rtpVXXJson[0]["Last"];
+                realtimeUtcVXXOrig = rtpVXXJson[0]["LastUtc"];   // later it can be more sophisticated (like using the snapshot if this is not available, or using ask+bid/2)
+
+                if (typeof realtimePriceVXXOrig !== 'undefined') {  // if we have proper realtime price
+                    document.getElementById("idRealTimeInfoText").innerHTML = "VXX Realtime: $" + realtimePriceVXXOrig + " (Utc: " + realtimeUtcVXXOrig + ")";   // at this stage: idRealTimeInfoText should be defined
+                } else {
+                    document.getElementById("idRealTimeInfoText").innerHTML = "VXX Realtime: not available yet";
+                }
+            };
+        </script>
+        <script src="http://hqacompute.cloudapp.net/q/rtp?s=VXX&f=l&jsonp=realtimepriceCallback"></script>
+
+
+</body>
+
+</html>
