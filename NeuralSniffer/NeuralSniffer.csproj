@@ -74,6 +74,7 @@
   <ItemGroup>
     <Content Include="charting_library\charting_library.min.js" />
     <Content Include="charting_library\customization.txt" />
+    <Content Include="charting_library\datafeed\udf\datafeedTest1.js" />
     <Content Include="charting_library\datafeed\udf\datafeed.js" />
     <Content Include="charting_library\static\chart-client\css\chartclient_full.compiled.css" />
     <Content Include="charting_library\static\chart-client\css\images\bartype-icons.png" />
@@ -129,7 +130,10 @@
     <Content Include="Global.asax" />
     <Content Include="index.htm" />
     <Content Include="indexNeuralSniffer.htm" />
+    <Content Include="TradingViewDemoTest1.html" />
     <Content Include="TradingViewDemo.html" />
+    <Content Include="VolatilityIndicesInDifferentMonths.htm" />
+    <Content Include="VolatilityIndicesInDifferentMonths.js" />
     <Content Include="VXXAdaptiveConnorAliveBacktest.htm" />
     <Content Include="Web.config" />
   </ItemGroup>
