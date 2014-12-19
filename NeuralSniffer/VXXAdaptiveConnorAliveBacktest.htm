@@ -159,7 +159,7 @@
             var head = document.getElementsByTagName('head')[0];
             var script = document.createElement('script');
             script.type = 'text/javascript';
-            script.src = "http://hqacompute.cloudapp.net/q/yff?yffOutFormat=json&yffOutVar=histVXXPriceOrig&yffUri=ichart.finance.yahoo.com/table.csv&s=VXX&a=0&b=30&c=2009&d=" + mm + "&e=" + dd + "&f=" + yyyy + "&g=d&ignore=.csv";
+            script.src = "http://hqacompute.cloudapp.net/q/yff?yffOutFormat=json&yffColumns=dc1&yffOutVar=histVXXPriceOrig&yffUri=ichart.finance.yahoo.com/table.csv&s=VXX&a=0&b=30&c=2009&d=" + mm + "&e=" + dd + "&f=" + yyyy + "&g=d&ignore=.csv";
             head.appendChild(script);
 
 

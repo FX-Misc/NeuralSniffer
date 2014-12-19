@@ -18,6 +18,9 @@
     //ajax.googleapis.com/ajax/libs/jquery/1.4/jquery.min.js
     The browser will use the page's protocol to try to obtain the file. On non-secure pages, http. On secure pages, https.-->
 
+    <script>
+        onHeadProcessing();
+    </script>
 
 
 
@@ -54,5 +57,7 @@
 
     
     Calculated field: <span class="labelStyle"> {{calculatedField}}</span>
+    <br /><br />
+    Developer info: <p class="labelStyle" id="idDeveloperInfo"> </p>
 </body>
 </html>
