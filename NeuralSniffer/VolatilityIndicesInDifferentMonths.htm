@@ -6,7 +6,7 @@
 <!--However, XHTML never really caught on. Professional developers (especially those who were integrating programming languages like JavaScript and PHP into their web projects) loved XHTML Strict but it was a little too unforgiving for most developers, and the vast majority of pages never bothered to validate to the new standards. When the time came to devise a new standard, the W3C (World Wide Web Consortium) decided to support HTML5 rather than XHTML 2.-->
 
 <head>
-    <title>Volatility Indices in Different Months, Alive Backtest</title>
+    <title>Vix Extremes in Different Months, Alive Backtest</title>
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.7/angular.min.js"></script>
     <script type="text/javascript" src="VolatilityIndicesInDifferentMonths.js"></script>
     <!--The current state-of-the-art is to put scripts in the Head tag and use the async or defer attributes.-->
@@ -99,7 +99,7 @@
 </head>
 <body ng-controller="DifferentMonthsCtrl">
 
-    <h2>Seasonality: VIX Index in Different Months. <small style="font-size: 0.6em; font-weight: normal">Alive Backtest (forever up-to-date)</small></h2>
+    <h2>Seasonality: VIX Index Extremes in Different Months. <small style="font-size: 0.6em; font-weight: normal">Alive Backtest (forever up-to-date)</small></h2>
 
 
     <!--<input type="text" ng-model="sometext" />
@@ -130,6 +130,37 @@
     <p class="perYearTableStyle" id="idDeveloperInfo"> </p>
 
     <br><br>
+    <hr>
+
+    <pre id="idNotes">
+-The motivation for this study came when the VIX reached 25.2 in December, 2014
+I thought that is quite extreme.
+VIX shouldn’t be as high as 25.2 in December.
+So, let’s see what is the typical HighestIntradayHigh during Decembers.
+-This kind of study can be done in Excel, but that will not be up-to-date next year, so
+I thought I do a WebApp (HTML, Javascript) that can use the latest prices from !YF and can be always up-to-date.
+Notes:
+1.
+Selecting the different months and looking for example the MaximumIntradayHigh values, 
+we can see that May has low VIX  (sell in May, May is still bullish), and September, October has high VIX (as expected).
+2.
+The study is not really conclusive. Monthly seasonality is destroyed by the bearish regimes.
+For 2008-2009 bear market, almost all months have exceptionally high VIX. Even December.
+So, in statistics like median, or average, it is difficult to see that December is a bullish month.
+3.
+Unexpectedly, the December MaximumIntradayHigh has the following statistics:
+typical (median): 22.72
+average: 24.15
+This suggest that the VIX high of 25.2 that occurred in December, 2014 was not exceptional.
+It is quite typical to have highest highs of 20+ in Decembers.
+4.
+Very much depends on the fact that this December is in a long term bearish or bullish regime.
+But even in the latest bullish period of 2009-2013, there was only 1 time (out of 5 years) when highest December VIX was under 20:
+It was December, 2013 and the max VIX value was 16.75. In the other 4 years in this bullish cycle, maximum VIX was 24.51, 21.43, 30.91, 22.72.
+
+
+</pre>
+    <hr />
     <pre id="idOutputNotImportantText"></pre>
 </body>
 </html>
