@@ -2,11 +2,11 @@
 <html ng-app="DifferentMonthsApp">
 
 <!--<html xmlns="http://www.w3.org/1999/xhtml">-->
-<!--Also, keep in mind that unless you're serving your pages as application/xhtml+xml -- which virtually no one actually is -- then you're not actually using XHTML. It doesn't matter even if your doctype says XHTML. If you serve it as text/html, then the browser is treating it as plain old HTML, and all those self-closing slashes aren't really doing anything at all.-->
+<!--Also, keep in mind that unless you're serving your pages as application/xhtml+xml - which virtually no one actually is - then you're not actually using XHTML. It doesn't matter even if your doctype says XHTML. If you serve it as text/html, then the browser is treating it as plain old HTML, and all those self-closing slashes aren't really doing anything at all.-->
 <!--However, XHTML never really caught on. Professional developers (especially those who were integrating programming languages like JavaScript and PHP into their web projects) loved XHTML Strict but it was a little too unforgiving for most developers, and the vast majority of pages never bothered to validate to the new standards. When the time came to devise a new standard, the W3C (World Wide Web Consortium) decided to support HTML5 rather than XHTML 2.-->
 
 <head>
-    <title>Volatility Indices in Different Months</title>
+    <title>Volatility Indices in Different Months, Alive Backtest</title>
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.7/angular.min.js"></script>
     <script type="text/javascript" src="VolatilityIndicesInDifferentMonths.js"></script>
     <!--The current state-of-the-art is to put scripts in the Head tag and use the async or defer attributes.-->
@@ -30,9 +30,65 @@
             text-align: center;
         }
 
-         .labelStyle {
+        .labelAlertStyle {
+            /*font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;*/
+            font-size: 16pt;
+            font-weight: bold;
+            color: #ff0000;
+            padding-top: 10px;
+            padding-bottom: 3px;
+            display: inline;
+        }
+
+        
+        .labelSelectedMonthStyle {
+            /*font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;*/
+            font-size: 16pt;
+            font-weight: bold;
+            color: #8f11d1;
+            padding-top: 10px;
+            padding-bottom: 3px;
+            display: inline;
+        }
+
+       
+
+         .statisticsMinStyle {
+            /*font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;*/
+            font-size: 14pt;
+            font-weight: bold;
+            color: #08810a;
+            padding-top: 10px;
+            padding-bottom: 3px;
+            display: inline;
+        }
+
+         .statisticsMaxStyle {
+            /*font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;*/
+            font-size: 14pt;
+            font-weight: bold;
+            color: #ff0000;
+            padding-top: 10px;
+            padding-bottom: 3px;
+            display: inline;
+        }
+
+         
+
+         .tableHeaderStyle {
+            /*font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;*/
+            font-size: 14pt;
+            font-weight: normal;
+            color: #0000ff;
+            padding-top: 10px;
+            padding-bottom: 3px;
+            display: inline;
+        }
+
+         .perYearTableStyle {
             /*font-family: Verdana, Geneva, Arial, Helvetica, sans-serif;*/
             font-size: 12pt;
+            font-weight: normal;
             color: #0000ff;
             padding-top: 10px;
             padding-bottom: 3px;
@@ -43,7 +99,7 @@
 </head>
 <body ng-controller="DifferentMonthsCtrl">
 
-    <h2> Volatility Indices in Different Months</h2>
+    <h2>Seasonality: VIX Index in Different Months. <small style="font-size: 0.6em; font-weight: normal">Alive Backtest (forever up-to-date)</small></h2>
 
 
     <!--<input type="text" ng-model="sometext" />
@@ -51,13 +107,29 @@
         Hello {{sometext;}}
     </span>-->
 
+    <span class="labelAlertStyle"> {{waitMessageToUser}}</span> <br>
+    Selected Month: <select ng-model="selectedMonth" ng-options="opt as opt for opt in months" ng-init="selectedMonth='December'" ng-change="monthChanged()"></select>
+    <br><br>
+    <!--<h3>Selected Month : <span class="labelStyle">{{selectedMonth}}</span> </h3>-->
+    <span class="tableHeaderStyle">VIX Index Statistics in </span><span class="labelSelectedMonthStyle"> {{selectedMonth}}:</span>
 
-    <select ng-model="selectedMonth" ng-options="opt as opt for opt in months" ng-init="selectedMonth='December'" ng-change="monthChanged()"></select>
-    <h3>Selected Month : <span class="labelStyle">{{selectedMonth}}</span> </h3>
+    <table id="idPerYearTable"></table>
+    <b>MinimumClosePrice</b>; Range: [ <b> {{minimumCloseRangeStart}} </b>.. <b>   {{minimumCloseRangeEnd}} </b> ], Typical (median): <span class="statisticsMinStyle"> {{minimumCloseMedian}}</span>, aMean: <span class="statisticsMinStyle"> {{minimumCloseAmean | number:2}}</span> <br>
+    <b>MaximumClosePrice</b>; Range: [ <b> {{maximumCloseRangeStart}} </b>.. <b>   {{maximumCloseRangeEnd}} </b> ], Typical (median): <span class="statisticsMaxStyle"> {{maximumCloseMedian}}</span>, aMean: <span class="statisticsMaxStyle"> {{maximumCloseAmean | number:2}}</span> <br>
 
+    <br>
+
+    <b>MinimumIntradayLow</b>; Range: [ <b> {{minimumIntradayLowRangeStart}} </b>.. <b>   {{minimumIntradayLowRangeEnd}} </b> ], Typical (median): <span class="statisticsMinStyle"> {{minimumIntradayLowMedian}}</span>, aMean: <span class="statisticsMinStyle"> {{minimumIntradayLowAmean | number:2}}</span> <br>
+    <b>MaximumIntradayHigh</b>; Range: [ <b> {{maximumIntradayHighRangeStart}} </b>.. <b>   {{maximumIntradayHighRangeEnd}} </b> ], Typical (median): <span class="statisticsMaxStyle"> {{maximumIntradayHighMedian}}</span>, aMean: <span class="statisticsMaxStyle"> {{maximumIntradayHighAmean | number:2}}</span> <br>
+
+    <br>
+    <hr>
+    <!--Calculated field: <span class="labelStyle"> {{calculatedField}}</span>-->
     
-    Calculated field: <span class="labelStyle"> {{calculatedField}}</span>
-    <br /><br />
-    Developer info: <p class="labelStyle" id="idDeveloperInfo"> </p>
+    <span class="tableHeaderStyle">MinCloses, MaxCloses, MinIntradayLows, MaxIntradayHighs in </span> <span class="labelSelectedMonthStyle"> {{selectedMonth}}:</span>
+    <p class="perYearTableStyle" id="idDeveloperInfo"> </p>
+
+    <br><br>
+    <pre id="idOutputNotImportantText"></pre>
 </body>
 </html>
