@@ -116,6 +116,7 @@
     <Content Include="index.htm" />
     <Content Include="indexNeuralSniffer.htm" />
     <Content Include="TradingView1.1index.html" />
+    <Content Include="TradingView1.1introTinkering1.html" />
     <Content Include="TradingView1.1intro.html" />
     <Content Include="TradingView1.1test.html" />
     <Content Include="TradingViewDemoTest1.html" />
