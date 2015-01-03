@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html>
+	<head>
+
+		<title>TradingView Charting Library demo</title>
+
+		<!-- Fix for iOS Safari zooming bug -->
+		<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
+
+		<script type="text/javascript" src="../charting_library/charting_library.min.js"></script>
+        <script type="text/javascript" src="../charting_library/datafeed/udf/datafeedSQTradingViewChart1.js"></script>
+
+		<script type="text/javascript" src="//code.jquery.com/jquery-2.1.0.min.js"></script>
+
+		<script type="text/javascript">
+
+			TradingView.onready(function()
+			{
+			    //https://github.com/tradingview/charting_library/wiki/Widget-Constructor
+				var widget = new TradingView.widget({
+					//fullscreen: true,
+				    symbol: 'SQTickerOrStrategySymbol',
+					//symbol: 'AA',
+					interval: 'D',
+					container_id: "tv_chart_container",
+					//	BEWARE: no trailing slash is expected in feed URL
+					datafeed: new Datafeeds.UDFCompatibleDatafeed("http://demo_feed.tradingview.com"),
+					library_path: "../charting_library/",
+					locale: "en",
+					//	Regression Trend-related functionality is not implemented yet, so it's hidden for a while
+					drawings_access: { type: 'black', tools: [ { name: "Regression Trend" } ] },
+					
+					charts_storage_url: 'http://saveload.tradingview.com',
+					client_id: 'tradingview.com',
+					user_id: 'public_user_id'
+
+
+                    , width: "90%"        //Remark: if you want the chart to occupy all the available space, do not use '100%' in those field. Use fullscreen parameter instead (see below). It's because of issues with DOM nodes resizing in different browsers.
+                    , height: 600
+				    //https://github.com/tradingview/charting_library/wiki/Featuresets
+				    //,enabled_features: ["trading_options"]    
+				    //, enabled_features: ["charting_library_debug_mode", "narrow_chart_enabled", "move_logo_to_main_pane"] //narrow_chart_enabled and move_logo_to_main_pane doesn't do anything to me
+                    , enabled_features: ["charting_library_debug_mode"]
+				    //, disabled_features: ["use_localstorage_for_settings", "volume_force_overlay", "left_toolbar", "control_bar", "timeframes_toolbar", "border_around_the_chart", "header_widget"]
+                    , disabled_features: ["border_around_the_chart"]
+                    , debug: true   // Setting this property to true makes the chart to write detailed API logs to console. Feature charting_library_debug_mode is a synonym for this field usage.
+					, time_frames: [
+                        //{ text: "All", resolution: "6M" }, crash: first character should be a Number
+                        { text: "121m", resolution: "D" },   // this can be equivalent to ALL. Just calculate before how many years, or month. DO WORK with months.
+                        { text: "12y", resolution: "D" },   // this can be equivalent to ALL. Just calculate before how many years, or month.
+                        { text: "6000d", resolution: "D" },   // this can be equivalent to ALL. Just calculate before how many years, or month. DO NOT WORK. Max days: 350
+                        
+						{ text: "50y", resolution: "6M" },
+						{ text: "3y", resolution: "W" },
+						{ text: "8m", resolution: "D" },
+						{ text: "2m", resolution: "D" }
+					]
+
+				    , overrides: {
+				        "mainSeriesProperties.style": 3,    // area style
+				        "symbolWatermarkProperties.color": "#644"
+				    },
+
+
+				});
+
+			    //// it is set in the variables, but it is not updated in the chart.
+			    //widget.options.hideSideToolbar = true;    //obsolete(1.1 - 1.5) (use disabled_features instead)
+				//widget.options.time_frames[0].text = "ALL";
+
+			    //https://github.com/tradingview/charting_library/wiki/Widget-Methods
+				//widget.onContextMenu(function (unixtime, price) {
+				//    return [{
+				//        position: "top",
+				//        text: "First top menu item, time: " + unixtime + ", price: " + price,
+				//        click: function () { alert("First clicked."); }
+				//    }, {
+				//        position: "top",
+				//        text: "Second top menu item 2",
+				//        click: function () { alert("Second clicked."); }
+				//    }, {
+				//        position: "bottom",
+				//        text: "Bottom menu item",
+				//        click: function () { alert("Third clicked."); }
+				//    }];
+				//});
+
+
+				widget.onChartReady(function () {
+
+				    widget.options.time_frames[0].text = "ALL";
+
+				    widget.createStudy('Moving Average Exponential', false, false, [26]);       //inputs: (since version 1.2) an array of study inputs.
+
+					var position = widget.createPositionLine()
+						.onReverse(function(text) {
+						})
+						.onClose(function(text) {
+						})
+						.setText("PROFIT OF POSITION: $??.? (?.??%)")
+						.setQuantity("#X.XX")    // that is the Position in the positionLine (number of shares)
+                        .setLineLength(3); //  how far is the mark from the right side
+                    position.setPrice(position.getPrice() - 2.0);     // how far is that from the lastBar price.
+
+					//var order = widget.createOrderLine()
+					//	.onCancel(function(text) {
+					//	})
+					//	.setText("STOP: 73.5 (5,64%)")
+                    //    .setLineLength(3)
+					//	.setQuantity("2");
+                    //order.setPrice(order.getPrice() - 2.5);
+
+					//widget.createExecutionShape()     // this crashes
+					//	.setText("@1,320.75 Limit Buy 1")
+					//	.setTextColor("rgba(255,0,0,0.5)")
+					//	.setArrowSpacing(25)
+					//	.setArrowHeight(25)
+					//	.setArrowColor("#F00")
+					//	//.setTime(new Date().valueOf() - 3*24*60*60*1000)    // get 3 days earlier than today
+                    //    .setTime(new Date(2014,12,1,0,0,0,0).valueOf())    // get 3 days earlier than today
+					//	.setPrice(15.5);
+				});
+			})
+
+		</script>
+
+	</head>
+
+	<body style="margin:0px;">
+		<div id="tv_chart_container"></div>
+	</body>
+
+</html>

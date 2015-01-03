@@ -375,7 +375,13 @@ Datafeeds.UDFCompatibleDatafeed.prototype.unsubscribeBars = function(listenerGUI
 	this._barsPulseUpdater.unsubscribeDataListener(listenerGUID);
 };
 
-Datafeeds.UDFCompatibleDatafeed.prototype.calculateHistoryDepth = function(period, resolutionBack, intervalBack) {
+Datafeeds.UDFCompatibleDatafeed.prototype.calculateHistoryDepth = function (period, resolutionBack, intervalBack) {
+    //if (period == "D") {
+    //    return {
+    //        resolutionBack: "D",
+    //        intervalBack: 3
+    //    };
+    //}
 };
 
 Datafeeds.UDFCompatibleDatafeed.prototype.getQuotes = function(symbols, onDataCallback, onErrorCallback) {
@@ -755,13 +761,13 @@ Datafeeds.QuotesPulseUpdater = function(datafeed) {
 
 	var that = this;
 
-	setInterval(function() {
-		that._updateQuotes(function(subscriptionRecord) { return subscriptionRecord.symbols; })
-	}, this._updateInterval);
+    setInterval(function() {
+    	that._updateQuotes(function(subscriptionRecord) { return subscriptionRecord.symbols; })
+    }, this._updateInterval);
 
-	setInterval(function() {
-		that._updateQuotes(function(subscriptionRecord) { return subscriptionRecord.fastSymbols.length > 0 ? subscriptionRecord.fastSymbols : subscriptionRecord.symbols; })
-	}, this._fastUpdateInterval);
+    setInterval(function() {
+    	that._updateQuotes(function(subscriptionRecord) { return subscriptionRecord.fastSymbols.length > 0 ? subscriptionRecord.fastSymbols : subscriptionRecord.symbols; })
+    }, this._fastUpdateInterval);
 };
 
 Datafeeds.QuotesPulseUpdater.prototype.subscribeDataListener = function(symbols, fastSymbols, newDataCallback, listenerGUID) {

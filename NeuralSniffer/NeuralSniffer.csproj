@@ -74,6 +74,7 @@
   <ItemGroup>
     <Content Include="charting_library\charting_library.min.js" />
     <Content Include="charting_library\customization.txt" />
+    <Content Include="charting_library\datafeed\udf\datafeedSQTradingViewChart1.js" />
     <Content Include="charting_library\datafeed\udf\datafeedTest1.js" />
     <Content Include="charting_library\datafeed\udf\datafeed.js" />
     <Content Include="charting_library\static\chart-client\css\images\bartype-icons.png" />
@@ -111,16 +112,17 @@
     <Content Include="charting_library\static\images\tvcolorpicker-bg.png" />
     <Content Include="charting_library\static\images\tvcolorpicker-check.png" />
     <Content Include="charting_library\static\images\tvcolorpicker-sprite.png" />
+    <Content Include="charting_library\static\tv-chart-deobfuscated.html" />
     <Content Include="charting_library\static\tv-chart.html" />
     <Content Include="Global.asax" />
     <Content Include="index.htm" />
     <Content Include="indexNeuralSniffer.htm" />
-    <Content Include="TradingView1.1index.html" />
-    <Content Include="TradingView1.1introTinkering1.html" />
-    <Content Include="TradingView1.1intro.html" />
-    <Content Include="TradingView1.1test.html" />
-    <Content Include="TradingViewDemoTest1.html" />
-    <Content Include="TradingViewDemo.html" />
+    <Content Include="charting_library\ChartSamples\TradingView1.1index.html" />
+    <Content Include="SQTemplates\SQTradingViewChart1.html" />
+    <Content Include="charting_library\ChartSamples\TradingView1.1introTinkering1.html" />
+    <Content Include="charting_library\ChartSamples\TradingView1.1intro.html" />
+    <Content Include="charting_library\ChartSamples\TradingViewDemoTest1.html" />
+    <Content Include="charting_library\ChartSamples\TradingViewDemo.html" />
     <Content Include="VolatilityIndicesInDifferentMonths.htm" />
     <Content Include="VolatilityIndicesInDifferentMonths.js" />
     <Content Include="VXXAdaptiveConnorAliveBacktest.htm" />
