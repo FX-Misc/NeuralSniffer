@@ -72,10 +72,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="AdaptiveConnor\VXXAdaptiveConnorAliveBacktestDev.htm" />
     <Content Include="charting_library\charting_library.min.js" />
     <Content Include="charting_library\customization.txt" />
-    <Content Include="charting_library\datafeed\udf\datafeedSQTradingViewChart1.js" />
-    <Content Include="charting_library\datafeed\udf\datafeedTest1.js" />
+    <Content Include="SQTemplates\datafeedSQTradingViewChart1.js" />
     <Content Include="charting_library\datafeed\udf\datafeed.js" />
     <Content Include="charting_library\static\chart-client\css\images\bartype-icons.png" />
     <Content Include="charting_library\static\chart-client\css\light\cursor_closed_hand.cur" />
@@ -118,14 +118,12 @@
     <Content Include="index.htm" />
     <Content Include="indexNeuralSniffer.htm" />
     <Content Include="charting_library\ChartSamples\TradingView1.1index.html" />
-    <Content Include="SQTemplates\SQTradingViewChart1.html" />
-    <Content Include="charting_library\ChartSamples\TradingView1.1introTinkering1.html" />
+    <Content Include="SQTemplates\SQTradingViewChart1.htm" />
     <Content Include="charting_library\ChartSamples\TradingView1.1intro.html" />
-    <Content Include="charting_library\ChartSamples\TradingViewDemoTest1.html" />
     <Content Include="charting_library\ChartSamples\TradingViewDemo.html" />
     <Content Include="VolatilityIndicesInDifferentMonths.htm" />
     <Content Include="VolatilityIndicesInDifferentMonths.js" />
-    <Content Include="VXXAdaptiveConnorAliveBacktest.htm" />
+    <Content Include="AdaptiveConnor\VXXAdaptiveConnorAliveBacktest.htm" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>

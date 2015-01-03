@@ -272,7 +272,8 @@ Datafeeds.UDFCompatibleDatafeed.prototype.calculateHistoryDepth = function (peri
         //    //};
         return {
             resolutionBack: "D",
-            intervalBack: 260*5      // better to tell TV to ask 5 years of data in one big chunk. Because later when user scrolls, or zooms out, the 'loading data' problem will not appear
+            intervalBack: 260 * 5      // better to tell TV to ask 5 years of data in one big chunk. Because later when user scrolls, or zooms out, the 'loading data' problem will not appear
+            // unfortunately, even if we say, there are 2000 days available, it only asks for 200 data, if the browser window is very wide. Let's wait 
         };
 
     }
