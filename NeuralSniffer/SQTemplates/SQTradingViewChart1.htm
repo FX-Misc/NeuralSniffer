@@ -58,7 +58,8 @@
 
 				    , overrides: {
 				        "mainSeriesProperties.style": 3,    // area style
-				        "symbolWatermarkProperties.color": "#644"
+				        "symbolWatermarkProperties.color": "#644",
+				        "moving average exponential.length": 13     // but doesn't work. It will be changed later anyway.
 				    },
 
 
@@ -88,7 +89,9 @@
 
 				widget.onChartReady(function () {
 
-				    widget.options.time_frames[0].text = "ALL";
+				    gTradingViewChartWidget = widget;
+
+				    widget.options.time_frames[0].text = "ALL";     // doesn't work; doesn't change the Text
 
 				    widget.createStudy('Moving Average Exponential', false, false, [26]);       //inputs: (since version 1.2) an array of study inputs.
 
@@ -127,7 +130,45 @@
 	</head>
 
 	<body style="margin:0px;">
+
+        <button id="startButton">Click here to Refresh chart (after backtest is ready) to make getBars() be called for new data and to update the TimeFrames toolbar </button><br><br>
 		<div id="tv_chart_container"></div>
+
+        <script>
+            document.getElementById("startButton").onclick = function () {
+            
+                //gConnorStrategy.pvToPlot = pvToPlot;    // after that, we may widget.remove the Chart, and create a completely new Chart every time, we re-run the backtest
+
+
+                //// 1. Refresh TVChart (make it call the getBars()), version 1: //After #178 chart supports loading chart without iframe reloading. 
+                //// This will redraw only the innear area of the chart, not the Toolbars. Quick, but sometimes it is not enough. When you want to change the TimeFrames for example.
+                //gTradingViewChartWidget.save(function (json) {        
+                //    gTradingViewChartWidget.load(json);
+                //});
+
+
+                // 2. Refresh TVChart (make it call the getBars()), version 2: idea stolen from widget.setLangue() inner implementation. It will redraw the Toolbars too, not only the inner area. But it can change TimeFrames Toolbar
+                gTradingViewChartWidget.remove();       // this is the way to the widget.options to be effective
+                //gTradingViewChartWidget.options.time_frames[0].text = "All";    // cannot be "All"; it crashes.
+                gTradingViewChartWidget.options.time_frames[0].text = "6y";
+                gTradingViewChartWidget.options.time_frames[1].text = "61m";    // I can calculate dynamically, but not important now.
+                //gTradingViewChartWidget.options.width = "50%";        // works too in Remove(), Create()
+                gTradingViewChartWidget.create()
+
+                //// 3. Refresh TVChart (make it call the getBars()), version 3: parent.removeChild(iFrame); and append again, // good for resize() iframe, but doesn't rebuild the Toolbars
+                ////redraw chart, see https://github.com/tradingview/charting_library/issues/155 ,but changing options.width doesn't work for me; for that you have to do it on the iFrame
+                //var container = document.getElementById('tv_chart_container');
+                //var iframe = container.querySelector('iframe');
+                ////iframe.height = "300px";
+                ////iframe.width = "50%";
+                ////gTradingViewChartWidget.options.time_frames[0].text = "6y";
+                ////gTradingViewChartWidget.options.time_frames[1].text = "61m";    // I can calculate dynamically, but not important now.
+                //container.removeChild(iframe);      
+                //container.appendChild(iframe);
+
+            }
+
+        </script>
 	</body>
 
 </html>

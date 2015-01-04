@@ -9,9 +9,8 @@
 Datafeeds = {};
 
 
-Datafeeds.UDFCompatibleDatafeed = function (datafeedURL, updateFrequency) {
-
-    //this._datafeedURL = datafeedURL;
+Datafeeds.UDFCompatibleDatafeed = function (p_connorStrategy) {
+    this.connorStrategy = p_connorStrategy;
     this._configuration = {};   // this is the DefaultConfig in the Test
     this._configuration.supports_search = false;
     this._configuration.supports_group_request = true;
@@ -75,7 +74,7 @@ Datafeeds.UDFCompatibleDatafeed.prototype.setup = function (studyEngineOptions, 
 
         var rtSubsc = that.realtimeUpdater;
         if (rtSubsc != null) {
-            rtSubsc.listeners[0](lastBar)
+            //rtSubsc.listeners[0](lastBar) // switch off update temporarily
         }
 
     }, 10 * 1000); // Pulse every 10 seconds
@@ -114,18 +113,17 @@ Datafeeds.UDFCompatibleDatafeed.prototype.searchSymbolsByName = function (ticker
 Datafeeds.UDFCompatibleDatafeed.prototype.resolveSymbol = function (symbolName, onSymbolResolvedCallback, onResolveErrorCallback) {
 
     var data = {};
-    data.description = "SQ strategy desc";  //Will be printed in chart legend for this symbol.
+    data.description = "SQAdaptiveConnor";  //Will be printed in chart legend for this symbol.
     data['exchange-listed'] = "NYSE";
     data['exchange-traded'] = "NYSE";
     data.has_intraday = false;
     data.has_no_volume = true;
     data.minmov	= 1;
     data.minmov2 = 0;
-    data.name = "SQ strategy name";     //It's name of a symbol. It is a string which your users will see.
+    data.name = "Connor";     //It's name of a symbol. It is a string which your users will see.
     data.pointvalue	= 1;
     data.pricescale	= 100;
     data.session =	"0930-1630";
-    //data.session = "24x7"; doesn't solve the 'loading data' problem
     data.ticker	= "SQ1"; //It's an unique identifier for this symbol in your symbology. If you specify this property then its value will be used for all data requests for this symbol. ticker is treated to be equal to symbol if not specified explicitly.
     data.timezone = "UTC";
     //data.timezone = "America/New_York";
@@ -145,9 +143,6 @@ Datafeeds.UDFCompatibleDatafeed.prototype.resolveSymbol = function (symbolName, 
 
 
 
-//How can I make data_status invisible?, https://github.com/tradingview/charting_library/issues/311
-//It's an important part of our UI and there is no way to hide it. Virtually, you can override CSS style for this item but we do not recommend to do this.
-
 // rangeStartDate, rangeEndDate comes in UNIX style, which is seconds; so convert it to msec for JS
 Datafeeds.UDFCompatibleDatafeed.prototype.getBars = function (symbolInfo, resolution, rangeStartDate, rangeEndDate, onDataCallback, onErrorCallback) {
 
@@ -161,61 +156,81 @@ Datafeeds.UDFCompatibleDatafeed.prototype.getBars = function (symbolInfo, resolu
     var startDate = new Date((rangeStartDate) * 1000);    //15h extra because of UTC time and summer time winter time change on 26th October  // rangeStartDate Time field is: 00:00
     var endDate = new Date((rangeEndDate) * 1000);    // rangeEndDate is pretty real time with its Time attribute as seconds
 
-    var iDate = new Date((rangeStartDate) * 1000);
-    //iDate.setUTCDate(iDate.getUTCDate() - 280);  //https://github.com/tradingview/charting_library/issues/266 , Didn't work Now we use our way to return more data than the library request so the library will keep request when scroll to end until actually no more data at server.
-    
-    while (iDate <= endDate) {
-        if (iDate.getFullYear() == 2014 && iDate.getMonth() == 9 && iDate.getDate() == 24) {
-            var x = 0;
-        }
 
-        var weekDay = iDate.getDay();
-        if (weekDay != 0 && weekDay != 6)
-        {
-            var barValue = {
-                time: iDate.getTime(),  // gives back the miliseconds, so it is OK.  //time: data.t[i] * 1000,
-                close: 10.0 + weekDay
-            };
-            
-            barValue.open = barValue.close - 0.25;
-            barValue.high = barValue.close + 0.25;
-            barValue.low = barValue.close - 0.55;
-
-            //barValue.open = barValue.high = barValue.low = barValue.close;
-
-            //var nextDate = new Date(iDate.getTime());
-            //nextDate.setDate(nextDate.getDate() + 1);
-
-            if (iDate.getFullYear() == 2015 && iDate.getMonth() == 0 && iDate.getDate() == 1) { // new years: holiday
-                //bars.push(barValue);
-                var x = 0;
-            } else {
+    if (typeof this.connorStrategy.pvToPlot != 'undefined') { // get all days between startDate and endDate and send to the chart
+  
+        var y = 55;
+        for (var i = 0; i < this.connorStrategy.pvToPlot.length; i++) {
+            if (this.connorStrategy.pvToPlot[i][0] >= startDate && this.connorStrategy.pvToPlot[i][0] <= endDate) {
+                var barValue = {
+                    time: this.connorStrategy.pvToPlot[i][0],
+                    close: this.connorStrategy.pvToPlot[i][1]
+                };
+                barValue.open = barValue.close;
+                barValue.high = barValue.close;
+                barValue.low = barValue.close;
                 bars.push(barValue);
             }
-
-            //if (nextDate <= endDate) {  // if nextDate is out of range, so this is the last date, don't put it to the stack.
-            //    bars.push(barValue);
-            //} else {
-            //    var yy = 0;
-            //}
         }
 
-        
 
-        //iDate.setDate(iDate.getDate() + 1);   // not good
-        iDate.setUTCDate(iDate.getUTCDate() + 1);   // this solved the disappearing days: when 2 bars went to the same day. other idea was: increase the time as miliseconds with another 24hours every time.
+    } else {
+        var iDate = new Date((rangeStartDate) * 1000);;
+        while (iDate <= endDate) {
+            if (iDate.getFullYear() == 2014 && iDate.getMonth() == 9 && iDate.getDate() == 24) {
+                var x = 0;
+            }
 
+            var weekDay = iDate.getDay();
+            if (weekDay != 0 && weekDay != 6) {
+                var barValue = {
+                    time: iDate.getTime(),  // gives back the miliseconds, so it is OK.  //time: data.t[i] * 1000,
+                    close: 10.0 + weekDay
+                };
+
+                barValue.open = barValue.close - 0.25;
+                barValue.high = barValue.close + 0.25;
+                barValue.low = barValue.close - 0.55;
+
+                //barValue.open = barValue.high = barValue.low = barValue.close;
+
+                //var nextDate = new Date(iDate.getTime());
+                //nextDate.setDate(nextDate.getDate() + 1);
+
+                if (iDate.getFullYear() == 2015 && iDate.getMonth() == 0 && iDate.getDate() == 1) { // new years: holiday
+                    //bars.push(barValue);
+                    var x = 0;
+                } else {
+                    bars.push(barValue);
+                }
+
+                //if (nextDate <= endDate) {  // if nextDate is out of range, so this is the last date, don't put it to the stack.
+                //    bars.push(barValue);
+                //} else {
+                //    var yy = 0;
+                //}
+            }
+
+
+
+            //iDate.setDate(iDate.getDate() + 1);   // not good
+            iDate.setUTCDate(iDate.getUTCDate() + 1);   // this solved the disappearing days: when 2 bars went to the same day. other idea was: increase the time as miliseconds with another 24hours every time.
+
+        }
+
+        //// repeat the last one value, but with the endDate; with the proper time
+        //var barValue = {
+        //    time: (rangeEndDate - 1) * 1000,  // gives back the miliseconds, so it is OK.  //time: data.t[i] * 1000,
+        //    close: 18
+        //};
+        //barValue.open = barValue.close - 0.25;
+        //barValue.high = barValue.close + 0.25;
+        //barValue.low = barValue.close - 0.55;
+        //bars.push(barValue);
     }
 
-    //// repeat the last one value, but with the endDate; with the proper time
-    //var barValue = {
-    //    time: (rangeEndDate - 1) * 1000,  // gives back the miliseconds, so it is OK.  //time: data.t[i] * 1000,
-    //    close: 18
-    //};
-    //barValue.open = barValue.close - 0.25;
-    //barValue.high = barValue.close + 0.25;
-    //barValue.low = barValue.close - 0.55;
-    //bars.push(barValue);
+
+  
 
 
     onDataCallback(bars);

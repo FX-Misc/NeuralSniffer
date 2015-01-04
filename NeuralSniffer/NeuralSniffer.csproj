@@ -72,7 +72,9 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="AdaptiveConnor\VXXAdaptiveConnorAliveBacktestDev.htm" />
+    <Content Include="AdaptiveConnor\datafeedVXXAdaptiveConnorAliveBacktest.js" />
+    <Content Include="AdaptiveConnor\VXXAdaptiveConnorAliveBacktest.htm" />
+    <Content Include="charting_library\charting_library.min-deobfuscated.js" />
     <Content Include="charting_library\charting_library.min.js" />
     <Content Include="charting_library\customization.txt" />
     <Content Include="SQTemplates\datafeedSQTradingViewChart1.js" />
@@ -123,7 +125,7 @@
     <Content Include="charting_library\ChartSamples\TradingViewDemo.html" />
     <Content Include="VolatilityIndicesInDifferentMonths.htm" />
     <Content Include="VolatilityIndicesInDifferentMonths.js" />
-    <Content Include="AdaptiveConnor\VXXAdaptiveConnorAliveBacktest.htm" />
+    <Content Include="AdaptiveConnor\VXXAdaptiveConnorAliveBacktestArchived1.htm" />
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
