@@ -144,6 +144,42 @@ Datafeeds.UDFCompatibleDatafeed.prototype.resolveSymbol = function (symbolName, 
 };
 
 
+//calculateHistoryDepth(period, resolutionBack, intervalBack)
+//One may affect requested data range by overriding this function. The Charting Library will call your function and use resolutionBack and intervalBack returned by it (if any).
+//        Arguments:
+//        period: requested symbol's resolution. You may not change it.
+//        resolutionBack: desired history period type. `D` (days) or `M` (months) is expected.
+//        intervalBack: desired history depth (periods, see resolutionBack)
+//Returned value:
+//    Your function should return nothing if you do not want to override anything. If you do, it should return an object with respective properties. Only resolutionBack and intervalBack properties are expected.
+//        Example:
+//        Assume the implementation is
+//    Datafeed.prototype.calculateHistoryDepth = function(period,
+//    resolutionBack, intervalBack) {
+//        if (period == "1D") {
+//            return {
+//                resolutionBack: 'M',
+//                intervalBack: 6
+//            };
+//        }
+//    }
+//    This means when Charting Library will request the data for '1D' resolution, the history will be 6 months in depth. In all other cases the history depth will have the default value.
+// after I call gTradingViewChartWidget.remove();       , this will be called again. So I can return to the chart, how much data I have.
+Datafeeds.UDFCompatibleDatafeed.prototype.calculateHistoryDepth = function (period, resolutionBack, intervalBack) {     // default"D", "M", 12 (which means 6 months is show for daily resolution
+    //This function should return undefined if you do not want to override anything. 
+    if (period == "D") {
+        //return {
+        //    resolutionBack: "D",
+        //    intervalBack: 870     //if I return 870 Days, getBars() will ask for only 250 days of data. However, if I return 43Months, getBars() asks for 870 data, with a proper startdate. However, the data is there, but it is not rendered.
+        return {
+            resolutionBack: "M",
+            intervalBack: 43
+            //intervalBack: 260 * 5      // better to tell TV to ask 5 years of data in one big chunk. Because later when user scrolls, or zooms out, the 'loading data' problem will not appear
+            // unfortunately, even if we say, there are 2000 days available, it only asks for 200 data, if the browser window is very wide. Let's wait 
+        };
+
+    }
+};
 
 //How can I make data_status invisible?, https://github.com/tradingview/charting_library/issues/311
 //It's an important part of our UI and there is no way to hide it. Virtually, you can override CSS style for this item but we do not recommend to do this.
@@ -239,49 +275,6 @@ Datafeeds.UDFCompatibleDatafeed.prototype.unsubscribeBars = function (listenerGU
     this.realtimeUpdater = null;
 };
 
-//calculateHistoryDepth(period, resolutionBack, intervalBack)
-//One may affect requested data range by overriding this function. The Charting Library will call your function and use resolutionBack and intervalBack returned by it (if any).
-//        Arguments:
-//        period: requested symbol's resolution. You may not change it.
-//        resolutionBack: desired history period type. `D` (days) or `M` (months) is expected.
-//        intervalBack: desired history depth (periods, see resolutionBack)
-//Returned value:
-//    Your function should return nothing if you do not want to override anything. If you do, it should return an object with respective properties. Only resolutionBack and intervalBack properties are expected.
-//        Example:
-//        Assume the implementation is
-//    Datafeed.prototype.calculateHistoryDepth = function(period,
-//    resolutionBack, intervalBack) {
-//        if (period == "1D") {
-//            return {
-//                resolutionBack: 'M',
-//                intervalBack: 6
-//            };
-//        }
-//    }
-//    This means when Charting Library will request the data for '1D' resolution, the history will be 6 months in depth. In all other cases the history depth will have the default value.
-Datafeeds.UDFCompatibleDatafeed.prototype.calculateHistoryDepth = function (period, resolutionBack, intervalBack) {     // default"D", "M", 12 (which means 6 months is show for daily resolution
-    //This function should return undefined if you do not want to override anything. 
-    if (period == "D") {
-        //    //return {
-        //    //    resolutionBack: "D",
-        //    //    intervalBack: 3
-        //    //};
-        //    //return {
-        //    //    resolutionBack: "D",
-        //    //    intervalBack: 165 //good
-        //    //};
-        //    //return {
-        //    //    resolutionBack: "D",
-        //    //    intervalBack: 164 //bad, // next day, the threshold when there 'loading data' doesn't appear is 262, good, 261 not good. Reason probably is that the IE window is bigger. YES. if I resize the window, even 100 is enough.
-        //    //};
-        return {
-            resolutionBack: "D",
-            intervalBack: 260 * 5      // better to tell TV to ask 5 years of data in one big chunk. Because later when user scrolls, or zooms out, the 'loading data' problem will not appear
-            // unfortunately, even if we say, there are 2000 days available, it only asks for 200 data, if the browser window is very wide. Let's wait 
-        };
-
-    }
-};
 
 
 

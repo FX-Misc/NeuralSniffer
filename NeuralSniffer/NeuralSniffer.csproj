@@ -77,6 +77,12 @@
     <Content Include="charting_library\charting_library.min-deobfuscated.js" />
     <Content Include="charting_library\charting_library.min.js" />
     <Content Include="charting_library\customization.txt" />
+    <Content Include="css\QuickTester.css" />
+    <Content Include="SQQuickTester\QuickTester.js" />
+    <Content Include="SQQuickTester\Strategies\L-ETF-Discrepancy\L-ETF-Discrepancy.htm" />
+    <Content Include="SQQuickTester\QuickTester.htm" />
+    <Content Include="SQQuickTester\Strategies\L-ETF-Discrepancy\L-ETF-Discrepancy.js" />
+    <Content Include="SQQuickTester\Strategies\L-ETF-Discrepancy\L-ETF-DiscrepancyInput.htm" />
     <Content Include="SQTemplates\datafeedSQTradingViewChart1.js" />
     <Content Include="charting_library\datafeed\udf\datafeed.js" />
     <Content Include="charting_library\static\chart-client\css\images\bartype-icons.png" />
@@ -130,6 +136,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\WebApiConfig.cs" />
+    <Compile Include="Controllers\QtController.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
@@ -167,7 +174,6 @@
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
-    <Folder Include="Controllers\" />
     <Folder Include="Models\" />
   </ItemGroup>
   <PropertyGroup>

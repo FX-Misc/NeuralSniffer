@@ -1,0 +1,88 @@
+﻿<!DOCTYPE html>
+<!--<html xmlns="http://www.w3.org/1999/xhtml">-->
+<!--Also, keep in mind that unless you're serving your pages as application/xhtml+xml - which virtually no one actually is - then you're not actually using XHTML. It doesn't matter even if your doctype says XHTML. If you serve it as text/html, then the browser is treating it as plain old HTML, and all those self-closing slashes aren't really doing anything at all.-->
+<!--However, XHTML never really caught on. Professional developers (especially those who were integrating programming languages like JavaScript and PHP into their web projects) loved XHTML Strict but it was a little too unforgiving for most developers, and the vast majority of pages never bothered to validate to the new standards. When the time came to devise a new standard, the W3C (World Wide Web Consortium) decided to support HTML5 rather than XHTML 2.-->
+
+<html ng-app="QuickTesterApp">
+  <!-- Adding the ng-app declaration to initialize AngularJS -->
+
+<head>
+    <title>SQ QuickTester</title>
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.8/angular.min.js"></script>
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+
+
+    <script type="text/javascript" src="Strategies/L-ETF-Discrepancy/L-ETF-Discrepancy.js"></script>
+    <script type="text/javascript" src="QuickTester.js"></script>
+
+    <link href="../css/QuickTester.css" rel="stylesheet" />
+</head>
+<body id="idBodyAngularController" ng-controller="QuickTesterCtrl">
+
+    <div class="divTitle" >SQ QuickTester</div> <br>
+
+    
+
+
+    <!--//http://jsfiddle.net/rabidGadfly/f8ea6/ this was a good Angular menu, but submenus was not hovering-->
+    <!--// jquery horizontal menu is from here (I gave up finding Angular one): http://runnable.com/UdQdRyHniSpKAAXx/create-a-horizontal-navigation-menu-bar-using-jquery-->
+    <!-- Use this navigation div as your menu bar div -->
+    <div class="navigation">
+        <ul class="nav">
+            <li>
+                <a href="#" onclick="MenuItemStartBacktest()">Start backtest!</a>
+            </li>
+            <li>
+                <a href="#">Strategies</a>
+                <ul>
+                    <li><a href="#" onclick="Menu21ItemCallback()">L-ETF Discrepancy 1</a></li>
+                    <li><a href="#">L-ETF Discrepancy 2</a></li>
+                    <li><a href="#">L-ETF Discrepancy 3</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#">Tools</a>
+                <ul>
+                    <li><a href="#">Copy PV to clipboard</a></li>
+                    <li><a href="#">Version info</a></li>
+                </ul>
+            </li>
+            <li>
+                <a href="#">Debug</a>
+                <ul>
+                    <li><a href="#">See debug info 1</a></li>
+                    <li><a href="#">See debug info 2</a></li>
+                </ul>
+            </li>
+            
+        </ul>
+    </div><br><br>
+
+
+
+    <!--// fast SSI, Server Side Include works in Azure website from 2014: http://azure.microsoft.com/blog/2014/03/26/server-side-includes-ssi-in-windows-azure-web-sites-waws/-->
+    <!--#include virtual="/SQQuickTester/Strategies/L-ETF-Discrepancy/L-ETF-DiscrepancyInput.htm"-->
+
+
+    <div style="width: 100%; height: 1px; background: #808080; overflow: hidden;"></div>
+    Statistics:<br>
+    Start Value:<br>
+    Final Value:<br>
+    Total Gain%:<br>
+    CAGR:<br>
+    Annualized StDev:<br>
+    Sharpe:<br>
+    Max Drawdown:<br>
+    Max.Days in Drawdown:<br>
+
+    <div style="width: 100%; height: 1px; background: #808080; overflow: hidden;"></div>
+    Chart
+
+
+    <br><br>
+    <br><br>
+    <span>
+        {{tipToUser;}}
+    </span>
+</body>
+</html>
