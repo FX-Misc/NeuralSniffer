@@ -16,7 +16,7 @@ namespace NeuralSniffer
 
             config.Routes.MapHttpRoute(
                 name: "DefaultApi",
-                routeTemplate: "{controller}/{id}",
+                routeTemplate: "q/{controller}/{id}",
                 defaults: new { id = RouteParameter.Optional }
             );
 

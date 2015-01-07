@@ -197,8 +197,13 @@ Datafeeds.UDFCompatibleDatafeed.prototype.getBars = function (symbolInfo, resolu
     var startDate = new Date((rangeStartDate) * 1000);    //15h extra because of UTC time and summer time winter time change on 26th October  // rangeStartDate Time field is: 00:00
     var endDate = new Date((rangeEndDate) * 1000);    // rangeEndDate is pretty real time with its Time attribute as seconds
 
+
     var iDate = new Date((rangeStartDate) * 1000);
     //iDate.setUTCDate(iDate.getUTCDate() - 280);  //https://github.com/tradingview/charting_library/issues/266 , Didn't work Now we use our way to return more data than the library request so the library will keep request when scroll to end until actually no more data at server.
+
+    if (startDate.getFullYear() <= 2003)
+        iDate = new Date(2003, 1, 1, 0, 0, 0, 0);
+
     
     while (iDate <= endDate) {
         if (iDate.getFullYear() == 2014 && iDate.getMonth() == 9 && iDate.getDate() == 24) {

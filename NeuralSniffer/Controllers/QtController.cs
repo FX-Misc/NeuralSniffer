@@ -1,21 +1,33 @@
-﻿using System;
+﻿using HQCodeTemplates;
+using NeuralSniffer.Controllers.Strategies;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 using System.Web.Http;
 
-// http://hqacompute.cloudapp.net/q/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l&o=csv
-// http://localhost:52174//rtp?s=VXX,^VIX,^VXV,^GSPC,XIV&f=l&o=csv
+interface Strategies
+{
+    string GenerateQuickTesterResponse(string p_params);
+}
+
+// http://hqacompute.cloudapp.net/q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=SRS-URE&rebalanceFrequency=5d
+// http://localhost:52174/q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=SRS-URE&rebalanceFrequency=5d
+// http://neuralsniffer.azurewebsites.net/q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=SRS-URE&rebalanceFrequency=5d
 namespace NeuralSniffer.Controllers
 {
     // Qt = QuickTester
     public class QtController : ApiController       
     {
         // if I have Get(), I cannot have GetAllRtp(), as it will be Duplicate resolve possibility and I got an exception.
-        public HttpResponseMessage Get()
+        //// IIS can handle if the return is a Task lst, not a HttpActionResult. It is needed for async SQL examples from Robert
+        public async Task<HttpResponseMessage> Get()
         {
+            string jsonpCallback = null;
             var response = this.Request.CreateResponse(HttpStatusCode.OK);
             try
             {
@@ -23,31 +35,80 @@ namespace NeuralSniffer.Controllers
 
                 if (uriQuery.Length > 8192)
                 {//When you try to pass a string longer than 8192 charachters, a faultException will be thrown. There is a solution, but I don't want
-
-                    response.Content = new StringContent(@"{ ""Message"":  ""Error caught by WebApi Get():: uriQuery is longer than 8192: we don't process that. Uri: " + uriQuery + @""" }", Encoding.UTF8, "application/json");
-                    return response;
+                    throw new Exception("Error caught by WebApi Get():: uriQuery is longer than 8192: we don't process that. Uri: " + uriQuery);
                 }
 
-                //ChannelFactory<IStringReverser> httpFactory = new ChannelFactory<IStringReverser>(new BasicHttpBinding(), new EndpointAddress("http://localhost:8000/Reverse"));
-                //IStringReverser httpProxy = httpFactory.CreateChannel();
-                //string resHttp = httpProxy.ReverseString(uriQuery);
-
-                //ChannelFactory<IWebVBroker> pipeFactory = new ChannelFactory<IWebVBroker>(new NetNamedPipeBinding(), new EndpointAddress("net.pipe://localhost/RealTimePrice"));
-                //IWebVBroker pipeProxy = pipeFactory.CreateChannel();
-                //string jsonString = pipeProxy.Execute(uriQuery);
-
-                string jsonString = "Bela";
+                uriQuery = uriQuery.Substring(1);   // remove '?'
 
 
-                //string jsonString = @"[{""symbol"": """ + uriQuery + @""", ""Ask"": 41.2, ""Bid"", 41.3 }, {""symbol"": ""XIV"", ""Ask"": 34.5, ""Bid"", 34.6 }]";
-                response.Content = new StringContent(jsonString, Encoding.UTF8, "application/json");
-                return response;
+                int ind = -1;
+                if (uriQuery.StartsWith("jsonp=", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    uriQuery = uriQuery.Substring("jsonp=".Length);
+                    ind = uriQuery.IndexOf('&');
+                    if (ind == -1)
+                    {
+                        throw new Exception("Error: uriQuery.IndexOf('&') 2. Uri: " + uriQuery);
+                    }
+                    jsonpCallback = uriQuery.Substring(0, ind);
+                    uriQuery = uriQuery.Substring(ind + 1);
+                }
+
+
+                if (!uriQuery.StartsWith("strategy=", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    throw new Exception("Error: strategy= was not found. Uri: " + uriQuery);
+                }
+                uriQuery = uriQuery.Substring("strategy=".Length);
+                ind = uriQuery.IndexOf('&');
+                if (ind == -1)
+                {
+                    ind = uriQuery.Length;
+                }
+                string strategyName = uriQuery.Substring(0, ind);
+                if (ind < uriQuery.Length)  // if we are not at the end of the string
+                    uriQuery = uriQuery.Substring(ind + 1);
+                else
+                    uriQuery = "";
+
+
+                string strategyParams = uriQuery;
+
+
+
+
+
+                
+                string jsonString = (await VXX_SPY_Controversial.GenerateQuickTesterResponse(strategyName, strategyParams));
+                if (jsonString == null)
+                    jsonString = (await LEtfDistcrepancy.GenerateQuickTesterResponse(strategyName, strategyParams));
+                if (jsonString == null)
+                    jsonString = (await TotM.GenerateQuickTesterResponse(strategyName, strategyParams));
+
+                if (jsonString == null)
+                    throw new Exception("Strategy was not found in the WebApi: " + strategyName);
+
+                return ResponseBuilder(jsonpCallback, jsonString);
             }
             catch (Exception e)
             {
-                response.Content = new StringContent(@"{ ""Message"":  ""Exception caught by WebApi Get(): " + e.Message + @""" }", Encoding.UTF8, "application/json");
-                return response;
+                return ResponseBuilder(jsonpCallback, @"{ ""errorMessage"":  ""Exception caught by WebApi Get(): " + e.Message + @""" }");
             }
         }
+
+        public HttpResponseMessage ResponseBuilder(string p_jsonpCallback, string p_jsonResponse)
+        {
+            var response = this.Request.CreateResponse(HttpStatusCode.OK);
+            StringBuilder responseStrBldr = new StringBuilder();
+            if (p_jsonpCallback != null)
+                responseStrBldr.Append(p_jsonpCallback + "(\n");
+            responseStrBldr.Append(p_jsonResponse);
+            if (p_jsonpCallback != null)
+                responseStrBldr.Append(");");
+
+            response.Content = new StringContent(responseStrBldr.ToString(), Encoding.UTF8, "application/json");
+            return response;
+        }
+
     }
 }

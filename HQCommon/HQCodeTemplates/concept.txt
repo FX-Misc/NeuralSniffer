@@ -1,0 +1,14 @@
+Copy & paste & tailoring often results in simpler source code that is therefore
+easier to understand than using a cumbersome API aimed at serving all use cases.
+
+But such code templates need to evolve, too: bug fixes and subtle improvements
+are very useful to them.
+
+This folder is designed to share (and evolve) such code templates and fixes and
+improvements.
+The routines here should be as concise and dependency-free as possible.
+
+Most of these routines are compiled into (and are therefore present in)
+HQCommon.dll readily consumable in binary form, too. This should be preferred
+over copy & paste when no modification is necessary. But copy & paste is
+preferred over further elaborating these routines here.

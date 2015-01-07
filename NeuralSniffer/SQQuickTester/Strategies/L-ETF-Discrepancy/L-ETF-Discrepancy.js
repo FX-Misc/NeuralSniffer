@@ -1,9 +1,11 @@
 ﻿
 
-AngularStart_LEtfDistcrepancy = function ($scope, $http) {
-    $scope.etfPairs = ["SRS/URE", "XIV/VXX"];
-    $scope.selectedEtfPairs = "SRS/URE";
-    $scope.selectedEtfPairsIdx = 1;   // zero based, so it is December
+AngularInit_LEtfDistcrepancy = function ($scope, $http) {
+    $scope.etfPairs = ["URE-SRS", "DRN-DRV", "FAS-FAZ", "XIV-VXX", "ZIV-VXZ",  ];
+    $scope.selectedEtfPairs = "URE-SRS";
+    //$scope.selectedEtfPairsIdx = 1;   // zero based, so it is December
+
+    $scope.rebalancingFrequency = "5d";
 
 
     $scope.etfPairsChanged = function () {
@@ -16,20 +18,44 @@ AngularStart_LEtfDistcrepancy = function ($scope, $http) {
     };
 
 
-    $scope.StartBacktest_LEtfDistcrepancy1 = function () {
+    $scope.SubStrategySelected_LEtfDistcrepancy = function () {
+        if ($scope.selectedStrategyMenuItemId == "idMenuItemLETFDiscrepancy1") {
+            $scope.selectedStrategyName = "L-ETF Discrepancy 1";
+            $scope.strategyGoogleDocHelpUri = "https://docs.google.com/document/d/1IpqNT6THDP5B1C-Vugt1fA96Lf1Ms9Tb-pq0LzT3GnY";
+            $scope.selectedStrategyWebApiName = "LETFDiscrepancy1";
+        }
+        if ($scope.selectedStrategyMenuItemId == "idMenuItemLETFDiscrepancy2") {
+            $scope.selectedStrategyName = "L-ETF Discrepancy 2";
+            $scope.strategyGoogleDocHelpUri = "https://docs.google.com/document/d/1JI7sttAtI2Yzix1WbVUCTNP8SujiVInvNyaQyrC30Us";
+            $scope.selectedStrategyWebApiName = "LETFDiscrepancy2";
+        }
+        if ($scope.selectedStrategyMenuItemId == "idMenuItemLETFDiscrepancy3") {
+            $scope.selectedStrategyName = "L-ETF Discrepancy 3";
+            $scope.strategyGoogleDocHelpUri = "https://docs.google.com/document/d/1Ey9Su6JcGGt2XtcCV0PgUTZ6F5waJ6tm5_c_phYmQZU";
+            $scope.selectedStrategyWebApiName = "LETFDiscrepancy3";
+        }
+    };
 
-        alert("StartBacktest_LEtfDistcrepancy1()")
+    $scope.StartBacktest_LEtfDistcrepancy = function () {
 
-        var today = new Date();
-        var dd = today.getDate();   // day of the month
-        var mm = today.getMonth(); //January is 0!
-        var yyyy = today.getFullYear();
-        // OpenPrice is not necessary, but we may need it later for a Close to Open analysis; so query it
-        var url = "http://hqacompute.cloudapp.net/q/yff?yffOutFormat=json&yffColumns=dohlc&jsonp=JSON_CALLBACK&yffUri=ichart.finance.yahoo.com/table.csv&s=%5EVIX&a=0&b=2&c=1990&d=" + mm + "&e=" + dd + "&f=" + yyyy + "&g=d&ignore=.csv";
+        if ($scope.selectedStrategyMenuItemId != "idMenuItemLETFDiscrepancy1" && $scope.selectedStrategyMenuItemId != "idMenuItemLETFDiscrepancy2" && $scope.selectedStrategyMenuItemId != "idMenuItemLETFDiscrepancy3")
+            return;
 
+        //var url = "http://localhost:52174/q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=SRS-URE&rebalanceFrequency=5d";
+        //var url = "http://localhost:52174/q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + $scope.selectedEtfPairs + "&rebalancingFrequency=" + $scope.rebalancingFrequency;
+        //var url = "///q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + $scope.selectedEtfPairs + "&rebalancingFrequency=" + $scope.rebalancingFrequency;
+        //var url = "/q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + $scope.selectedEtfPairs + "&rebalancingFrequency=" + $scope.rebalancingFrequency;
+        var url = "/q/qt?jsonp=JSON_CALLBACK&strategy=" + $scope.selectedStrategyWebApiName + "&ETFPairs=" + $scope.selectedEtfPairs + "&rebalancingFrequency=" + $scope.rebalancingFrequency;
+
+        
         $http.jsonp(url).
             success(function (data, status, headers, config) {
-                $scope.quotesDohlc = data;
+
+                $scope.tradingViewChartName = "L-ETF Discrepancy 1";
+                $scope.ProcessStrategyResult(data);
+                
+
+                //alert("StartBacktest_LEtfDistcrepancy() : " + data);
 
                 //var debugInfoForDelevopers = [];
                 //for (var i = 0; i < $scope.quotesDohlc.length; i++) {

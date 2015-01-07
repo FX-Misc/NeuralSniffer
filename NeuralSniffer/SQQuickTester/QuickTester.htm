@@ -4,85 +4,206 @@
 <!--However, XHTML never really caught on. Professional developers (especially those who were integrating programming languages like JavaScript and PHP into their web projects) loved XHTML Strict but it was a little too unforgiving for most developers, and the vast majority of pages never bothered to validate to the new standards. When the time came to devise a new standard, the W3C (World Wide Web Consortium) decided to support HTML5 rather than XHTML 2.-->
 
 <html ng-app="QuickTesterApp">
-  <!-- Adding the ng-app declaration to initialize AngularJS -->
+<!-- Adding the ng-app declaration to initialize AngularJS -->
 
 <head>
     <title>SQ QuickTester</title>
-    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.8/angular.min.js"></script>
+
+    <!--If you include JQuery before Angular, then angular will start using JQuery for DOM manipulation. But, including JQuery is upto you. You dont necessarily have to.-->
     <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+    <script type="text/javascript" src="//ajax.googleapis.com/ajax/libs/angularjs/1.3.8/angular.min.js"></script>
 
+    <script type="text/javascript" src="../Utils/Utils.js"></script>
+    <script type="text/javascript" src="../charting_library/charting_library.min-deobfuscated.js"></script> <!--// deobfuscated is needed for postMessage "loadRangeAgy"-->
+    <script type="text/javascript" src="datafeedQuickTesterChart.js"></script>
 
+    <script type="text/javascript" src="Strategies/TotM/TotM.js"></script>
+    <script type="text/javascript" src="Strategies/VIX/VXX_SPY_Controversial.js"></script>
     <script type="text/javascript" src="Strategies/L-ETF-Discrepancy/L-ETF-Discrepancy.js"></script>
     <script type="text/javascript" src="QuickTester.js"></script>
+
+    <script>onHeadProcessing();</script>
 
     <link href="../css/QuickTester.css" rel="stylesheet" />
 </head>
 <body id="idBodyAngularController" ng-controller="QuickTesterCtrl">
 
-    <div class="divTitle" >SQ QuickTester</div> <br>
-
-    
-
-
+    <div class="divTitle">SQ Strategy QuickTester ({{versionShortInfo}}) <span class="spanTitleSuperscript">*RealTime</span> </div>
+    <div style="width: 100%; height: 2px; background: #ffffff; overflow: hidden;"></div>
     <!--//http://jsfiddle.net/rabidGadfly/f8ea6/ this was a good Angular menu, but submenus was not hovering-->
     <!--// jquery horizontal menu is from here (I gave up finding Angular one): http://runnable.com/UdQdRyHniSpKAAXx/create-a-horizontal-navigation-menu-bar-using-jquery-->
     <!-- Use this navigation div as your menu bar div -->
     <div class="navigation">
-        <ul class="nav">
-            <li>
-                <a href="#" onclick="MenuItemStartBacktest()">Start backtest!</a>
+        <ul class="sqMenuNav">
+            <li class="sqMenuItemLevel0" id="idStartBacktestButtonLi">
+                <a class="startBacktestButton" id="idStartBacktestButtonA" href="" onclick="MenuItemStartBacktestClicked()">Start Backtest!</a>
             </li>
-            <li>
-                <a href="#">Strategies</a>
-                <ul>
-                    <li><a href="#" onclick="Menu21ItemCallback()">L-ETF Discrepancy 1</a></li>
-                    <li><a href="#">L-ETF Discrepancy 2</a></li>
-                    <li><a href="#">L-ETF Discrepancy 3</a></li>
+            <li class="sqMenuItemLevel0">
+                <a href="">Tools</a>
+                <ul class="sqMenuBarLevel1">
+                    <li><a href="">Copy PV to clipboard</a></li>
+                    <li><a href="" onclick="MenuItemVersionInfoClicked()">Version info</a></li>
                 </ul>
             </li>
-            <li>
-                <a href="#">Tools</a>
-                <ul>
-                    <li><a href="#">Copy PV to clipboard</a></li>
-                    <li><a href="#">Version info</a></li>
+            <li class="sqMenuItemLevel0">
+                <a href="">Debug</a>
+                <ul class="sqMenuBarLevel1">
+                    <li><a href="">See debug info 1</a></li>
+                    <li><a href="">See debug info 2</a></li>
                 </ul>
             </li>
-            <li>
-                <a href="#">Debug</a>
-                <ul>
-                    <li><a href="#">See debug info 1</a></li>
-                    <li><a href="#">See debug info 2</a></li>
+            <li class="sqMenuItemLevel0">
+                <a href="">Strategies</a>
+                <ul class="sqMenuBarLevel1">
+                    <li class="sqMenuItemLevel1">
+                        <a href="">Seasonalities</a>
+                        <ul class="sqMenuBarLevel2">
+                            <li><a id="idMenuItemTotM" href="" onclick="MenuItemStrategyClick(this)">Turn of the Month</a></li>
+                        </ul>
+                    </li>
+                    <li class="sqMenuItemLevel1">
+                        <a href="">VIX</a>
+                        <ul class="sqMenuBarLevel2">
+                            <li><a id="idMenuItemVXX_SPY_Controversial" href="" onclick="MenuItemStrategyClick(this)">VXX-SPY Controversial</a></li>
+                        </ul>
+                    </li>
+                    <li class="sqMenuItemLevel1">
+                        <a href="">L-ETF</a>
+                        <ul class="sqMenuBarLevel2">
+                            <li><a id="idMenuItemLETFDiscrepancy1" href="" onclick="MenuItemStrategyClick(this)">L-ETF Discrepancy 1</a></li>
+                            <li><a id="idMenuItemLETFDiscrepancy2" href="" onclick="MenuItemStrategyClick(this)">L-ETF Discrepancy 2</a></li>
+                            <li><a id="idMenuItemLETFDiscrepancy3" href="" onclick="MenuItemStrategyClick(this)">L-ETF Discrepancy 3</a></li>
+                        </ul>
+                    </li>
                 </ul>
             </li>
-            
         </ul>
-    </div><br><br>
-
-
-
-    <!--// fast SSI, Server Side Include works in Azure website from 2014: http://azure.microsoft.com/blog/2014/03/26/server-side-includes-ssi-in-windows-azure-web-sites-waws/-->
+    </div>
+    <br>
+    <div style="width: 100%; height: 1px; background: #808080; overflow: hidden;"></div>
+    <span>SelectedStrategy:</span>
+    <span class="spanStrategyDescription"> {{selectedStrategyName}} </span>
+    <a id="googleHelpHref" target="_blank" ng-href="{{strategyGoogleDocHelpUri}}" href=""> Help</a>
+    <span class="spanTitleSuperscript">(GoogleDoc)</span>
+    <div style="height: 1px; background: #808080; overflow: hidden;"></div>
+    <!--<div style="width: 50%; height: 1px; background: #ffffff; overflow: hidden;"></div>--> <!--extra 1 pixel line, so that the input rows doesn't touch each other -->    <!--// fast SSI, Server Side Include works in Azure website from 2014: http://azure.microsoft.com/blog/2014/03/26/server-side-includes-ssi-in-windows-azure-web-sites-waws/-->
+    <!--#include virtual="/SQQuickTester/Strategies/TotM/TotM.htm"-->
+    <!--#include virtual="/SQQuickTester/Strategies/VIX/VXX_SPY_Controversial.htm"-->
     <!--#include virtual="/SQQuickTester/Strategies/L-ETF-Discrepancy/L-ETF-DiscrepancyInput.htm"-->
+    <!--// How to Eliminate Whitespace around Server Side Includes when Pages are UTF-8 Encoded? http://stackoverflow.com/questions/7196993/how-to-eliminate-whitespace-around-server-side-includes-when-pages-are-utf-8-enc-->
+    <!--<div style="width: 50%; height: 1px; background: #ffffff; overflow: hidden;"></div>--> <!--extra 1 pixel line, so that the input rows doesn't touch each other -->
 
+
+
+    <div style="width: 100%; height: 2px; background: #ffffff; overflow: hidden;"></div>
+    <div style="width: 100%; height: 1px; background: #808080; overflow: hidden;"></div>
+    <!--Ideas what to put here as Statistics come from Portfolio123 http://imarketsignals.com/2015/best8-sp500-min-volatility-large-cap-portfolio-management-system/-->
+    <table id="statisticsTable">
+        <colgroup>
+            <col class="column1" />
+            <col class="column2" />
+            <col class="column3" />
+            <col class="column3" />
+        </colgroup>
+        <thead>
+        </thead>
+        <tbody>
+            <tr class='even'>
+                <td id="idTdGeneral">General:</td>
+                <td>Start Date: <span> {{startDateStr}} </span></td>
+                <td id="idTdRebalanceFrequency">Rebalance Frequency: <span> {{rebalanceFrequencyStr}} </span></td>
+                <td>Benchmark: <span> {{benchmarkStr}} </span></td>
+            </tr>
+        </tbody>
+    </table>
+    <span id="idSpanStatistics">Statistics (as of {{endDateStr}}):</span>
+    <br>
+    <table id="statisticsTable">
+        <colgroup>
+            <col class="column1" />
+            <col class="column2" />
+            <col class="column3" />
+        </colgroup>
+        <thead>
+        </thead>
+        <tbody>
+            <tr class='even'>
+                <td>PV Start Value: <span> ${{pvStartValue | number:2}} </span></td>
+                <td>PV Final Value: <span> ${{pvEndValue | number:2}} </span></td>
+                <td>Total Return: <span> {{100*totalGainPct | number:2}}% </span></td>
+            </tr>
+            <tr>
+                <td id="tdCagr">CAGR: <span> {{100*cagr | number:2}}% </span></td>
+                <td>Annualized StDev: <span> {{100*annualizedStDev | number:2}}% </span></td>
+                <td id="tdSharpe">Sharpe: <span> {{sharpeRatio | number:2}} </span></td>
+            </tr>
+            <tr class='even'>
+                <td>Max Drawdown: <span> {{100*maxDD | number:2}}% </span></td>
+                <td>Max.TradingDays in Drawdown: <span> {{maxTradingDaysInDD}} </span></td>
+                <td></td>
+            </tr>
+            <tr>
+                <td>Winners: <span> {{winnersStr}} </span></td>
+                <td>Losers: <span> {{losersStr}} </span></td>
+                <td></td>
+            </tr>
+            <tr class='even'>
+                <td>Benchmark CAGR: <span> {{100*benchmarkCagr | number:2}}% </span></td>
+                <td>Benchmark Max Drawdown: <span> {{100*benchmarkMaxDD | number:2}}% </span></td>
+                <td>Correlation with Benchmark: <span> {{benchmarkCorrelation | number:2}}</span></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <br />
+    Note from Strategy:
+    <span> {{noteFromStrategy}} </span>
+    <br>
 
     <div style="width: 100%; height: 1px; background: #808080; overflow: hidden;"></div>
-    Statistics:<br>
-    Start Value:<br>
-    Final Value:<br>
-    Total Gain%:<br>
-    CAGR:<br>
-    Annualized StDev:<br>
-    Sharpe:<br>
-    Max Drawdown:<br>
-    Max.Days in Drawdown:<br>
-
-    <div style="width: 100%; height: 1px; background: #808080; overflow: hidden;"></div>
-    Chart
-
+    <div id="tv_chart_container"></div>
+    <br>
+    <span id="idSpanStatistics">Holdings (as of {{endDateStr}}):</span>
+    <br>
+    <table id="statisticsTable">
+        <colgroup>
+            <col class="column1" />
+            <col class="column2" />
+            <col class="column3" />
+        </colgroup>
+        <thead>
+        </thead>
+        <tbody>
+            <tr class='even'>
+                <td>Cash: <span> ${{pvCash | number:2}} </span></td>
+                <td>Number of positions: <span> {{nPositions}} </span></td>
+            </tr>
+        </tbody>
+    </table>
+    Holdings List:
+    <span> {{holdingsListStr}} </span>
 
     <br><br>
-    <br><br>
+    ErrorMessage:
+    <span> {{errorMessage}} </span>
+    <br>
+    DebugMessage:
+    <span> {{debugMessage}} </span>
+    <br>
+    Profiling:
+    <span>JS BacktestCallback: {{profilingBacktestCallbackMSec | number}}ms, BacktestAtChartReadyStart(chart removed/created): {{profilingBacktestAtChartReadyStartMSec | number}}ms, BacktestAtChartReadyEnd(TimeFrame clicked): {{profilingBacktestAtChartReadyEndMSec | number}}ms </span>
+    <br>
+
+    <br>ChartDataInStr:
+    <pre>{{chartDataInStr}} </pre>
+    <br>
+
+    <br>
+    <br>
+    <br>
+    <br>
     <span>
-        {{tipToUser;}}
+        {{tipToUser}}
     </span>
 </body>
 </html>

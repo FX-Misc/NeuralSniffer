@@ -1,0 +1,20 @@
+<table id="inputTable" ng-show="selectedStrategyMenuItemId === 'idMenuItemVXX_SPY_Controversial'">
+    <colgroup>
+        <col class="column1" />
+        <col class="column2" />
+    </colgroup>
+    <thead>
+        <tr>
+            <th>SPY Min %Change</th>
+            <th>VXX Min %Change</th>
+            <th>VXX Long or Short <br /> after controversial days</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td><input type="text" ng-model="spyMinPctMove" style="width: 40px; padding: 2px; border: 1px solid #A0A0A0" />%</td>
+            <td><input type="text" ng-model="vxxMinPctMove" style="width: 40px; padding: 2px; border: 1px solid #A0A0A0" />%</td>
+            <td><select ng-model="selectedVXXLongOrShortTrade" ng-options="opt as opt for opt in vxxLongOrShortTrade" ng-change="vxxLongOrShortTradeChanged()"></select></td>
+        </tr>
+    </tbody>
+</table>

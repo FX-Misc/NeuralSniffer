@@ -1,0 +1,544 @@
+﻿<?xml version="1.0" encoding="utf-8"?><Database Name="HedgeQuant" Class="DBDataClassesDataContext" xmlns="http://schemas.microsoft.com/linqtosql/dbml/2007">
+  <Connection Mode="AppSettings" ConnectionString="Data Source=tcp:k6297l5iy9.database.windows.net;Initial Catalog=HedgeQuant;Integrated Security=False;User ID=HQServer@k6297l5iy9;Connect Timeout=600;Encrypt=True" SettingsObjectName="HQCommon.Properties.Settings" SettingsPropertyName="ServerHedgeQuantConnectionString" Provider="System.Data.SqlClient" />
+  <Table Name="dbo.IbdGrade" Member="IbdGrades">
+    <Type Name="IbdGrade">
+      <Column Name="Type" Type="System.Byte" DbType="TinyInt NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="StockID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Date" Type="System.DateTime" DbType="SmallDateTime NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Value" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+      <Association Name="Stock_IbdGrade" Member="Stock" ThisKey="StockID" OtherKey="ID" Type="Stock" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.ZacksGrade" Member="ZacksGrades">
+    <Type Name="ZacksGrade">
+      <Column Name="Type" Type="System.Byte" DbType="TinyInt NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="StockID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Date" Type="System.DateTime" DbType="SmallDateTime NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Value" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+      <Association Name="Stock_ZacksGrade" Member="Stock" ThisKey="StockID" OtherKey="ID" Type="Stock" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.HistoricalStringItem" Member="HistoricalStringItems">
+    <Type Name="HistoricalStringItem">
+      <Column Name="TypeID" Type="System.Byte" DbType="TinyInt NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="SubTableID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Date" Type="System.DateTime" DbType="SmallDateTime NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="StringData" Type="System.String" DbType="NVarChar(1024) NOT NULL" CanBeNull="false" />
+    </Type>
+  </Table>
+  <Table Name="dbo.HistoricalIntItem" Member="HistoricalIntItems">
+    <Type Name="HistoricalIntItem">
+      <Column Name="TypeID" Type="System.Byte" DbType="TinyInt NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="SubTableID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Date" Type="System.DateTime" DbType="SmallDateTime NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="IntData" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+    </Type>
+  </Table>
+  <Table Name="dbo.NavellierStockGrade" Member="NavellierStockGrades">
+    <Type Name="NavellierStockGrade">
+      <Column Name="Date" Type="System.DateTime" DbType="SmallDateTime NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="StockID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Total" Type="System.Char" DbType="Char(1) NOT NULL" CanBeNull="false" />
+      <Column Name="ProprietaryQuantitative" Type="System.Char" DbType="Char(1) NOT NULL" CanBeNull="false" />
+      <Column Name="OverallFundamental" Type="System.Char" DbType="Char(1) NOT NULL" CanBeNull="false" />
+      <Column Name="SalesGrowth" Type="System.Char" DbType="Char(1) NOT NULL" CanBeNull="false" />
+      <Column Name="OperatingMarginGrowth" Type="System.Char" DbType="Char(1) NOT NULL" CanBeNull="false" />
+      <Column Name="EarningsGrowth" Type="System.Char" DbType="Char(1) NOT NULL" CanBeNull="false" />
+      <Column Name="EarningsRevisions" Type="System.Char" DbType="Char(1) NOT NULL" CanBeNull="false" />
+      <Column Name="EarningsSurprise" Type="System.Char" DbType="Char(1) NOT NULL" CanBeNull="false" />
+      <Column Name="EarningsMomentum" Type="System.Char" DbType="Char(1) NOT NULL" CanBeNull="false" />
+      <Column Name="ROE" Type="System.Char" DbType="Char(1) NOT NULL" CanBeNull="false" />
+      <Column Name="FreeCashFlow" Type="System.Char" DbType="Char(1) NOT NULL" CanBeNull="false" />
+      <Association Name="Stock_NavellierStockGrade" Member="Stock" ThisKey="StockID" OtherKey="ID" Type="Stock" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.FoolSecurityRate" Member="FoolSecurityRates">
+    <Type Name="FoolSecurityRate">
+      <Column Name="StockID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Date" Type="System.DateTime" DbType="SmallDateTime NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Rate" Type="System.Byte" DbType="TinyInt" CanBeNull="true" />
+      <Column Name="Bulls" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="Bears" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Association Name="Stock_FoolSecurityRate" Member="Stock" ThisKey="StockID" OtherKey="ID" Type="Stock" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.PortfolioItem" Member="PortfolioItems">
+    <Type Name="PortfolioItem">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="PortfolioID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="TransactionType" Type="System.Byte" DbType="TinyInt" CanBeNull="true" />
+      <Column Name="AssetTypeID" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+      <Column Name="AssetSubTableID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Volume" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="Price" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="Date" Type="System.DateTime" DbType="SmallDateTime NOT NULL" CanBeNull="false" />
+      <Column Name="Note" Type="System.String" DbType="VarChar(1024)" CanBeNull="true" />
+      <Association Name="FSPortfolio_PortfolioItem" Member="FSPortfolio" ThisKey="PortfolioID" OtherKey="FileSystemItemID" Type="FSPortfolio" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Sector_Sector_Relation" Member="Sector_Sector_Relations">
+    <Type Name="Sector_Sector_Relation">
+      <Column Name="SectorID1" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="SectorID2" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Association Name="Sector_Sector_Sector_Relation" Member="Sector" ThisKey="SectorID1" OtherKey="ID" Type="Sector" IsForeignKey="true" />
+      <Association Name="Sector_Sector_Sector_Relation1" Member="Sector1" ThisKey="SectorID2" OtherKey="ID" Type="Sector" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Sector" Member="Sectors">
+    <Type Name="Sector">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="Name" Type="System.String" DbType="NVarChar(128) NOT NULL" CanBeNull="false" />
+      <Column Name="Type" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+      <Association Name="Sector_Sector_Sector_Relation" Member="Sector_Sector_Relations" ThisKey="ID" OtherKey="SectorID1" Type="Sector_Sector_Relation" />
+      <Association Name="Sector_Sector_Sector_Relation1" Member="Sector_Sector_Relations1" ThisKey="ID" OtherKey="SectorID2" Type="Sector_Sector_Relation" />
+      <Association Name="Sector_Company_Sector_Relation" Member="Company_Sector_Relations" ThisKey="ID" OtherKey="SectorID" Type="Company_Sector_Relation" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Company_Sector_Relation" Member="Company_Sector_Relations">
+    <Type Name="Company_Sector_Relation">
+      <Column Name="CompanyID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="SectorID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Association Name="Sector_Company_Sector_Relation" Member="Sector" ThisKey="SectorID" OtherKey="ID" Type="Sector" IsForeignKey="true" />
+      <Association Name="Company_Company_Sector_Relation" Member="Company" ThisKey="CompanyID" OtherKey="ID" Type="Company" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.StockSplitDividend" Member="StockSplitDividends">
+    <Type Name="StockSplitDividend">
+      <Column Name="StockID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Date" Type="System.DateTime" DbType="SmallDateTime NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="IsSplit" Type="System.Boolean" DbType="Bit NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="DividendOrPrevClosePrice" Type="System.Single" DbType="Real NOT NULL" CanBeNull="false" />
+      <Column Name="OldVolume" Type="System.Int16" DbType="SmallInt" CanBeNull="true" />
+      <Column Name="NewVolume" Type="System.Int16" DbType="SmallInt" CanBeNull="true" />
+      <Association Name="Stock_StockSplitDividend" Member="Stock" ThisKey="StockID" OtherKey="ID" Type="Stock" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.VectorVestSignal" Member="VectorVestSignals">
+    <Type Name="VectorVestSignal">
+      <Column Name="Date" Type="System.DateTime" DbType="Date NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Buys" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Sells" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Holds" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="VVCompositePrice" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
+      <Column Name="VVCompositeRelativeTiming" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
+      <Column Name="MarketTimingIndicator" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
+      <Column Name="ColorGuardVVCPrice" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+      <Column Name="ColorGuardVVCRelativeTiming" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+      <Column Name="ColorGuardBuySellRatio" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+    </Type>
+  </Table>
+  <Table Name="dbo.StockOptionQuote" Member="StockOptionQuotes">
+    <Type Name="StockOptionQuote">
+      <Column Name="StockOptionID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Date" Type="System.DateTime" DbType="Date NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="AskPrice" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="BidPrice" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="LastPrice" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="Volume" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="OpenInterest" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Association Name="StockOption_StockOptionQuote" Member="StockOption" ThisKey="StockOptionID" OtherKey="ID" Type="StockOption" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.StockOption" Member="StockOptions">
+    <Type Name="StockOption">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="UnderlyingStockID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Flags" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+      <Column Name="ExpirationDate" Type="System.DateTime" DbType="SmallDateTime NOT NULL" CanBeNull="false" />
+      <Column Name="StrikePrice" Type="System.Single" DbType="Real NOT NULL" CanBeNull="false" />
+      <Association Name="StockOption_StockOptionQuote" Member="StockOptionQuotes" ThisKey="ID" OtherKey="StockOptionID" Type="StockOptionQuote" />
+      <Association Name="Stock_StockOption" Member="Stock" ThisKey="UnderlyingStockID" OtherKey="ID" Type="Stock" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.TimingCubeMarketSignal" Member="TimingCubeMarketSignals">
+    <Type Name="TimingCubeMarketSignal">
+      <Column Name="Date" Type="System.DateTime" DbType="SmallDateTime NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Signal" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+    </Type>
+  </Table>
+  <Table Name="dbo.FinancialData" Member="FinancialDatas">
+    <Type Name="FinancialData">
+      <Column Name="TypeID" Type="System.Byte" DbType="TinyInt NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="CompanyID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Date" Type="System.DateTime" DbType="SmallDateTime NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="PeriodDays" Type="System.Int16" DbType="SmallInt NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="CurrencyID" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+      <Column Name="Value" Type="System.Single" DbType="Real NOT NULL" CanBeNull="false" />
+      <Association Name="Company_FinancialData" Member="Company" ThisKey="CompanyID" OtherKey="ID" Type="Company" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.SeasonalEdge" Member="SeasonalEdges">
+    <Type Name="SeasonalEdge">
+      <Column Name="StockID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Date" Type="System.DateTime" DbType="SmallDateTime NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="EdgeTradingDays" Type="System.Int16" DbType="SmallInt NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="EdgeIndex" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+      <Column Name="EdgePeak" Type="System.Single" DbType="Real NOT NULL" CanBeNull="false" />
+      <Column Name="EdgeSum" Type="System.Single" DbType="Real NOT NULL" CanBeNull="false" />
+      <Column Name="PercentReturn" Type="System.Single" DbType="Real NOT NULL" CanBeNull="false" />
+      <Column Name="UsdVolumePercentileGrade" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+      <Column Name="TotalOccurences" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+      <Column Name="EdgeOccurences" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+      <Association Name="Stock_SeasonalEdge" Member="Stock" ThisKey="StockID" OtherKey="ID" Type="Stock" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.StockScouterGroupFavor" Member="StockScouterGroupFavors">
+    <Type Name="StockScouterGroupFavor">
+      <Column Name="GroupID" Type="System.Byte" DbType="TinyInt NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Date" Type="System.DateTime" DbType="SmallDateTime NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Value" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+    </Type>
+  </Table>
+  <Table Name="dbo.FileSystemItem" Member="FileSystemItems">
+    <Type Name="FileSystemItem">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="Name" Type="System.String" DbType="NVarChar(1024) NOT NULL" CanBeNull="false" />
+      <Column Name="UserID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="TypeID" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+      <Column Name="ParentFolderID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="LastWriteTime" Type="System.DateTime" DbType="DateTime NOT NULL" CanBeNull="false" />
+      <Column Name="Note" Type="System.String" DbType="VarChar(1024)" CanBeNull="true" />
+      <Association Name="FileSystemItem_QuickfolioItem" Member="QuickfolioItems" ThisKey="ID" OtherKey="QuickfolioID" Type="QuickfolioItem" />
+      <Association Name="HQUser_FileSystemItem" Member="HQUser" ThisKey="UserID" OtherKey="ID" Type="HQUser" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.FSPortfolio" Member="FSPortfolios">
+    <Type Name="FSPortfolio">
+      <Column Name="FileSystemItemID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Flags" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+      <Association Name="FSPortfolio_PortfolioItem" Member="PortfolioItems" ThisKey="FileSystemItemID" OtherKey="PortfolioID" Type="PortfolioItem" />
+    </Type>
+  </Table>
+  <Table Name="dbo.StockScouterGrade" Member="StockScouterGrades">
+    <Type Name="StockScouterGrade">
+      <Column Name="StockID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Date" Type="System.DateTime" DbType="SmallDateTime NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Type" Type="System.Byte" DbType="TinyInt NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Value" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+      <Association Name="Stock_StockScouterGrade" Member="Stock" ThisKey="StockID" OtherKey="ID" Type="Stock" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Company" Member="Companies">
+    <Type Name="Company">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="Name" Type="System.String" DbType="NVarChar(128)" CanBeNull="true" />
+      <Column Name="Description" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="WebSite" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="BaseCurrencyID" Type="System.Int16" DbType="SmallInt" CanBeNull="true" />
+      <Column Name="BaseCountryID" Type="System.Int16" DbType="SmallInt" CanBeNull="true" />
+      <Association Name="Company_Company_Sector_Relation" Member="Company_Sector_Relations" ThisKey="ID" OtherKey="CompanyID" Type="Company_Sector_Relation" />
+      <Association Name="Company_FinancialData" Member="FinancialDatas" ThisKey="ID" OtherKey="CompanyID" Type="FinancialData" />
+      <Association Name="Company_Stock" Member="Stocks" ThisKey="ID" OtherKey="CompanyID" Type="Stock" />
+      <Association Name="Currency_Company" Member="Currency" ThisKey="BaseCurrencyID" OtherKey="ID" Type="Currency" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.ChinaAnalystGrade" Member="ChinaAnalystGrades">
+    <Type Name="ChinaAnalystGrade">
+      <Column Name="StockID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Date" Type="System.DateTime" DbType="SmallDateTime NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Value" Type="System.Single" DbType="Real NOT NULL" CanBeNull="false" />
+      <Association Name="Stock_ChinaAnalystGrade" Member="Stock" ThisKey="StockID" OtherKey="ID" Type="Stock" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.HistoricalDoubleItem" Member="HistoricalDoubleItems">
+    <Type Name="HistoricalDoubleItem">
+      <Column Name="TypeID" Type="System.Byte" DbType="TinyInt NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="SubTableID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Date" Type="System.DateTime" DbType="SmallDateTime NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="DoubleData" Type="System.Double" DbType="Float NOT NULL" CanBeNull="false" />
+    </Type>
+  </Table>
+  <Table Name="dbo.GeoInvestingGrade" Member="GeoInvestingGrades">
+    <Type Name="GeoInvestingGrade">
+      <Column Name="Type" Type="System.Byte" DbType="TinyInt NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="StockID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Date" Type="System.DateTime" DbType="SmallDateTime NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Value" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+      <Association Name="Stock_GeoInvestingGrade" Member="Stock" ThisKey="StockID" OtherKey="ID" Type="Stock" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.StockQuote" Member="StockQuotes">
+    <Type Name="StockQuote">
+      <Column Name="StockID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Date" Type="System.DateTime" DbType="SmallDateTime NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="OpenPrice" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="ClosePrice" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="HighPrice" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="LowPrice" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="Volume" Type="System.Int64" DbType="BigInt" CanBeNull="true" />
+      <Association Name="Stock_StockQuote" Member="Stock" ThisKey="StockID" OtherKey="ID" Type="Stock" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.EarningsEstimate" Member="EarningsEstimates">
+    <Type Name="EarningsEstimate">
+      <Column Name="Flags" Type="System.Byte" DbType="TinyInt NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="StockID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="TypeID" Type="System.Byte" DbType="TinyInt NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="ReleaseDate" Type="System.DateTime" DbType="Date NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="EstimationDate" Type="System.DateTime" DbType="Date NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="EstimationValue" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Association Name="Stock_EarningsEstimate" Member="Stock" ThisKey="StockID" OtherKey="ID" Type="Stock" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.QuickfolioItem" Member="QuickfolioItems">
+    <Type Name="QuickfolioItem">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="QuickfolioID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="AssetTypeID" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+      <Column Name="AssetSubTableID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Association Name="FileSystemItem_QuickfolioItem" Member="FileSystemItem" ThisKey="QuickfolioID" OtherKey="ID" Type="FileSystemItem" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Currency" Member="Currencies">
+    <Type Name="Currency">
+      <Column Name="ID" Type="System.Int16" DbType="SmallInt NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Sign" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="IsoCode" Type="System.String" DbType="NVarChar(3)" CanBeNull="true" />
+      <Column Name="Description" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Association Name="Currency_Company" Member="Companies" ThisKey="ID" OtherKey="BaseCurrencyID" Type="Company" />
+      <Association Name="Currency_Future" Member="Futures" ThisKey="ID" OtherKey="CurrencyID" Type="Future" />
+      <Association Name="Currency_Stock" Member="Stocks" ThisKey="ID" OtherKey="CurrencyID" Type="Stock" />
+    </Type>
+  </Table>
+  <Table Name="dbo.HQUser" Member="HQUsers">
+    <Type Name="HQUser">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="UserName" Type="System.String" DbType="NVarChar(50)" CanBeNull="true" />
+      <Column Name="Password" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="FirstName" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="LastName" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Association Name="HQUser_FileSystemItem" Member="FileSystemItems" ThisKey="ID" OtherKey="UserID" Type="FileSystemItem" />
+    </Type>
+  </Table>
+  <Table Name="dbo.HQUserGroup" Member="HQUserGroups">
+    <Type Name="HQUserGroup">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Name" Type="System.String" DbType="NVarChar(225) NOT NULL" CanBeNull="false" />
+    </Type>
+  </Table>
+  <Table Name="dbo.HQUser_HQUserGroup_Relation" Member="HQUser_HQUserGroup_Relations">
+    <Type Name="HQUser_HQUserGroup_Relation">
+      <Column Name="UserID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="UserGroupID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+    </Type>
+  </Table>
+  <Table Name="dbo.VectorVestMarketSignal" Member="VectorVestMarketSignals">
+    <Type Name="VectorVestMarketSignal">
+      <Column Name="Date" Type="System.DateTime" DbType="SmallDateTime NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Signal" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+    </Type>
+  </Table>
+  <Table Name="dbo.MarketHoliday" Member="MarketHolidays">
+    <Type Name="MarketHoliday">
+      <Column Name="CountryID" Type="System.Byte" DbType="TinyInt NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Date" Type="System.DateTime" DbType="SmallDateTime NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+    </Type>
+  </Table>
+  <Table Name="dbo.NewsItem" Member="NewsItems">
+    <Type Name="NewsItem">
+      <Column Name="TypeID" Type="System.Byte" DbType="TinyInt NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="SubTableID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="NewsCreationDateTimeUtc" Type="System.DateTime" DbType="SmallDateTime NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="DbInsertionDateTimeUtc" Type="System.DateTime" DbType="SmallDateTime NOT NULL" CanBeNull="false" />
+      <Column Name="Name" Type="System.String" DbType="NVarChar(256)" CanBeNull="true" />
+      <Column Name="Url" Type="System.String" DbType="NVarChar(1024)" CanBeNull="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.PowerEvent" Member="PowerEvents">
+    <Type Name="PowerEvent">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="UserID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="Name" Type="System.String" DbType="NVarChar(256) NOT NULL" CanBeNull="false" />
+      <Column Name="EventStartDateTimeUtc" Type="System.DateTime" DbType="SmallDateTime NOT NULL" CanBeNull="false" />
+      <Column Name="Urls" Type="System.String" DbType="NVarChar(2048)" CanBeNull="true" />
+      <Column Name="InfluencedQuickfolioID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="InfluenceStartDateTimeUtc" Type="System.DateTime" DbType="SmallDateTime" CanBeNull="true" />
+      <Column Name="InfluenceEndDateTimeUtc" Type="System.DateTime" DbType="SmallDateTime" CanBeNull="true" />
+      <Column Name="EventEndDateTimeUtc" Type="System.DateTime" DbType="SmallDateTime" CanBeNull="true" />
+      <Association Name="PowerEvent_Tag_PowerEvent_Relation" Member="Tag_PowerEvent_Relations" ThisKey="ID" OtherKey="PowerEventID" Type="Tag_PowerEvent_Relation" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Tag_PowerEvent_Relation" Member="Tag_PowerEvent_Relations">
+    <Type Name="Tag_PowerEvent_Relation">
+      <Column Name="TagID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="PowerEventID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Association Name="PowerEvent_Tag_PowerEvent_Relation" Member="PowerEvent" ThisKey="PowerEventID" OtherKey="ID" Type="PowerEvent" IsForeignKey="true" />
+      <Association Name="Tag_Tag_PowerEvent_Relation" Member="Tag" ThisKey="TagID" OtherKey="ID" Type="Tag" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Tag" Member="Tags">
+    <Type Name="Tag">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="Name" Type="System.String" DbType="NVarChar(MAX) NOT NULL" CanBeNull="false" />
+      <Association Name="Tag_Tag_PowerEvent_Relation" Member="Tag_PowerEvent_Relations" ThisKey="ID" OtherKey="TagID" Type="Tag_PowerEvent_Relation" />
+    </Type>
+  </Table>
+  <Table Name="dbo.StockIndex" Member="StockIndexes">
+    <Type Name="StockIndex">
+      <Column Name="ID" Type="System.Int16" DbType="SmallInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="Name" Type="System.String" DbType="NVarChar(MAX) NOT NULL" CanBeNull="false" />
+      <Column Name="Ticker" Type="System.String" DbType="NChar(10)" CanBeNull="true" />
+      <Column Name="Description" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="CurrencyID" Type="System.Int16" DbType="SmallInt" CanBeNull="true" />
+      <Association Name="StockIndex_StockIndexQuote" Member="StockIndexQuotes" ThisKey="ID" OtherKey="StockIndexID" Type="StockIndexQuote" />
+    </Type>
+  </Table>
+  <Table Name="dbo.StockIndexQuote" Member="StockIndexQuotes">
+    <Type Name="StockIndexQuote">
+      <Column Name="StockIndexID" Type="System.Int16" DbType="SmallInt NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Date" Type="System.DateTime" DbType="SmallDateTime NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="OpenPrice" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="ClosePrice" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="HighPrice" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="LowPrice" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="Volume" Type="System.Int64" DbType="BigInt" CanBeNull="true" />
+      <Association Name="StockIndex_StockIndexQuote" Member="StockIndex" ThisKey="StockIndexID" OtherKey="ID" Type="StockIndex" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.FuturesQuote" Member="FuturesQuotes">
+    <Type Name="FuturesQuote">
+      <Column Name="Date" Type="System.DateTime" DbType="Date NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="FuturesID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="OpenPrice" Type="System.Single" DbType="Real NOT NULL" CanBeNull="true" />
+      <Column Name="HighPrice" Type="System.Single" DbType="Real NOT NULL" CanBeNull="true" />
+      <Column Name="LowPrice" Type="System.Single" DbType="Real NOT NULL" CanBeNull="true" />
+      <Column Name="ClosePrice" Type="System.Single" DbType="Real NOT NULL" CanBeNull="true" />
+      <Column Name="SettlePrice" Type="System.Single" DbType="Real NOT NULL" CanBeNull="false" />
+      <Column Name="Volume" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="OpenInterest" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="EFP" Type="System.Int16" DbType="SmallInt NOT NULL" CanBeNull="false" />
+      <Association Name="Future_FuturesQuote" Member="Future" ThisKey="FuturesID" OtherKey="ID" Type="Future" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Futures" Member="Futures">
+    <Type Name="Future">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="UnderlyingAssetType" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+      <Column Name="UnderlyingSubTableID" Type="System.Int32" DbType="Int NOT NULL" CanBeNull="false" />
+      <Column Name="ExpirationDate" Type="System.DateTime" DbType="Date NOT NULL" CanBeNull="false" />
+      <Column Name="Multiplier" Type="System.Int16" DbType="SmallInt NOT NULL" CanBeNull="false" />
+      <Column Name="StockExchangeID" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+      <Column Name="CurrencyID" Type="System.Int16" DbType="SmallInt NOT NULL" CanBeNull="false" />
+      <Column Name="Ticker" Type="System.String" DbType="VarChar(10)" CanBeNull="true" />
+      <Association Name="Future_FuturesQuote" Member="FuturesQuotes" ThisKey="ID" OtherKey="FuturesID" Type="FuturesQuote" />
+      <Association Name="Currency_Future" Member="Currency" ThisKey="CurrencyID" OtherKey="ID" Type="Currency" IsForeignKey="true" />
+      <Association Name="StockExchange_Future" Member="StockExchange" ThisKey="StockExchangeID" OtherKey="ID" Type="StockExchange" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.StockExchange" Member="StockExchanges">
+    <Type Name="StockExchange">
+      <Column Name="ID" Type="System.Byte" DbType="TinyInt NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="Name" Type="System.String" DbType="VarChar(8) NOT NULL" CanBeNull="false" />
+      <Column Name="Description" Type="System.String" DbType="NVarChar(MAX)" CanBeNull="true" />
+      <Column Name="TimeZone" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+      <Column Name="CountryID" Type="System.Byte" DbType="TinyInt NOT NULL" CanBeNull="false" />
+      <Association Name="StockExchange_Future" Member="Futures" ThisKey="ID" OtherKey="StockExchangeID" Type="Future" />
+      <Association Name="StockExchange_Stock" Member="Stocks" ThisKey="ID" OtherKey="StockExchangeID" Type="Stock" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Stock" Member="Stocks">
+    <Type Name="Stock">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="CompanyID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="FundID" Type="System.Int32" DbType="Int" CanBeNull="true" />
+      <Column Name="ISIN" Type="System.String" DbType="VarChar(12)" CanBeNull="true" />
+      <Column Name="Ticker" Type="System.String" DbType="VarChar(20) NOT NULL" CanBeNull="false" />
+      <Column Name="IsAlive" Type="System.Boolean" DbType="Bit NOT NULL" CanBeNull="false" />
+      <Column Name="CurrencyID" Type="System.Int16" DbType="SmallInt" CanBeNull="true" />
+      <Column Name="StockExchangeID" Type="System.Byte" DbType="TinyInt" CanBeNull="true" />
+      <Column Name="Name" Type="System.String" DbType="NVarChar(128)" CanBeNull="true" />
+      <Association Name="Stock_IbdGrade" Member="IbdGrades" ThisKey="ID" OtherKey="StockID" Type="IbdGrade" />
+      <Association Name="Stock_ZacksGrade" Member="ZacksGrades" ThisKey="ID" OtherKey="StockID" Type="ZacksGrade" />
+      <Association Name="Stock_NavellierStockGrade" Member="NavellierStockGrades" ThisKey="ID" OtherKey="StockID" Type="NavellierStockGrade" />
+      <Association Name="Stock_FoolSecurityRate" Member="FoolSecurityRates" ThisKey="ID" OtherKey="StockID" Type="FoolSecurityRate" />
+      <Association Name="Stock_StockSplitDividend" Member="StockSplitDividends" ThisKey="ID" OtherKey="StockID" Type="StockSplitDividend" />
+      <Association Name="Stock_StockOption" Member="StockOptions" ThisKey="ID" OtherKey="UnderlyingStockID" Type="StockOption" />
+      <Association Name="Stock_SeasonalEdge" Member="SeasonalEdges" ThisKey="ID" OtherKey="StockID" Type="SeasonalEdge" />
+      <Association Name="Stock_StockScouterGrade" Member="StockScouterGrades" ThisKey="ID" OtherKey="StockID" Type="StockScouterGrade" />
+      <Association Name="Stock_ChinaAnalystGrade" Member="ChinaAnalystGrades" ThisKey="ID" OtherKey="StockID" Type="ChinaAnalystGrade" />
+      <Association Name="Stock_GeoInvestingGrade" Member="GeoInvestingGrades" ThisKey="ID" OtherKey="StockID" Type="GeoInvestingGrade" />
+      <Association Name="Stock_StockQuote" Member="StockQuotes" ThisKey="ID" OtherKey="StockID" Type="StockQuote" />
+      <Association Name="Stock_EarningsEstimate" Member="EarningsEstimates" ThisKey="ID" OtherKey="StockID" Type="EarningsEstimate" />
+      <Association Name="Stock_EarningsEventCalculatedIndicator" Member="EarningsEventCalculatedIndicators" ThisKey="ID" OtherKey="StockID" Type="EarningsEventCalculatedIndicator" />
+      <Association Name="Stock_Ipo" Member="Ipo" ThisKey="ID" OtherKey="StockID" Type="Ipo" Cardinality="One" />
+      <Association Name="Company_Stock" Member="Company" ThisKey="CompanyID" OtherKey="ID" Type="Company" IsForeignKey="true" />
+      <Association Name="Currency_Stock" Member="Currency" ThisKey="CurrencyID" OtherKey="ID" Type="Currency" IsForeignKey="true" />
+      <Association Name="StockExchange_Stock" Member="StockExchange" ThisKey="StockExchangeID" OtherKey="ID" Type="StockExchange" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.EarningsEventCalculatedIndicators" Member="EarningsEventCalculatedIndicators">
+    <Type Name="EarningsEventCalculatedIndicator">
+      <Column Name="EventDate" Type="System.DateTime" DbType="Date NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="StockID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="Timing" Type="System.Byte" DbType="TinyInt" CanBeNull="true" />
+      <Column Name="VirtualReleaseDate" Type="System.DateTime" DbType="Date" CanBeNull="true" />
+      <Column Name="MarketDayAfterTheEvent" Type="System.DateTime" DbType="Date" CanBeNull="true" />
+      <Column Name="EarningsEstimate" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="EarningsActual" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="RevenueEstimate" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="RevenueActual" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="Prev3MonthsVolumeAvg" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="SHIR" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="SHIRPercentileRanking" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="PE" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="PEPercentileRanking" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="SMA7" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="SMA7PercentileRanking" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="SMA2" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="SMA2PercentileRanking" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="RSI" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="RSIPercentileRanking" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="LCPS" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="LCPSPercentileRanking" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="PrevClosePrice" Type="System.Single" DbType="Real NOT NULL" CanBeNull="false" />
+      <Column Name="PostOpenPrice" Type="System.Single" DbType="Real NOT NULL" CanBeNull="false" />
+      <Column Name="PostClosePrice" Type="System.Single" DbType="Real NOT NULL" CanBeNull="false" />
+      <Column Name="PostHighPrice" Type="System.Single" DbType="Real NOT NULL" CanBeNull="false" />
+      <Column Name="PostLowPrice" Type="System.Single" DbType="Real NOT NULL" CanBeNull="false" />
+      <Column Name="SPYopenGap" Type="System.Single" DbType="Real NOT NULL" CanBeNull="false" />
+      <Column Name="RelOpenGap" Type="System.Single" DbType="Real NOT NULL" CanBeNull="false" />
+      <Column Name="EarningsActualPrevYear" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="RevenueActualPrevYear" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="NextDayOpenToClose" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="CloseToNextDayClose" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="VirtualReleaseDayOpenToClose" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="OpenGap" Type="System.Single" DbType="Real NOT NULL" IsDbGenerated="true" CanBeNull="false" UpdateCheck="Never" />
+      <Column Name="RevenuePerMC" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="IncomePerMC" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="CashPerMC" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="DeptPerMC" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="RevenuePerMCPercentileRanking" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="IncomePerMCPercentileRanking" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="CashPerMCPercentileRanking" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="DeptPerMCPercentileRanking" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="RevenuePerMCMainSectorRelative" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="IncomePerMCMainSectorRelative" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="CashPerMCMainSectorRelative" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="DeptPerMCMainSectorRelative" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="RevenuePerMCSubSectorRelative" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="IncomePerMCSubSectorRelative" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="CashPerMCSubSectorRelative" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="DeptPerMCSubSectorRelative" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Association Name="Stock_EarningsEventCalculatedIndicator" Member="Stock" ThisKey="StockID" OtherKey="ID" Type="Stock" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.Ipo" Member="Ipos">
+    <Type Name="Ipo">
+      <Column Name="StockID" Type="System.Int32" DbType="Int NOT NULL" IsPrimaryKey="true" CanBeNull="false" />
+      <Column Name="LeadUnderwriters" Type="System.String" DbType="VarChar(128)" CanBeNull="true" />
+      <Column Name="Underwriters" Type="System.String" DbType="VarChar(128)" CanBeNull="true" />
+      <Column Name="IPODate" Type="System.DateTime" DbType="Date NOT NULL" CanBeNull="false" />
+      <Column Name="QuietPeriodEndDate" Type="System.DateTime" DbType="Date" CanBeNull="true" />
+      <Column Name="LockupPeriodEndDate" Type="System.DateTime" DbType="Date" CanBeNull="true" />
+      <Column Name="InitialFloat" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Column Name="InitialRevenue" Type="System.Single" DbType="Real" CanBeNull="true" />
+      <Association Name="Stock_Ipo" Member="Stock" ThisKey="StockID" OtherKey="ID" Type="Stock" IsForeignKey="true" />
+    </Type>
+  </Table>
+  <Table Name="dbo.IpoUnderwriter" Member="IpoUnderwriters">
+    <Type Name="IpoUnderwriter">
+      <Column Name="ID" Type="System.Int32" DbType="Int NOT NULL IDENTITY" IsPrimaryKey="true" IsDbGenerated="true" CanBeNull="false" />
+      <Column Name="Name" Type="System.String" DbType="VarChar(128)" CanBeNull="true" />
+    </Type>
+  </Table>
+</Database>

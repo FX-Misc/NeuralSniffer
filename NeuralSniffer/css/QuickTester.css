@@ -2,25 +2,56 @@
 
 
 
-
 body {
     color: #333;
     /*text-align:center;*/
     font-family: arial;
-    font-size: 10pt;
+    font-size: medium;      /* choose Base to Medium*/
 }
 
 
 .divTitle {
     width: 60%;
+
+    padding-top: 0px;
+    padding-bottom: 0px;
+
     /*height: 200px;*/
-    margin: 0 auto;
+    margin: 0 0 0 120px;
     /*background-color: #FFA500;*/
-    font-size: 16pt;
+    font-size: 130%; /*Sets the font-size to a percent of  the parent element's font size*/
     font-weight: bold;
 }
 
+.spanTitleSuperscript {
+    width: 20%;
+    /*height: 200px;*/
+    margin: 0 auto;
+    /*background-color: #FFA500;*/
+    font-size: x-small;
+    font-weight: normal;
+    vertical-align:super;
+}
 
+.spanStrategyDescription {
+    width: 20%;
+    /*height: 200px;*/
+    margin: 0 auto;
+    background-color: #BED5FE;
+    font-weight: bold;
+    padding-left: 5px;
+    padding-right: 5px;
+
+    /*background:    -moz-linear-gradient(#648880, #293f50);*/  /* for Chrome */
+    background:         linear-gradient(#9EB5DE, #ffffff);  /* for IE and for Chrome */
+
+}
+
+
+#googleHelpHref {
+    padding-left: 5px;
+    padding-right: 2px;
+}
 
 
 
@@ -35,13 +66,13 @@ body {
 
 
 /*=== Navigation MainMenu ===*/
-.nav {
+.sqMenuNav {
     margin: 0px;
     padding: 0px;
     list-style: none;
 }
 
-.nav li {
+.sqMenuNav li {
 	float: left;
 	width: 100px;
 	position: relative;
@@ -53,9 +84,11 @@ body {
     background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#0B5BA1), to(#012238));
     background-image: -moz-linear-gradient(19% 75% 90deg,#012238, #0B5BA1);
     box-shadow: inset 0 1px 0 0 #a5b9d9;
+
+    text-align:center;
 }
 
-.nav li a {
+.sqMenuNav li a {
 	/*background: #333;*/
 	color: #ffffff;
 	display: block;
@@ -64,7 +97,7 @@ body {
 	border-top: 1px solid #069;
 }
 
-.nav li a:hover {
+.sqMenuNav li a:hover {
 	color: #808080;
     background-color: #458cff;
     background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#0D6CBF), to(#023F69));
@@ -73,7 +106,7 @@ body {
 
 /*=== submenu ===*/
 
-.nav ul {
+.sqMenuNav ul {
 	display: none;
 	position: absolute;
 	margin-left: 0px;
@@ -82,7 +115,7 @@ body {
 
 }
 
-.nav ul li {
+.sqMenuNav ul li {
 	width: 160px;
 	float: left;
 
@@ -90,9 +123,54 @@ body {
     background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#0B5BA1), to(#012238));
     background-image: -moz-linear-gradient(19% 75% 90deg,#012238, #0B5BA1);
     box-shadow: inset 0 1px 0 0 #a5b9d9;
+
+    text-align:left;
 }
 
-.nav ul a {
+.sqMenuNav ul a {
+	display: block;
+	height: 15px;
+	/*padding: 7px 8px;*/
+	/*color: #fff;*/
+    padding-top: 5px;
+    padding-bottom: 5px;
+	text-decoration: none;
+	border-bottom: 1px solid #222;
+}
+
+.sqMenuNav ul li a:hover {
+	color: #808080;
+    background-color: #458cff;
+    background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#0D6CBF), to(#023F69));
+    background-image: -moz-linear-gradient(19% 75% 90deg,#023F69, #0D6CBF)
+}
+
+
+/*=== subsubmenu ===*/
+.sqMenuNav ul li ul {
+	display: none;
+	position: absolute;
+    left: 161px;
+    top: 0px;
+
+	margin-left: 0px;
+	list-style: none;
+	padding: 0px;
+}
+
+.sqMenuNav ul li ul li {
+	width: 160px;
+	float: left;
+
+    background-color: #2581cc;
+    background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#0B5BA1), to(#012238));
+    background-image: -moz-linear-gradient(19% 75% 90deg,#012238, #0B5BA1);
+    box-shadow: inset 0 1px 0 0 #a5b9d9;
+
+    text-align:left;
+}
+
+.sqMenuNav ul li ul a {
 	display: block;
 	height: 15px;
 	/*padding: 7px 8px;*/
@@ -101,11 +179,28 @@ body {
 	border-bottom: 1px solid #222;
 }
 
-.nav ul li a:hover {
+.sqMenuNav ul li ul li a:hover {
 	color: #808080;
     background-color: #458cff;
     background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#0D6CBF), to(#023F69));
     background-image: -moz-linear-gradient(19% 75% 90deg,#023F69, #0D6CBF)
+}
+
+
+
+#idStartBacktestButtonLi {
+    width: 200px;       /* width is the property of <li>*/
+}
+
+#idStartBacktestButtonA { /* colour is the property of <a>*/
+    font-size: 110%;  /* Sets the font-size to a percent of  the parent element's font size */
+    font-weight: bold;
+    color: #ffea00;
+
+    background-color: #45a1ec;
+    background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#2B7BC1), to(#214258));
+    background-image: -moz-linear-gradient(19% 75% 90deg,#214258, #2B7BC1);
+    box-shadow: inset 0 1px 0 0 #a5b9d9;
 }
 
 
@@ -115,8 +210,95 @@ body {
 
 
 
+#inputTable {
+    border-collapse: collapse;
+    border: solid black;
+    border-width: 1px 0px 1px 0;
+}
+
+#inputTable tr.even {
+    background-color: #FEF6E0;
+}
+
+#inputTable th, td.colVIXF2per1 {
+    padding: 0px 7px 0px 7px;
+}
+
+#inputTable td {
+    text-align: center;
+}
+
+#inputTable th {
+    text-align: center;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    background-color: #9EB5DE;
+    background:         linear-gradient(#ffffff, #9EB5DE);  /* for IE and for Chrome */
+}
+
+#inputTable .colDate, .colVIXF2per1, .colVIXF7per4per3 {
+    text-align: right;
+}
 
 
 
+
+
+
+#statisticsTable {
+    border-collapse: collapse;
+    border: solid black;
+    border-width: 1px 0px 1px 0;
+}
+
+#statisticsTable tr.even {
+    background-color: #FEF6E0;
+}
+
+#statisticsTable th, td.colVIXF2per1 {
+    padding: 0px 7px 0px 7px;
+}
+
+#statisticsTable td {
+    text-align: left;
+    padding-right: 10px;
+}
+
+#statisticsTable th {
+    text-align: center;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    background-color: #9EB5DE;
+    background:         linear-gradient(#ffffff, #9EB5DE);  /* for IE and for Chrome */
+}
+
+#statisticsTable .colDate, .colVIXF2per1, .colVIXF7per4per3 {
+    text-align: right;
+}
+
+
+#idSpanStatistics {   /* At first, I thought I would use different font-types, like Verdana, Gothic, but Android and all tablets and Linux doesn't have these font-types. Better stay away from changing font-types at all */
+    font-weight:bold;
+    font-style: italic;
+}
+
+#statisticsTable #idTdGeneral { 
+    font-weight:bold;
+    background-color: #ffffff;
+    padding-right: 80px;
+    font-style: italic;
+}
+
+#statisticsTable #idTdRebalanceFrequency { 
+    background-color: #ffffff;
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+#statisticsTable #tdCagr { 
+    font-weight:bold;
+    background-color: #BED5FE;
+}
+#statisticsTable #tdSharpe { font-weight:bold; }
 
 

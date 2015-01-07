@@ -1,0 +1,78 @@
+﻿<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="HQCommon.Properties" GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <Setting Name="LocalServerHedgeQuantConnectionString" Type="(Connection string)" Scope="Application">
+      <DesignTimeValue Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;SerializableConnectionString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
+  &lt;ConnectionString&gt;server=(local),1504;database=HedgeQuant;UID=sa; PWD='mozaikutca006'&lt;/ConnectionString&gt;
+  &lt;ProviderName&gt;System.Data.SqlClient&lt;/ProviderName&gt;
+&lt;/SerializableConnectionString&gt;</DesignTimeValue>
+      <Value Profile="(Default)">server=(local),1504;database=HedgeQuant;UID=sa; PWD='mozaikutca006'</Value>
+    </Setting>
+    <Setting Name="ServerHedgeQuantConnectionString" Type="(Connection string)" Scope="Application">
+      <DesignTimeValue Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;SerializableConnectionString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
+  &lt;ConnectionString&gt;Server=tcp:o81ehksdym.database.windows.net;Database=HedgeQuant;User ID=HQServer@o81ehksdym;Password=H667QServer;Trusted_Connection=False;Encrypt=True;Connection Timeout=600;&lt;/ConnectionString&gt;
+  &lt;ProviderName&gt;System.Data.SqlClient&lt;/ProviderName&gt;
+&lt;/SerializableConnectionString&gt;</DesignTimeValue>
+      <Value Profile="(Default)">Server=tcp:o81ehksdym.database.windows.net;Database=HedgeQuant;User ID=HQServer@o81ehksdym;Password=H667QServer;Trusted_Connection=False;Encrypt=True;Connection Timeout=600;</Value>
+    </Setting>
+    <Setting Name="ClientHedgeQuantConnectionString" Type="(Connection string)" Scope="Application">
+      <DesignTimeValue Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;SerializableConnectionString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
+  &lt;ConnectionString&gt;Data Source=|DataDirectory|\HedgeQuant.sdf;Max Database Size=2047&lt;/ConnectionString&gt;
+  &lt;ProviderName&gt;Microsoft.SqlServerCe.Client.3.5&lt;/ProviderName&gt;
+&lt;/SerializableConnectionString&gt;</DesignTimeValue>
+      <Value Profile="(Default)">Data Source=|DataDirectory|\HedgeQuant.sdf;Max Database Size=2047</Value>
+    </Setting>
+    <Setting Name="SqOfflineDbFilesUrlPathOnly" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">/public/OfflineDBFiles/</Value>
+    </Setting>
+    <Setting Name="SqOfflineDbFilesUrlTimeZoneID" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">GMT</Value>
+    </Setting>
+    <Setting Name="SqlNTryDefault" Type="System.Int32" Scope="Application">
+      <Value Profile="(Default)">4</Value>
+    </Setting>
+    <Setting Name="EmailSenderForUsers" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">hedgequantserver@hqavm1.cloudapp.com</Value>
+    </Setting>
+    <Setting Name="EmailAddressGyantal" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">gyantal@gmail.com</Value>
+    </Setting>
+    <Setting Name="EmailAddressRobin" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">meszaros.robert4@gmail.com</Value>
+    </Setting>
+    <Setting Name="EmailAddressCharmat" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">drcharmat@yahoo.com</Value>
+    </Setting>
+    <Setting Name="EmailAddressCharmat2" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">drcharmat2@gmail.com</Value>
+    </Setting>
+    <Setting Name="EmailAddressJeanCharmat" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">jmcharmat@yahoo.com</Value>
+    </Setting>
+    <Setting Name="EmailAddressLNemeth" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">laszlo.nemeth.hu@gmail.com</Value>
+    </Setting>
+    <Setting Name="EmailAddressBLukucz" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">blukucz@gmail.com</Value>
+    </Setting>
+    <Setting Name="SmsNumberGyantalUK" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">447787069129</Value>
+    </Setting>
+    <Setting Name="SmsNumberGyantalHU" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">36203491806</Value>
+    </Setting>
+    <Setting Name="SmsNumberCharmat" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">447795347979</Value>
+    </Setting>
+    <Setting Name="SmsNumberLNemeth" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">36203210211</Value>
+    </Setting>
+    <Setting Name="SmsNumberBLukucz" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">36705705467</Value>
+    </Setting>
+  </Settings>
+</SettingsFile>
