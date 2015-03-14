@@ -9,6 +9,7 @@ using System.Xml;
 
 namespace HQCommon
 {
+
     public static partial class Utils
     {
         /// <summary> Equivalent to
