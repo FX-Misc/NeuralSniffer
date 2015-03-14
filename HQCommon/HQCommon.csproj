@@ -114,6 +114,7 @@
     <Compile Include="Utils\AbortSignalHandlerRegistration.cs" />
     <Compile Include="Utils\AccessOrderCache.cs" />
     <Compile Include="Utils\BitVector.cs" />
+    <Compile Include="Utils\EmailWithoutSensitiveData.cs" />
     <Compile Include="Utils\HQAppBase.cs" />
     <Compile Include="Utils\IObjSettings.cs" />
     <Compile Include="Utils\ListLookupDictionary.cs" />
