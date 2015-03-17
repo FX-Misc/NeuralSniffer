@@ -4,6 +4,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using HQCommonPublic;
 
 namespace HQCodeTemplates
 {
@@ -16,35 +17,35 @@ namespace HQCodeTemplates
     public class QuoteRequest
     {
         public string Ticker;
-        public int?   SubtableID;
+        public int? SubtableID;
         /// <summary> Local time (in the local timezone of the stock's exchange) </summary>
         public DateTime? StartDate, EndDate;
-        public int    nQuotes = 1;
-        public bool   NonAdjusted;
+        public int nQuotes = 1;
+        public bool NonAdjusted;
         public string StartDateStr { get { return StartDate.HasValue ? HQCommon.DBUtils.Date2Str(StartDate.Value) : null; } }
-        public string EndDateStr   { get { return   EndDate.HasValue ? HQCommon.DBUtils.Date2Str(EndDate.Value  ) : null; } }
+        public string EndDateStr { get { return EndDate.HasValue ? HQCommon.DBUtils.Date2Str(EndDate.Value) : null; } }
         public ushort ReturnedColumns = TDC;
-        public const ushort TDC = 1+2+32, TDOHLCVS = 255, All = 255;    // Ticker:1,Date:2,Open:4,High:8,Low:16,Close:32,Volume:64,SubTableID:128
+        public const ushort TDC = 1 + 2 + 32, TDOHLCVS = 255, All = 255;    // Ticker:1,Date:2,Open:4,High:8,Low:16,Close:32,Volume:64,SubTableID:128
     }
 
     public static partial class Tools
     {
-        #if DEBUG
+#if DEBUG
         public static void GetHistoricalQuotes_example()
         {
-            Console.WriteLine("result:\n" + String.Join(Environment.NewLine, 
+            Console.WriteLine("result:\n" + String.Join(Environment.NewLine,
                 GetHistoricalQuotesAsync(new[] {
                     new QuoteRequest { Ticker = "VXX", nQuotes = 2, StartDate = new DateTime(2011,1,1), NonAdjusted = true },
                     new QuoteRequest { Ticker = "SPY", nQuotes = 3 }
                 }, HQCommon.AssetType.Stock).Result
-            .Select(  row => String.Join(",", row)  )));
+            .Select(row => String.Join(",", row))));
 
-            Console.WriteLine("result:\n" + String.Join(Environment.NewLine, 
+            Console.WriteLine("result:\n" + String.Join(Environment.NewLine,
                 GetHistoricalQuotesAsync(p_at: HQCommon.AssetType.BenchmarkIndex, p_req: new[] {
                     new QuoteRequest { Ticker = "^VIX",  nQuotes = 3, EndDate   = new DateTime(2014,2,1) },
                     new QuoteRequest { Ticker = "^GSPC", nQuotes = 2, StartDate = new DateTime(2014,1,1) }
                 }).Result
-            .Select(  row => String.Join(",", row)  )));
+            .Select(row => String.Join(",", row))));
 
             Console.Write("Press a key...");
             Console.ReadKey();
@@ -60,7 +61,7 @@ namespace HQCodeTemplates
                     new QuoteRequest { Ticker = "VXX", nQuotes = 2, StartDate = new DateTime(2011,1,1), NonAdjusted = true },
                     new QuoteRequest { Ticker = "SPY", nQuotes = 3 }
                 }, HQCommon.AssetType.Stock))
-            .Select(  row => String.Join(",", row)  )));
+            .Select(row => String.Join(",", row))));
 
             // Alternative technique if you want to avoid async/await: block with Task.Run().Result. Here Task.Run() is crucial
             Console.WriteLine("result:\n" + String.Join(Environment.NewLine, Task.Run(() =>
@@ -68,12 +69,12 @@ namespace HQCodeTemplates
                     new QuoteRequest { Ticker = "^VIX",  nQuotes = 3, EndDate   = new DateTime(2014,2,1) },
                     new QuoteRequest { Ticker = "^GSPC", nQuotes = 2, StartDate = new DateTime(2014,1,1) }
                 })).Result
-            .Select(  row => String.Join(",", row)  )));
+            .Select(row => String.Join(",", row))));
 
             Console.Write("Press a key...");
             Console.ReadKey();
         }
-        #endif
+#endif
 
         public static async Task<IList<object[]>> GetHistoricalQuotesAsync(IEnumerable<QuoteRequest> p_req,
             HQCommon.AssetType p_at, bool? p_isAscendingDates = null, CancellationToken p_canc = default(CancellationToken))
@@ -82,7 +83,7 @@ namespace HQCodeTemplates
             switch (p_at)
             {
                 case HQCommon.AssetType.BenchmarkIndex: table = "StockIndex"; query = Sql_GetHistoricalStockIndexQuotes; break;
-                case HQCommon.AssetType.Stock:          table = "Stock";      query = Sql_GetHistoricalStockQuotes;      break;
+                case HQCommon.AssetType.Stock: table = "Stock"; query = Sql_GetHistoricalStockQuotes; break;
                 default: throw new NotSupportedException(p_at.ToString());
             }
             if (p_isAscendingDates.HasValue)
@@ -101,8 +102,8 @@ namespace HQCodeTemplates
                 if (r.SubtableID.HasValue)
                 {
                     string sql = CustomizeSql(query, r.ReturnedColumns), a;
-                    string p   = String.Join(",", r.SubtableID, r.StartDateStr, r.EndDateStr, r.nQuotes, r.NonAdjusted ? 0 : 1);
-                    sqls[sql]  = sqls.TryGetValue(sql, out a) ? a + "," + p : p;
+                    string p = String.Join(",", r.SubtableID, r.StartDateStr, r.EndDateStr, r.nQuotes, r.NonAdjusted ? 0 : 1);
+                    sqls[sql] = sqls.TryGetValue(sql, out a) ? a + "," + p : p;
                 }
             }
             var result = new List<object[]>();
@@ -177,10 +178,10 @@ FROM (
         {
             bool leaveTheConnectionOpen = (p_conn != null);
             if (p_conn == null)
-                p_conn = new SqlConnection(HQCommon.DBUtils.GetDefaultConnectionString(HQCommon.DBType.Remote));
+                p_conn = new SqlConnection(ExeCfgSettings.ServerHedgeQuantConnectionString.Read());
             try
             {
-                int nTry = HQCommon.DBManager.NMaxTryDefault;
+                int nTry = int.Parse(ExeCfgSettings.SqlNTryDefault.Read() ?? "4");
                 for (int @try = 1, wait = 0; true; ++@try)
                 {
                     SqlParameterCollection pars = null;
@@ -215,8 +216,8 @@ FROM (
                         if (!failed)
                         {
                             var sqlex = e as SqlException;
-                            failed = !(sqlex != null ? HQCommon.DBManager.IsSqlExceptionToRetry(sqlex, @try)
-                                                     : HQCommon.DBManager.IsNonSqlExceptionToRetry(e, @try));
+                            failed = !(sqlex != null ? HQCommon.DBUtils.IsSqlExceptionToRetry(sqlex, @try)
+                                                     : HQCommon.DBUtils.IsNonSqlExceptionToRetry(e, @try));
                             if (failed && e is InvalidOperationException && System.Text.RegularExpressions.Regex
                                 .IsMatch(e.Message, @"\bMultipleActiveResultSets\b"))
                             {   // "The connection does not support MultipleActiveResultSets."
@@ -226,20 +227,20 @@ FROM (
                         }
                         if (failed)
                         {
-                            HQCommon.Utils.Logger.Error("*** {1}{0}in try#{2}/{3} of executing \"{4}\"", Environment.NewLine,
-                                HQCommon.Utils.ToStringWithoutStackTrace(e), @try, nTry, p_sql);
+                            g_LogError(String.Format("*** {1}{0}in try#{2}/{3} of executing \"{4}\"", Environment.NewLine,
+                                HQCommon.Utils.ToStringWithoutStackTrace(e), @try, nTry, p_sql));
                             throw;
                         }
                         if (pars != null && 0 < pars.Count)
                         {
-                            p_params = new Dictionary<string,object>();
+                            p_params = new Dictionary<string, object>();
                             foreach (SqlParameter p in pars)
                                 p_params[p_params.Count.ToString()] = (SqlParameter)(((ICloneable)p).Clone());
                         }
                         switch (@try & 3)   // { 2-5sec, 30sec, 2min, 4min } repeated
                         {
-                            case 1: wait =          2000 + new Random().Next(3000); break;   // wait 2-5 secs
-                            case 2: wait =     30 * 1000; break;
+                            case 1: wait = 2000 + new Random().Next(3000); break;   // wait 2-5 secs
+                            case 2: wait = 30 * 1000; break;
                             case 3: wait = 2 * 60 * 1000; break;
                             case 0: wait = 4 * 60 * 1000; break;
                         }
@@ -247,11 +248,14 @@ FROM (
                     await Task.Delay(wait, p_canc);     // error CS1985: Cannot await in the body of a catch clause
                 }
             }
-            finally {
+            finally
+            {
                 using (leaveTheConnectionOpen ? null : p_conn) { }
             }
         }
 
-    }
+        public static Action<string> g_LogError = (p_str) => System.Diagnostics.Trace.WriteLine(p_str);
+
+    } //~ Tools
 
 }

@@ -7,6 +7,19 @@ using System.Web;
 
 namespace NeuralSniffer.Controllers
 {
+    public enum Severity
+    {
+        /// <summary> Debug.Fail() + Logger.Error() (to be sent in email) </summary>
+        Simple,
+        /// <summary> Debug.Fail() + Logger.Error() + throw exception </summary>
+        Exception,
+        /// <summary> Debug.Fail() + Logger.Error() + freeze (current implementation: throw exception) </summary>
+        Freeze,
+        /// <summary> Debug.Fail() + Logger.Error() (email immediately) + Environment.Exit() </summary>
+        Halt
+    }
+
+
     public static class Utils
     {
         // <summary> Returns System.Globalization.CultureInfo.InvariantCulture </summary>
