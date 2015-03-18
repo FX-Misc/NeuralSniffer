@@ -1,7 +1,7 @@
 ﻿
 AngularInit_TotM = function ($scope, $http) {
 
-    $scope.bullishTradingInstrument = ["Long SPY", "Long QQQ", "Long IWM", "Short VXX"];
+    $scope.bullishTradingInstrument = ["Long SPY", "Long QQQ", "Long QLD", "Long TQQQ", "Long IWM", "Short VXX"];
     $scope.selectedBullishTradingInstrument = $scope.bullishTradingInstrument[0];
 
     //$scope.totMStock = ["SPY", "QQQ", "VXX"];
