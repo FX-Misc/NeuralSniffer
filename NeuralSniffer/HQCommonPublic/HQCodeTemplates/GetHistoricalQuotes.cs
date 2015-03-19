@@ -4,7 +4,7 @@ using System.Data.SqlClient;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using HQCommonPublic;
+using HQCommonLite;
 
 namespace HQCodeTemplates
 {
@@ -41,7 +41,7 @@ namespace HQCodeTemplates
             .Select(row => String.Join(",", row))));
 
             Console.WriteLine("result:\n" + String.Join(Environment.NewLine,
-                GetHistoricalQuotesAsync(p_at: HQCommon.AssetType.BenchmarkIndex, p_req: new[] {
+                GetHistoricalQuotesAsync(p_at: HQCommon.AssetType.BenchmarkIndex, p_reqs: new[] {
                     new QuoteRequest { Ticker = "^VIX",  nQuotes = 3, EndDate   = new DateTime(2014,2,1) },
                     new QuoteRequest { Ticker = "^GSPC", nQuotes = 2, StartDate = new DateTime(2014,1,1) }
                 }).Result
@@ -55,7 +55,7 @@ namespace HQCodeTemplates
         public static async Task GetHistoricalQuotes_example_underIIS()
         {
             // Do not block with someOperationAsync().Result because that deadlocks
-            // Use 'await' if the method is 'async':
+            // Use 'await' if your method is 'async':
             Console.WriteLine("result:\n" + String.Join(Environment.NewLine,
                 (await GetHistoricalQuotesAsync(new[] {
                     new QuoteRequest { Ticker = "VXX", nQuotes = 2, StartDate = new DateTime(2011,1,1), NonAdjusted = true },
@@ -63,9 +63,9 @@ namespace HQCodeTemplates
                 }, HQCommon.AssetType.Stock))
             .Select(row => String.Join(",", row))));
 
-            // Alternative technique if you want to avoid async/await: block with Task.Run().Result. Here Task.Run() is crucial
+            // If your method cannot be 'async', block with Task.Run().Result. Here Task.Run() is crucial
             Console.WriteLine("result:\n" + String.Join(Environment.NewLine, Task.Run(() =>
-                GetHistoricalQuotesAsync(p_at: HQCommon.AssetType.BenchmarkIndex, p_req: new[] {
+                GetHistoricalQuotesAsync(p_at: HQCommon.AssetType.BenchmarkIndex, p_reqs: new[] {
                     new QuoteRequest { Ticker = "^VIX",  nQuotes = 3, EndDate   = new DateTime(2014,2,1) },
                     new QuoteRequest { Ticker = "^GSPC", nQuotes = 2, StartDate = new DateTime(2014,1,1) }
                 })).Result
@@ -76,59 +76,45 @@ namespace HQCodeTemplates
         }
 #endif
 
-        public static async Task<IList<object[]>> GetHistoricalQuotesAsync(IEnumerable<QuoteRequest> p_req,
+        public static async Task<IList<object[]>> GetHistoricalQuotesAsync(IEnumerable<QuoteRequest> p_reqs,
             HQCommon.AssetType p_at, bool? p_isAscendingDates = null, CancellationToken p_canc = default(CancellationToken))
         {
-            string table, query;
+            string query, isAdj = "1";
             switch (p_at)
             {
-                case HQCommon.AssetType.BenchmarkIndex: table = "StockIndex"; query = Sql_GetHistoricalStockIndexQuotes; break;
-                case HQCommon.AssetType.Stock: table = "Stock"; query = Sql_GetHistoricalStockQuotes; break;
+                case HQCommon.AssetType.BenchmarkIndex: query = Sql_GetHistoricalStockIndexQuotes; isAdj = null; break;
+                case HQCommon.AssetType.Stock: query = Sql_GetHistoricalStockQuotes; break;
                 default: throw new NotSupportedException(p_at.ToString());
             }
             if (p_isAscendingDates.HasValue)
                 query += " ORDER BY [Date]" + (p_isAscendingDates.Value ? null : " DESC");
-            QuoteRequest[] reqs = (p_req ?? Enumerable.Empty<QuoteRequest>()).ToArray();
-            var sqls = new Dictionary<string, string>(reqs.Length);
-            // Resolve tickers to database IDs
-            string tickers = String.Join("|", reqs.Select(req => req.SubtableID.HasValue ? null : req.Ticker));
-            foreach (object[] ids in await ExecuteSqlQueryAsync("SELECT s.SeqNr, (SELECT ID FROM " + table + " WHERE Ticker=s.Item)"
-                + " FROM dbo.SplitStringToTable(@tickers,'|') s ORDER BY s.SeqNr", p_canc: p_canc,
-                p_params: new Dictionary<string, object> { { "@tickers", tickers } }))
+            const string ma = "/*ColumnsBEGIN*/", mb = "/*ColumnsEND*/";
+            int a = query.IndexOf(ma), b = query.IndexOf(mb); System.Diagnostics.Debug.Assert(0 <= a && (a + ma.Length) <= b);
+            string q0 = query.Substring(0, a), q2 = query.Substring(b + mb.Length);
+            string[] q1 = query.Substring(a += ma.Length, b - a).Split(',');
+            var sqls = new Dictionary<string, string>(1);
+            foreach (QuoteRequest r in p_reqs)
             {
-                int i = Convert.ToInt32(ids[0]); QuoteRequest r = reqs[i];
-                if (ids[1] != null)
-                    r.SubtableID = Convert.ToInt32(ids[1]);
-                if (r.SubtableID.HasValue)
-                {
-                    string sql = CustomizeSql(query, r.ReturnedColumns), a;
-                    string p = String.Join(",", r.SubtableID, r.StartDateStr, r.EndDateStr, r.nQuotes, r.NonAdjusted ? 0 : 1);
-                    sqls[sql] = sqls.TryGetValue(sql, out a) ? a + "," + p : p;
-                }
+                string c = r.Ticker; if (c != null) c = c.Trim().ToUpperInvariant();
+                string sql = q0 + String.Join(",", q1.Where((s, i) => (r.ReturnedColumns & (1 << i)) != 0)) + q2;
+                string p = String.Join(",", c, r.SubtableID, r.StartDateStr, r.EndDateStr, r.nQuotes, r.NonAdjusted ? null : isAdj);
+                sqls[sql] = sqls.TryGetValue(sql, out c) ? c + "," + p : p;
             }
             var result = new List<object[]>();
-            foreach (var kv in sqls)
-                result.AddRange(await ExecuteSqlQueryAsync(kv.Key, p_params: new Dictionary<string, object> { { "@p_request", kv.Value } }, p_canc: p_canc));
+            await Task.WhenAll(sqls.Select(kv => ExecuteSqlQueryAsync(kv.Key, p_params: new Dictionary<string, object> { { "@p_request", kv.Value } }, p_canc: p_canc)
+                    .ContinueWith(t => result.AddRange(t.Result))));
             return result;
         }
-        static string CustomizeSql(string p_sql, int p_columnsToKeep)
-        {
-            const string ma = "/*ColumnsBEGIN*/", mb = "/*ColumnsEND*/";
-            int a = p_sql.IndexOf(ma), b = p_sql.IndexOf(mb);
-            if (a < 0 || b < (a + ma.Length))
-                throw new ArgumentException(p_sql, "p_sql");
-            return p_sql.Substring(0, a) + String.Join(",",
-                p_sql.Substring(a += ma.Length, b - a).Split(',').Where((s, i) => (p_columnsToKeep & (1 << i)) != 0)
-                ) + p_sql.Substring(b + mb.Length);
-        }
-        // @p_request is like "8000,20110101,,2,0,6956,,,3,1": <StockID>,<StartDate>,<EndDate>,<N>,<IsAdjusted>[,...]
-        // StockID and N are obligatory, IsAdjusted must be 0 or 1. N:=nQuotes see description at QuoteRequest. The returned Ticker is not historical.
+        // @p_request is like "VXX,8000,20110101,,2,,SPY,6956,,,3,1": <Ticker>,<StockID>,<StartDate>,<EndDate>,<N>,<IsAdjusted>[,...]
+        // (StockID OR Ticker) AND N are obligatory, IsAdjusted must be 1 or other (may be empty). N:=nQuotes see description at QuoteRequest. The returned Ticker is not historical.
         public const string Sql_GetHistoricalStockQuotes = @"
 WITH req(ID,Start,[End],N,IsAdj) AS (
-  SELECT [0],CAST(NULLIF([1],'') AS DATE),CAST(NULLIF([2],'') AS DATE),[3],[4] FROM (
-    SELECT (SeqNr / 5) AS R, (SeqNr % 5) AS M, Item
+  SELECT (CASE [1] WHEN '' THEN (SELECT ID FROM Stock WHERE Ticker=[0]) ELSE [1] END),
+      CAST(NULLIF([2],'') AS DATE),CAST(NULLIF([3],'') AS DATE),[4],[5]
+  FROM (
+    SELECT (SeqNr / 6) AS R, (SeqNr % 6) AS M, Item
     FROM dbo.SplitStringToTable(@p_request,',')
-  ) P PIVOT (MIN(Item) FOR M IN ([0],[1],[2],[3],[4])) AS S
+  ) P PIVOT (MIN(Item) FOR M IN ([0],[1],[2],[3],[4],[5])) AS S
 )
 SELECT /*ColumnsBEGIN*/(SELECT Ticker FROM Stock WHERE Stock.ID=StockID), [Date]
       ,OpenPrice * A AS [Open], HighPrice * A AS High
@@ -142,7 +128,7 @@ FROM (
         SELECT ID, N, IsAdj, COALESCE([End], GETDATE()) AS [End]
           ,COALESCE(Start, CAST('00010101' AS DATE)) AS Start
           ,CASE WHEN (Start IS NOT NULL AND [End] IS NULL) THEN -1 ELSE 1 END AS O
-        FROM req
+        FROM req WHERE ID IS NOT NULL
       ) AS r JOIN StockQuote q
       ON (q.StockID = r.ID AND (q.[Date] BETWEEN r.Start AND r.[End]))
     ) AS tx
@@ -151,10 +137,12 @@ FROM (
 
         public const string Sql_GetHistoricalStockIndexQuotes = @"
 WITH req(ID,Start,[End],N) AS (
-  SELECT [0],CONVERT(DATE,NULLIF([1],'')),CONVERT(DATE,NULLIF([2],'')),[3] FROM (
-    SELECT (SeqNr / 5) AS R, (SeqNr % 5) AS M, Item
+  SELECT (CASE [1] WHEN '' THEN (SELECT ID FROM StockIndex WHERE Ticker=[0]) ELSE [1] END),
+      CAST(NULLIF([2],'') AS DATE),CAST(NULLIF([3],'') AS DATE),[4]
+  FROM (
+    SELECT (SeqNr / 6) AS R, (SeqNr % 6) AS M, Item
     FROM dbo.SplitStringToTable(@p_request,',')
-  ) P PIVOT (MIN(Item) FOR M IN ([0],[1],[2],[3],[4])) AS S
+  ) P PIVOT (MIN(Item) FOR M IN ([0],[1],[2],[3],[4],[5])) AS S
 )
 SELECT /*ColumnsBEGIN*/(SELECT Ticker FROM StockIndex s WHERE s.ID=t.StockIndexID), [Date]
       ,OpenPrice AS [Open], HighPrice AS High
@@ -167,7 +155,7 @@ FROM (
       SELECT ID, N, COALESCE([End], GETDATE()) AS [End]
         ,COALESCE(Start, CAST('00010101' AS DATE)) AS Start
         ,CASE WHEN (Start IS NOT NULL AND [End] IS NULL) THEN -1 ELSE 1 END AS O
-      FROM req
+      FROM req WHERE ID IS NOT NULL
     ) AS r JOIN StockIndexQuote q
     ON (q.StockIndexID = r.ID AND (q.[Date] BETWEEN r.Start AND r.[End]))
   ) AS tx
@@ -227,7 +215,7 @@ FROM (
                         }
                         if (failed)
                         {
-                            g_LogError(String.Format("*** {1}{0}in try#{2}/{3} of executing \"{4}\"", Environment.NewLine,
+                            UtilsL.LogError(String.Format("*** {1}{0}in try#{2}/{3} of executing \"{4}\"", Environment.NewLine,
                                 HQCommon.Utils.ToStringWithoutStackTrace(e), @try, nTry, p_sql));
                             throw;
                         }
@@ -253,8 +241,6 @@ FROM (
                 using (leaveTheConnectionOpen ? null : p_conn) { }
             }
         }
-
-        public static Action<string> g_LogError = (p_str) => System.Diagnostics.Trace.WriteLine(p_str);
 
     } //~ Tools
 

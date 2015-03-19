@@ -1,9 +1,22 @@
-﻿// Declarations/code shared by HQCommon and HQCommonPublic
+﻿// Miscellaneous code fragments for HQCommonLite (and HQCommon)
+
+// HQCommonLite duplicates source code from HQCommon. When a duplicated source
+// code fragment is large enough, it is stored in a separate source code file
+// which is then included into both dlls.
+// When it is too small to occupy a separate file, we move it into this file.
+
+// HQCommonLite and HQCommon are not meant to be referenced at the same time,
+// because they contain identically named namespaces and types,
+// to facilitate porting source code between HQCommon and HQCommonLite (in both
+// directions).
+
+// The HQCommonLite namespace is dedicated to things that notably pertain to
+// HQCommonLite (even if parts of this namespace are compiled into HQCommon, too)
 
 using System;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.Linq;
-
 
 namespace HQCommon
 {
@@ -180,14 +193,26 @@ namespace HQCommon
             NTimes = p_nTimes;
         }
     }
-
 }
 
-#region Sensitive data access
-namespace HQCommonPublic
+#region Accessing configuration
+namespace HQCommonLite
 {
-    /// <summary> .exe.config settings that may be used in HQCommonPublic code
-    /// without specifying "factory default" value there (should be provided elsewhere) </summary>
+    /// <summary> Defines .exe.config setting names for HQCommonLite in accordance with HQCommon
+    /// to minimize configuration differences between HQCommonLite- and HQCommon-based programs.
+    /// HQCommon-based programs should use this enum for these names to ensure that these are up-to-date
+    /// (central definition, avoid further duplication).
+    ///
+    /// Only those names have to be included here that are/may be used in HQCommonLite
+    /// (but due to technical reasons it's comfortable to include all settings for which HQCommon provides
+    /// a factory default value and it is a sensitive data).
+    ///
+    /// Most of these settings have no "factory default" value in HQCommonLite, but has one in HQCommon.
+    /// These default values are served when the .exe.config-accessing API of HQCommon is used: Utils.ExeConfig[].
+    /// This works in HQCommonLite, too, and is therefore recommended, in order to foster interchangeability of
+    /// source code between the two projects.
+    /// The ExeCfgSettings.Read() extension method (designed primarily for HQCommonLite) is a syntactic sugar to Utils.ExeConfig[].
+    /// </summary>
     public enum ExeCfgSettings
     {
         EmailAddressCharmat,
@@ -197,6 +222,7 @@ namespace HQCommonPublic
         EmailAddressRobin,
         EmailAddressLNemeth,
         EmailAddressBLukucz,
+        EmailSenderForUsers,
         SmsNumberGyantalHU,
         SmsNumberGyantalUK,
         SmsNumberCharmat,
@@ -206,21 +232,11 @@ namespace HQCommonPublic
         TwilioSid,
         TwilioToken,
         ServerHedgeQuantConnectionString,
-        SmtpUsername,   // has different name in the .exe.config when HQCommon.dll's g_exeCfgGetter is used: <add key="HQEmailSettings" value="UserName=..."/>
-        SmtpPassword,   // has different name in the .exe.config when HQCommon.dll's g_exeCfgGetter is used: <add key="HQEmailSettings" value="Password=..."/>
+        /// <summary> In case of HQCommon it can also be set as ‹add key="HQEmailSettings" value="UserName=..."/› </summary>
+        SmtpUsername,
+        /// <summary> In case of HQCommon it can also be set as ‹add key="HQEmailSettings" value="Password=..."/› </summary>
+        SmtpPassword,
         SqlNTryDefault
-    }
-    public static class ExeCfgSettingsEx
-    {
-        public static string Read(this ExeCfgSettings p_cfg)
-        {
-            string key = p_cfg.ToString(); long dummy;
-            if (long.TryParse(key, out dummy)) return null; // invalid enum value
-            Func<string, string> f = g_exeCfgGetter;
-            return (f != null) ? f(key) : HQCommon.Utils.ReadFromExeConfig(key);
-        }
-        /// <summary> Must return null if the named setting (=input string) is not found </summary>
-        public static Func<string, string> g_exeCfgGetter;
     }
 }
 
@@ -228,29 +244,31 @@ namespace HQCommon
 {
     public static partial class Utils
     {
-        public static string ReadFromExeConfig(string p_key)
+        public static string Read(this HQCommonLite.ExeCfgSettings p_cfg)
         {
-            if (p_key == null)
-                return null;
-            if (p_key.IndexOf("ConnectionString", StringComparison.OrdinalIgnoreCase) < 0)
-                return System.Configuration.ConfigurationManager.AppSettings[p_key]; // returns null if not found
-            foreach (System.Configuration.ConnectionStringSettings cs in System.Configuration.ConfigurationManager.ConnectionStrings)
-            {
-                string name = cs.Name;
-                if (name == p_key || (p_key.Length + 1 < name.Length && name.EndsWith(p_key) && name[name.Length - p_key.Length - 1] == '.'))
-                {
-                    name = cs.ConnectionString;  //  ↓ in these cases ↓  it's just a placeholder so don't use (cf. j.mp/11XOfhL "if Windows Azure ... cannot find a connection string with a matching name..." )
-                    return (String.IsNullOrEmpty(name) || name.StartsWith("/*")) ? null : name;
-                }
-            }
-            return null;
+            string key = p_cfg.ToString(); object val = null;
+            if (!String.IsNullOrEmpty(key) && 'A' <= key[0])    // valid enum value
+                val = Utils.ExeConfig[key];
+            return (val != null) ? val.ToString() : null;
         }
-        public static string Read(this HQCommonPublic.ExeCfgSettings p_cfg) { return HQCommonPublic.ExeCfgSettingsEx.Read(p_cfg); }
     }
 }
 #endregion
 
 #region Miscellaneous utility methods
+namespace HQCommonLite
+{
+    public static class UtilsL
+    {
+        public static void LogError(string p_msg) { g_LogFn(TraceLevel.Error, p_msg); }
+        public static void LogWarning(string p_msg) { g_LogFn(TraceLevel.Warning, p_msg); }
+        public static void DefaultLogger(TraceLevel p_level, string p_msg) { Trace.WriteLine(p_msg); }
+        public static Action<TraceLevel, string> g_LogFn = HQCommon.Utils.HQCommonSpecific<Action<TraceLevel, string>>("GetLogger4HQCommonLite") ?? DefaultLogger;
+
+        // syntactic sugar for source codes that "using HQCommonLite" only
+        public static string Read(this ExeCfgSettings p_cfg) { return HQCommon.Utils.Read(p_cfg); }
+    }
+}
 namespace HQCommon
 {
     public static partial class Utils
