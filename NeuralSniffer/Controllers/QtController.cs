@@ -39,7 +39,7 @@ namespace NeuralSniffer.Controllers
                 }
 
                 uriQuery = uriQuery.Substring(1);   // remove '?'
-
+                uriQuery = uriQuery.Replace("%20", " ").Replace("%5E", "^");    // de-coding from URL to normal things
 
                 int ind = -1;
                 if (uriQuery.StartsWith("jsonp=", StringComparison.InvariantCultureIgnoreCase))

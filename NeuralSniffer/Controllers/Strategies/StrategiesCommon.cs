@@ -71,7 +71,7 @@ namespace NeuralSniffer.Controllers.Strategies
                 rtPrices.Add(null);
             }
 
-            //string realtimeQuoteUri = "http://hqacompute.cloudapp.net/q/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV,^^^VIX201410,GOOG&f=l&jsonp=myCallbackFunction";
+            //string realtimeQuoteUri = "http://hqacompute.cloudapp.net/q/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV,^^^VIX201410,GOOG&f=l&jsonp=myCallbackFunction";    // even if IB doesn't support ticker ^GSPC, we implemented it in the RealTime App
             string realtimeQuoteUri = "http://hqacompute.cloudapp.net/q/rtp?s=" + String.Join(",", p_tickers) + "&f=l&jsonp=myCallbackFunction";
 
             try
@@ -149,17 +149,40 @@ namespace NeuralSniffer.Controllers.Strategies
             //return null;
         }
 
-        public static async Task<Tuple<IList<object[]>,TimeSpan>> GetHistoricalQuotesAsync(IEnumerable<QuoteRequest> p_req, HQCommon.AssetType p_at, bool? p_isAscendingDates = null, CancellationToken p_canc = default(CancellationToken))
+        //public static async Task<Tuple<IList<object[]>,TimeSpan>> GetHistQuotesAsync(IEnumerable<QuoteRequest> p_req, HQCommon.AssetType p_at, bool? p_isAscendingDates = null, CancellationToken p_canc = default(CancellationToken))
+        public static async Task<Tuple<List<object[]>, TimeSpan>> GetHistQuotesAsync(List<string> p_tickers, ushort p_sqlReturnedColumns)
         {
-            Stopwatch stopWatch = Stopwatch.StartNew();
-            
-            var sqlReturnTask = Tools.GetHistoricalQuotesAsync(p_req, p_at, p_isAscendingDates, p_canc);
-            var sqlReturn = await sqlReturnTask;
+            List<string> stockTickers = p_tickers.Where(r => !r.StartsWith("^")).ToList();
+            List<string> indicesTickers = p_tickers.Where(r => r.StartsWith("^")).ToList();
 
+            Stopwatch stopWatch = Stopwatch.StartNew();
+
+            Task<IList<object[]>> stocksSqlReturnTask = null, indicesSqlReturnTask = null; ;
+            IList<object[]> stocksSqlReturn = null, indicesSqlReturn = null;
+            if (stockTickers.Count != 0)
+                stocksSqlReturnTask = Tools.GetHistoricalQuotesAsync(stockTickers.Select(r => new QuoteRequest { Ticker = r, nQuotes = Int32.MaxValue, NonAdjusted = false, ReturnedColumns = p_sqlReturnedColumns }), HQCommon.AssetType.Stock, true); // Ascending date order: TRUE, better to order it at the SQL server than locally. SQL has indexers
+            if (indicesTickers.Count != 0)
+                indicesSqlReturnTask = Tools.GetHistoricalQuotesAsync(indicesTickers.Select(r => new QuoteRequest { Ticker = r, nQuotes = Int32.MaxValue, NonAdjusted = false, ReturnedColumns = p_sqlReturnedColumns }), HQCommon.AssetType.BenchmarkIndex, true); // Ascending date order: TRUE, better to order it at the SQL server than locally. SQL has indexers
+
+            if (stockTickers.Count != 0)
+                stocksSqlReturn = await stocksSqlReturnTask;
+            if (indicesTickers.Count != 0)
+                indicesSqlReturn = await indicesSqlReturnTask;
             stopWatch.Stop();
             TimeSpan historicalQueryTimeSpan = stopWatch.Elapsed;
 
-            return new Tuple<IList<object[]>, TimeSpan>(sqlReturn, historicalQueryTimeSpan);
+            List<object[]> sqlReturn = null;
+            if (stocksSqlReturn != null)
+                sqlReturn = stocksSqlReturn.ToList();   // the return is a List() already if you look deeper in the implementation
+            if (indicesSqlReturn != null)
+            {
+                if (sqlReturn == null)
+                    sqlReturn = indicesSqlReturn.ToList();
+                else
+                    sqlReturn.AddRange(indicesSqlReturn.ToList());
+            }
+
+            return new Tuple<List<object[]>, TimeSpan>(sqlReturn, historicalQueryTimeSpan);
         }
     
 
@@ -174,9 +197,10 @@ namespace NeuralSniffer.Controllers.Strategies
             //Conclusion:downloading only Closeprice from SQL, we can save 100msec (LocalServer website (non-datacenter website)) or 15msec (Azure server website when SQL server is very close), still worth it
             ushort sqlReturnedColumns = QuoteRequest.TDC;       // QuoteRequest.All or QuoteRequest.TDOHLCVS
 
-            var sqlReturnTask = GetHistoricalQuotesAsync(p_tickers.Select(r => new QuoteRequest { Ticker = r, nQuotes = Int32.MaxValue, NonAdjusted = false, ReturnedColumns = sqlReturnedColumns }), HQCommon.AssetType.Stock, true); // Ascending date order: TRUE, better to order it at the SQL server than locally. SQL has indexers
+            //var sqlReturnTask = GetHistQuotesAsync(p_tickers.Select(r => new QuoteRequest { Ticker = r, nQuotes = Int32.MaxValue, NonAdjusted = false, ReturnedColumns = sqlReturnedColumns }), HQCommon.AssetType.Stock, true); // Ascending date order: TRUE, better to order it at the SQL server than locally. SQL has indexers
+            var sqlReturnTask = GetHistQuotesAsync(p_tickers, sqlReturnedColumns); 
 
-            var realtimeReturnTask = StrategiesCommon.GetRealtimesQuotesAsync(p_tickers);
+            var realtimeReturnTask = GetRealtimesQuotesAsync(p_tickers);
 
             // Control returns here before GetHistoricalQuotesAsync() returns.  // ... Prompt the user.
             Console.WriteLine("Please wait patiently while I do SQL and realtime price queries.");
@@ -192,9 +216,14 @@ namespace NeuralSniffer.Controllers.Strategies
             var realtimeReturn = realtimeReturnData.Item1;
             List<List<DailyData>> returnQuotes = null;
             if (sqlReturnedColumns == QuoteRequest.TDOHLCVS)
-                returnQuotes = p_tickers.Select(ticker => sqlReturn.Where(row => (string)row[0] == ticker).Select(row => new DailyData() { Date = ((DateTime)row[1]), ClosePrice = (double)row[5]}).ToList()).ToList();
+                returnQuotes = p_tickers.Select(ticker => sqlReturn.Where(row => (string)row[0] == ticker).Select(row => new DailyData() { Date = ((DateTime)row[1]), ClosePrice = (double)Convert.ToDecimal(row[5])}).ToList()).ToList();
             else if (sqlReturnedColumns == QuoteRequest.TDC)
-                returnQuotes = p_tickers.Select(ticker => sqlReturn.Where(row => (string)row[0] == ticker).Select(row => new DailyData() { Date = ((DateTime)row[1]), ClosePrice = (double)row[2]}).ToList()).ToList();
+                returnQuotes = p_tickers.Select(ticker => sqlReturn.Where(row => (string)row[0] == ticker).Select(
+                    row => new DailyData() {
+                            Date = ((DateTime)row[1]),
+                            ClosePrice = (double)Convert.ToDecimal(row[2])  // row[2] is object(double) if it is a stock (because Adjustment multiplier), and object(float) if it is Indices. However Convert.ToDouble(row[2]) would convert 16.66 to 16.6599999
+                        }).ToList()
+                    ).ToList();
             else
                 throw new NotImplementedException();
 

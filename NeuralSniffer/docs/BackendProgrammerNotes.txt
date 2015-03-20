@@ -1,0 +1,68 @@
+﻿*********************
+
+
+
+*******2015-03-19 **********  Effect of Using only 1 SQL access, instead of 2 SQL accesses (previously Select StockID from Tickers were sent separately)
+A. Local development, localhost:
+A.1 SPY:
+2 SQL query (before):
+DebugMessage:  SQL query time: 668ms, RT query time: 231ms, All query time: 671ms, TotalC#Response: 700ms 
+DebugMessage:  SQL query time: 655ms, RT query time: 205ms, All query time: 656ms, TotalC#Response: 668ms 
+DebugMessage:  SQL query time: 868ms, RT query time: 208ms, All query time: 869ms, TotalC#Response: 874ms 
+DebugMessage:  SQL query time: 688ms, RT query time: 190ms, All query time: 691ms, TotalC#Response: 713ms 
+DebugMessage:  SQL query time: 658ms, RT query time: 221ms, All query time: 660ms, TotalC#Response: 677ms 
+1. SQL query (after):
+DebugMessage:  SQL query time: 640ms, RT query time: 201ms, All query time: 640ms, TotalC#Response: 645ms  
+DebugMessage:  SQL query time: 661ms, RT query time: 201ms, All query time: 664ms, TotalC#Response: 687ms  
+DebugMessage:  SQL query time: 656ms, RT query time: 200ms, All query time: 658ms, TotalC#Response: 682ms  
+DebugMessage:  SQL query time: 684ms, RT query time: 200ms, All query time: 685ms, TotalC#Response: 692ms  
+DebugMessage:  SQL query time: 723ms, RT query time: 322ms, All query time: 725ms, TotalC#Response: 749ms  
+>Success: Saving of 30ms (locally)
+
+A.2 VXX:
+2 SQL query:
+DebugMessage:  SQL query time: 195ms, RT query time: 147ms, All query time: 196ms, TotalC#Response: 204ms 
+DebugMessage:  SQL query time: 194ms, RT query time: 115ms, All query time: 194ms, TotalC#Response: 196ms 
+DebugMessage:  SQL query time: 207ms, RT query time: 114ms, All query time: 208ms, TotalC#Response: 216ms 
+DebugMessage:  SQL query time: 198ms, RT query time: 114ms, All query time: 198ms, TotalC#Response: 202ms 
+DebugMessage:  SQL query time: 192ms, RT query time: 122ms, All query time: 193ms, TotalC#Response: 201ms 
+1. SQL query:
+DebugMessage:  SQL query time: 160ms, RT query time: 115ms, All query time: 160ms, TotalC#Response: 163ms  
+DebugMessage:  SQL query time: 163ms, RT query time: 112ms, All query time: 163ms, TotalC#Response: 167ms  
+DebugMessage:  SQL query time: 163ms, RT query time: 129ms, All query time: 163ms, TotalC#Response: 164ms  
+DebugMessage:  SQL query time: 169ms, RT query time: 113ms, All query time: 169ms, TotalC#Response: 170ms  
+DebugMessage:  SQL query time: 169ms, RT query time: 114ms, All query time: 169ms, TotalC#Response: 170ms  
+>Success: Saving of 30ms (locally)
+**********************
+B. Remote on Azure Server
+B.1 SPY:
+2 SQL query:
+DebugMessage: SQL query time: 632ms, RT query time: 181ms, All query time: 632ms, TotalC#Response: 645ms
+DebugMessage: SQL query time: 583ms, RT query time: 170ms, All query time: 584ms, TotalC#Response: 593ms
+DebugMessage: SQL query time: 609ms, RT query time: 192ms, All query time: 609ms, TotalC#Response: 622ms
+DebugMessage: SQL query time: 600ms, RT query time: 185ms, All query time: 601ms, TotalC#Response: 614ms
+DebugMessage: SQL query time: 658ms, RT query time: 168ms, All query time: 658ms, TotalC#Response: 679ms
+Avg: 615.4
+1. SQL query:
+DebugMessage: SQL query time: 620ms, RT query time: 194ms, All query time: 621ms, TotalC#Response: 636ms
+DebugMessage: SQL query time: 620ms, RT query time: 293ms, All query time: 620ms, TotalC#Response: 638ms 
+DebugMessage: SQL query time: 673ms, RT query time: 177ms, All query time: 674ms, TotalC#Response: 683ms
+DebugMessage: SQL query time: 608ms, RT query time: 175ms, All query time: 608ms, TotalC#Response: 618ms
+DebugMessage: SQL query time: 634ms, RT query time: 171ms, All query time: 635ms, TotalC#Response: 648ms
+Avg: 631 (no real time saving, because inside data center; the access is quite instant)
+
+B.2 VXX:
+2 SQL query:
+DebugMessage: SQL query time: 157ms, RT query time: 088ms, All query time: 157ms, TotalC#Response: 160ms
+DebugMessage: SQL query time: 133ms, RT query time: 090ms, All query time: 133ms, TotalC#Response: 135ms 
+DebugMessage: SQL query time: 135ms, RT query time: 100ms, All query time: 135ms, TotalC#Response: 137ms
+DebugMessage: SQL query time: 132ms, RT query time: 186ms, All query time: 187ms, TotalC#Response: 190ms
+DebugMessage: SQL query time: 131ms, RT query time: 094ms, All query time: 131ms, TotalC#Response: 134m
+Avg: 137.6
+1. SQL query:
+DebugMessage: SQL query time: 139ms, RT query time: 084ms, All query time: 140ms, TotalC#Response: 142ms
+DebugMessage: SQL query time: 143ms, RT query time: 090ms, All query time: 143ms, TotalC#Response: 146ms
+DebugMessage: SQL query time: 133ms, RT query time: 083ms, All query time: 133ms, TotalC#Response: 136ms 
+DebugMessage: SQL query time: 133ms, RT query time: 093ms, All query time: 134ms, TotalC#Response: 136ms
+DebugMessage: SQL query time: 151ms, RT query time: 083ms, All query time: 151ms, TotalC#Response: 154ms
+Avg: 139.8 (no real time saving, because inside data center; the access is quite instant)

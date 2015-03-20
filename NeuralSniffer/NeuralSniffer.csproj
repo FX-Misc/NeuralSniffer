@@ -77,6 +77,7 @@
     <Content Include="charting_library\charting_library.min-deobfuscated.js" />
     <Content Include="charting_library\charting_library.min.js" />
     <Content Include="charting_library\customization.txt" />
+    <Content Include="docs\BackendProgrammerNotes.txt" />
     <Content Include="css\QuickTester.css" />
     <Content Include="SQQuickTester\QuickTester.js" />
     <Content Include="SQQuickTester\QuickTester.htm" />

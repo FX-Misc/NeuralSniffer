@@ -81,7 +81,7 @@ namespace NeuralSniffer.Controllers.Strategies
                     strategyParams = "";
             }
 
-            bullishTradingInstrument = bullishTradingInstrument.Replace("%20", " ");
+            //bullishTradingInstrument = bullishTradingInstrument.Replace("%20", " ");
             ind = bullishTradingInstrument.IndexOf(' ');        // "long SPY", "long QQQ", "short VXX"
             Utils.StrongAssert(ind != -1 && ind != (bullishTradingInstrument.Length - 1), "bullishTradingInstrument parameter cannot be interpreted: " + bullishTradingInstrument);
             string stock = bullishTradingInstrument.Substring(ind + 1);
