@@ -11,6 +11,12 @@ using System.Web;
 
 namespace NeuralSniffer.Controllers.Strategies
 {
+    public class GeneralStrategyParameters
+    {
+        public DateTime startDateUtc;
+        public DateTime endDateUtc;        
+    }
+
     // ideas what to include come from Portfolio123: http://imarketsignals.com/2015/best8-sp500-min-volatility-large-cap-portfolio-management-system/
     public class StrategyResult
     {
@@ -150,19 +156,32 @@ namespace NeuralSniffer.Controllers.Strategies
         }
 
         //public static async Task<Tuple<IList<object[]>,TimeSpan>> GetHistQuotesAsync(IEnumerable<QuoteRequest> p_req, HQCommon.AssetType p_at, bool? p_isAscendingDates = null, CancellationToken p_canc = default(CancellationToken))
-        public static async Task<Tuple<List<object[]>, TimeSpan>> GetHistQuotesAsync(List<string> p_tickers, ushort p_sqlReturnedColumns)
+        public static async Task<Tuple<List<object[]>, TimeSpan>> GetHistQuotesAsync(GeneralStrategyParameters p_generalParams, List<string> p_tickers, ushort p_sqlReturnedColumns)
         {
             List<string> stockTickers = p_tickers.Where(r => !r.StartsWith("^")).ToList();
             List<string> indicesTickers = p_tickers.Where(r => r.StartsWith("^")).ToList();
+
+            TimeZoneInfo etZone = null;
+
+            int requestNQuotes = Int32.MaxValue;
+            DateTime? requestStartDateExcgLocal = null, requestEndDateExcgLocal = null;
+            if (p_generalParams.startDateUtc != DateTime.MinValue)
+            {
+                ConvertUtcToExchangeLocal(p_generalParams.startDateUtc, ref etZone, ref requestStartDateExcgLocal);
+            }
+            if (p_generalParams.endDateUtc != DateTime.MaxValue)
+            {
+                ConvertUtcToExchangeLocal(p_generalParams.endDateUtc, ref etZone, ref requestEndDateExcgLocal);
+            }
 
             Stopwatch stopWatch = Stopwatch.StartNew();
 
             Task<IList<object[]>> stocksSqlReturnTask = null, indicesSqlReturnTask = null; ;
             IList<object[]> stocksSqlReturn = null, indicesSqlReturn = null;
             if (stockTickers.Count != 0)
-                stocksSqlReturnTask = Tools.GetHistoricalQuotesAsync(stockTickers.Select(r => new QuoteRequest { Ticker = r, nQuotes = Int32.MaxValue, NonAdjusted = false, ReturnedColumns = p_sqlReturnedColumns }), HQCommon.AssetType.Stock, true); // Ascending date order: TRUE, better to order it at the SQL server than locally. SQL has indexers
+                stocksSqlReturnTask = Tools.GetHistoricalQuotesAsync(stockTickers.Select(r => new QuoteRequest { Ticker = r, nQuotes = requestNQuotes, StartDate = requestStartDateExcgLocal, EndDate = requestEndDateExcgLocal, NonAdjusted = false, ReturnedColumns = p_sqlReturnedColumns }), HQCommon.AssetType.Stock, true); // Ascending date order: TRUE, better to order it at the SQL server than locally. SQL has indexers
             if (indicesTickers.Count != 0)
-                indicesSqlReturnTask = Tools.GetHistoricalQuotesAsync(indicesTickers.Select(r => new QuoteRequest { Ticker = r, nQuotes = Int32.MaxValue, NonAdjusted = false, ReturnedColumns = p_sqlReturnedColumns }), HQCommon.AssetType.BenchmarkIndex, true); // Ascending date order: TRUE, better to order it at the SQL server than locally. SQL has indexers
+                indicesSqlReturnTask = Tools.GetHistoricalQuotesAsync(indicesTickers.Select(r => new QuoteRequest { Ticker = r, nQuotes = requestNQuotes, StartDate = requestStartDateExcgLocal, EndDate = requestEndDateExcgLocal, NonAdjusted = false, ReturnedColumns = p_sqlReturnedColumns }), HQCommon.AssetType.BenchmarkIndex, true); // Ascending date order: TRUE, better to order it at the SQL server than locally. SQL has indexers
 
             if (stockTickers.Count != 0)
                 stocksSqlReturn = await stocksSqlReturnTask;
@@ -184,9 +203,22 @@ namespace NeuralSniffer.Controllers.Strategies
 
             return new Tuple<List<object[]>, TimeSpan>(sqlReturn, historicalQueryTimeSpan);
         }
+
+        private static void ConvertUtcToExchangeLocal(DateTime p_dateTimeUtc, ref TimeZoneInfo etZone, ref DateTime? requestStartDateExcgLocal)
+        {
+            DateTime startDateUtc = p_dateTimeUtc;
+            if (startDateUtc.TimeOfDay.Ticks == 0) // if it ends with :00:00:00
+            {
+                startDateUtc = new DateTime(startDateUtc.Year, startDateUtc.Month, startDateUtc.Day, 16, 0, 0);
+            }
+
+            if (etZone == null)
+                etZone = TimeZoneInfo.FindSystemTimeZoneById("Eastern Standard Time");
+            requestStartDateExcgLocal = TimeZoneInfo.ConvertTimeFromUtc(startDateUtc, etZone).Date;  // convert UTC to ExcgLocal
+        }
     
 
-        public static async Task<Tuple<IList<List<DailyData>>,TimeSpan, TimeSpan>> GetHistoricalAndRealtimesQuotesAsync(List<string> p_tickers, CancellationToken p_canc = default(CancellationToken))
+        public static async Task<Tuple<IList<List<DailyData>>,TimeSpan, TimeSpan>> GetHistoricalAndRealtimesQuotesAsync(GeneralStrategyParameters p_generalParams, List<string> p_tickers, CancellationToken p_canc = default(CancellationToken))
         {
             //- SPY 300K CSV SQLqueryTime (local server), msecond times for  (for Azure in-house datacenter, these will be less)
             //All data: Open, High, Low, Close, Volume : 886, 706, 1237, 761, 727, Avg = 863
@@ -198,22 +230,26 @@ namespace NeuralSniffer.Controllers.Strategies
             ushort sqlReturnedColumns = QuoteRequest.TDC;       // QuoteRequest.All or QuoteRequest.TDOHLCVS
 
             //var sqlReturnTask = GetHistQuotesAsync(p_tickers.Select(r => new QuoteRequest { Ticker = r, nQuotes = Int32.MaxValue, NonAdjusted = false, ReturnedColumns = sqlReturnedColumns }), HQCommon.AssetType.Stock, true); // Ascending date order: TRUE, better to order it at the SQL server than locally. SQL has indexers
-            var sqlReturnTask = GetHistQuotesAsync(p_tickers, sqlReturnedColumns); 
+            var sqlReturnTask = GetHistQuotesAsync(p_generalParams, p_tickers, sqlReturnedColumns);
 
-            var realtimeReturnTask = GetRealtimesQuotesAsync(p_tickers);
+            Task<Tuple<IList<double?>, TimeSpan>> realtimeReturnTask = null;
+            if (p_generalParams.endDateUtc >= DateTime.UtcNow)
+                realtimeReturnTask = GetRealtimesQuotesAsync(p_tickers);
 
             // Control returns here before GetHistoricalQuotesAsync() returns.  // ... Prompt the user.
             Console.WriteLine("Please wait patiently while I do SQL and realtime price queries.");
 
             // Wait for the tasks to complete.            // ... Display its results.
             //var combinedAsyncTasksResults = await Task.WhenAll(sqlReturnTask, realtimeReturnTask); this cannot be done now, because the return values are different
-            await Task.WhenAll(sqlReturnTask, realtimeReturnTask);
-
+            if (realtimeReturnTask != null)
+                await Task.WhenAll(sqlReturnTask, realtimeReturnTask);  // otherwise, the next await will wait the historical data
+            
             var sqlReturnData = await sqlReturnTask;  //as they have all definitely finished, you could also use Task.Value, "However, I recommend using await because it's clearly correct, while Result can cause problems in other scenarios."
-            var realtimeReturnData = await realtimeReturnTask; //as they have all definitely finished, you could also use Task.Value, "However, I recommend using await because it's clearly correct, while Result can cause problems in other scenarios."
+            Tuple<IList<double?>, TimeSpan> realtimeReturnData = null;
+            if (realtimeReturnTask != null)
+                realtimeReturnData = await realtimeReturnTask; //as they have all definitely finished, you could also use Task.Value, "However, I recommend using await because it's clearly correct, while Result can cause problems in other scenarios."
 
             var sqlReturn = sqlReturnData.Item1;
-            var realtimeReturn = realtimeReturnData.Item1;
             List<List<DailyData>> returnQuotes = null;
             if (sqlReturnedColumns == QuoteRequest.TDOHLCVS)
                 returnQuotes = p_tickers.Select(ticker => sqlReturn.Where(row => (string)row[0] == ticker).Select(row => new DailyData() { Date = ((DateTime)row[1]), ClosePrice = (double)Convert.ToDecimal(row[5])}).ToList()).ToList();
@@ -227,23 +263,28 @@ namespace NeuralSniffer.Controllers.Strategies
             else
                 throw new NotImplementedException();
 
-            var todayDate = DateTime.UtcNow.Date;
-            for (int i = 0; i < p_tickers.Count(); i++)
+            if (realtimeReturnData != null)
             {
-                if (realtimeReturn[i] != null)
+                var todayDate = DateTime.UtcNow.Date;
+                var realtimeReturn = realtimeReturnData.Item1;
+                for (int i = 0; i < p_tickers.Count(); i++)
                 {
-                    int todayInd = returnQuotes[i].FindLastIndex(r => r.Date == todayDate);
-                    if (todayInd == -1) // if it is missing
+                    if (realtimeReturn[i] != null)
                     {
-                        returnQuotes[i].Add(new DailyData() { Date = todayDate, ClosePrice = (double)realtimeReturn[i] });
-                    } else // if it is already in the array, overwrite it
-                    {
-                        returnQuotes[i][todayInd].ClosePrice = (double)realtimeReturn[i];
+                        int todayInd = returnQuotes[i].FindLastIndex(r => r.Date == todayDate);
+                        if (todayInd == -1) // if it is missing
+                        {
+                            returnQuotes[i].Add(new DailyData() { Date = todayDate, ClosePrice = (double)realtimeReturn[i] });
+                        }
+                        else // if it is already in the array, overwrite it
+                        {
+                            returnQuotes[i][todayInd].ClosePrice = (double)realtimeReturn[i];
+                        }
                     }
                 }
             }
 
-            return new Tuple<IList<List<DailyData>>, TimeSpan, TimeSpan>(returnQuotes, sqlReturnData.Item2, realtimeReturnData.Item2);
+            return new Tuple<IList<List<DailyData>>, TimeSpan, TimeSpan>(returnQuotes, sqlReturnData.Item2, (realtimeReturnData != null)?realtimeReturnData.Item2:TimeSpan.Zero);
         }
 
 

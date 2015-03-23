@@ -10,7 +10,7 @@ namespace NeuralSniffer.Controllers.Strategies
 {
     public class TotM
     {
-        public static async Task<string> GenerateQuickTesterResponse(string p_strategyName, string p_params)
+        public static async Task<string> GenerateQuickTesterResponse(GeneralStrategyParameters p_generalParams, string p_strategyName, string p_params)
         {
             Stopwatch stopWatchTotalResponse = Stopwatch.StartNew();
 
@@ -89,7 +89,7 @@ namespace NeuralSniffer.Controllers.Strategies
 
 
             Stopwatch stopWatch = Stopwatch.StartNew();
-            var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync((new string[] { stock }).ToList());
+            var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(p_generalParams, (new string[] { stock }).ToList());
             // Control returns here before GetHistoricalQuotesAsync() returns.  // ... Prompt the user.
             Console.WriteLine("Please wait patiently while I do SQL and realtime price queries.");
             var getAllQuotesData = await getAllQuotesTask;
@@ -116,7 +116,7 @@ namespace NeuralSniffer.Controllers.Strategies
 
             stopWatchTotalResponse.Stop();
             StrategyResult strategyResult = StrategiesCommon.CreateStrategyResultFromPV(pv,
-                "Bearish on days when mask is D(own), Bullish  if mask is U(p). " + noteToUserCheckData + "***" + noteToUserBacktest, errorMessage,
+                "Bullish (Bearish) on days when mask is Up (Down)." + noteToUserCheckData + "***" + noteToUserBacktest, errorMessage,
                 debugMessage + String.Format("SQL query time: {0:000}ms", getAllQuotesData.Item2.TotalMilliseconds) + String.Format(", RT query time: {0:000}ms", getAllQuotesData.Item3.TotalMilliseconds) + String.Format(", All query time: {0:000}ms", stopWatch.Elapsed.TotalMilliseconds) + String.Format(", TotalC#Response: {0:000}ms", stopWatchTotalResponse.Elapsed.TotalMilliseconds));
             string jsonReturn = JsonConvert.SerializeObject(strategyResult);
             return jsonReturn;

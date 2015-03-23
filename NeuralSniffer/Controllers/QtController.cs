@@ -54,6 +54,38 @@ namespace NeuralSniffer.Controllers
                     uriQuery = uriQuery.Substring(ind + 1);
                 }
 
+                if (!uriQuery.StartsWith("StartDate=", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    throw new Exception("Error: StartDate= was not found. Uri: " + uriQuery);
+                }
+                uriQuery = uriQuery.Substring("StartDate=".Length);
+                ind = uriQuery.IndexOf('&');
+                if (ind == -1)
+                {
+                    ind = uriQuery.Length;
+                }
+                string startDateStr = uriQuery.Substring(0, ind);
+                if (ind < uriQuery.Length)  // if we are not at the end of the string
+                    uriQuery = uriQuery.Substring(ind + 1);
+                else
+                    uriQuery = "";
+
+                if (!uriQuery.StartsWith("EndDate=", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    throw new Exception("Error: EndDate= was not found. Uri: " + uriQuery);
+                }
+                uriQuery = uriQuery.Substring("EndDate=".Length);
+                ind = uriQuery.IndexOf('&');
+                if (ind == -1)
+                {
+                    ind = uriQuery.Length;
+                }
+                string endDateStr = uriQuery.Substring(0, ind);
+                if (ind < uriQuery.Length)  // if we are not at the end of the string
+                    uriQuery = uriQuery.Substring(ind + 1);
+                else
+                    uriQuery = "";
+
 
                 if (!uriQuery.StartsWith("strategy=", StringComparison.InvariantCultureIgnoreCase))
                 {
@@ -74,16 +106,26 @@ namespace NeuralSniffer.Controllers
 
                 string strategyParams = uriQuery;
 
+                DateTime startDate = DateTime.MinValue;
+                if (startDateStr.Length != 0)
+                {
+                    if (!DateTime.TryParse(startDateStr, out startDate))
+                        throw new Exception("Error: startDateStr couldn't be converted: " + uriQuery);
+                }
+                DateTime endDate = DateTime.MaxValue;
+                if (endDateStr.Length != 0)
+                {
+                    if (!DateTime.TryParse(endDateStr, out endDate))
+                        throw new Exception("Error: endDateStr couldn't be converted: " + uriQuery);
+                }
 
+                GeneralStrategyParameters generalParams = new GeneralStrategyParameters() { startDateUtc = startDate, endDateUtc = endDate };
 
-
-
-                
-                string jsonString = (await VXX_SPY_Controversial.GenerateQuickTesterResponse(strategyName, strategyParams));
+                string jsonString = (await VXX_SPY_Controversial.GenerateQuickTesterResponse(generalParams, strategyName, strategyParams));
                 if (jsonString == null)
-                    jsonString = (await LEtfDistcrepancy.GenerateQuickTesterResponse(strategyName, strategyParams));
+                    jsonString = (await LEtfDistcrepancy.GenerateQuickTesterResponse(generalParams, strategyName, strategyParams));
                 if (jsonString == null)
-                    jsonString = (await TotM.GenerateQuickTesterResponse(strategyName, strategyParams));
+                    jsonString = (await TotM.GenerateQuickTesterResponse(generalParams, strategyName, strategyParams));
 
                 if (jsonString == null)
                     throw new Exception("Strategy was not found in the WebApi: " + strategyName);

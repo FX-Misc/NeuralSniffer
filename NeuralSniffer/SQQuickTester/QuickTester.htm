@@ -81,6 +81,35 @@
     </div>
     <br>
     <div style="width: 100%; height: 1px; background: #808080; overflow: hidden;"></div>
+
+
+
+    <a href="javascript:SQToggle('idGeneralParameters', 'idAlwaysVisibleSwitch0', 'General Parameters');" id="idAlwaysVisibleSwitch0">+ Show General Parameters</a>
+    <br />
+    <div id="idGeneralParameters" style="display: none;">
+        <table id="idGeneralParametersTable">
+            <colgroup>
+                <col class="column1" />
+                <col class="column2" />
+            </colgroup>
+            <thead>
+                <tr>
+                    <th>StartDateUtc*</th>
+                    <th>EndDateUtc*</th>
+                    <th class="xSmallComment">*(UTC-16:00 will be converted to Exchange Time Zone)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><input type="text" ng-model="inputStartDateStr" style="width: 100px; padding: 1px; border: 1px solid #A0A0A0" /></td>
+                    <td><input type="text" ng-model="inputEndDateStr" style="width: 100px; padding: 1px; border: 1px solid #A0A0A0" /></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    
+
+
     <span>SelectedStrategy:</span>
     <span class="spanStrategyDescription"> {{selectedStrategyName}} </span>
     <a id="googleHelpHref" target="_blank" ng-href="{{strategyGoogleDocHelpUri}}" href=""> Help</a>
@@ -92,9 +121,6 @@
     <!--#include virtual="/SQQuickTester/Strategies/L-ETF-Discrepancy/L-ETF-DiscrepancyInput.htm"-->
     <!--// How to Eliminate Whitespace around Server Side Includes when Pages are UTF-8 Encoded? http://stackoverflow.com/questions/7196993/how-to-eliminate-whitespace-around-server-side-includes-when-pages-are-utf-8-enc-->
     <!--<div style="width: 50%; height: 1px; background: #ffffff; overflow: hidden;"></div>--> <!--extra 1 pixel line, so that the input rows doesn't touch each other -->
-
-
-
     <div style="width: 100%; height: 2px; background: #ffffff; overflow: hidden;"></div>
     <div style="width: 100%; height: 1px; background: #808080; overflow: hidden;"></div>
     <!--Ideas what to put here as Statistics come from Portfolio123 http://imarketsignals.com/2015/best8-sp500-min-volatility-large-cap-portfolio-management-system/-->
@@ -154,8 +180,6 @@
             </tr>
         </tbody>
     </table>
-
-    <br />
     Note from Strategy:
     <span> {{noteFromStrategy}} </span>
     <br>
@@ -182,7 +206,6 @@
     </table>
     Holdings List:
     <span> {{holdingsListStr}} </span>
-
     <br><br>
     ErrorMessage:
     <span> {{errorMessage}} </span>

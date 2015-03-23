@@ -15,6 +15,9 @@ app.controller('QuickTesterCtrl', function ($scope, $http) {   // runs after Ang
 
     $scope.tradingViewChartName = "DayOfTheWeek data";
 
+    $scope.inputStartDateStr = "";  // empty string means maximum available
+    $scope.inputEndDateStr = "";    // empty string means: today
+
     // Inputs area
     //$scope.selectedStrategy = "LETFDiscrepancy1";
     $scope.selectedStrategyMenuItemId = null;
@@ -177,9 +180,11 @@ app.controller('QuickTesterCtrl', function ($scope, $http) {   // runs after Ang
     
     $scope.StartBacktest = function () {
 
-        $scope.StartBacktest_TotM();
-        $scope.StartBacktest_VXX();
-        $scope.StartBacktest_LEtfDistcrepancy();
+        var generalInputParameters = "&StartDate=" + $scope.inputStartDateStr + "&EndDate=" + $scope.inputEndDateStr;
+
+        $scope.StartBacktest_TotM(generalInputParameters);
+        $scope.StartBacktest_VXX(generalInputParameters);
+        $scope.StartBacktest_LEtfDistcrepancy(generalInputParameters);
 
         $scope.profilingBacktestStopWatch = new StopWatch();
         $scope.profilingBacktestStopWatch.Start();
@@ -399,3 +404,15 @@ function MenuItemVersionInfoClicked() {
     controllerScope.ShowLongVersionInfo();
 }
 
+
+ function SQToggle(hiddenTextID, alwaysVisibleSwitchID, switchDisplayText) {
+     var hiddenText = document.getElementById(hiddenTextID);
+     var switchElement = document.getElementById(alwaysVisibleSwitchID);
+     if (hiddenText.style.display == "block") {
+         hiddenText.style.display = "none";
+         switchElement.innerHTML = "+ Show " + switchDisplayText;
+     } else {
+         hiddenText.style.display = "block";
+         switchElement.innerHTML = "- Hide " + switchDisplayText;
+     }
+ }

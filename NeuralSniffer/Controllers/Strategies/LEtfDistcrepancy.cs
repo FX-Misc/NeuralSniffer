@@ -12,7 +12,7 @@ namespace NeuralSniffer.Controllers.Strategies
 
     public partial class LEtfDistcrepancy
     {
-        public static async Task<string> GenerateQuickTesterResponse(string p_strategyName, string p_params)
+        public static async Task<string> GenerateQuickTesterResponse(GeneralStrategyParameters p_generalParams, string p_strategyName, string p_params)
         {
             Stopwatch stopWatchTotalResponse = Stopwatch.StartNew();
 
@@ -68,7 +68,7 @@ namespace NeuralSniffer.Controllers.Strategies
             // FAS: Nov 19, 2008
             // FAZ: Nov 19, 2008
             Stopwatch stopWatch = Stopwatch.StartNew();
-            var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync((new string[] { bullishTicker, bearishTicker }).ToList());
+            var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(p_generalParams, (new string[] { bullishTicker, bearishTicker }).ToList());
             // Control returns here before GetHistoricalQuotesAsync() returns.  // ... Prompt the user.
             Console.WriteLine("Please wait patiently while I do SQL and realtime price queries.");
             var getAllQuotesData = await getAllQuotesTask;

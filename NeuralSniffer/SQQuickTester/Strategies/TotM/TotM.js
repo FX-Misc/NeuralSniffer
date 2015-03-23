@@ -28,14 +28,14 @@ AngularInit_TotM = function ($scope, $http) {
         }
     };
 
-    $scope.StartBacktest_TotM = function () {
+    $scope.StartBacktest_TotM = function (generalInputParameters) {
         if ($scope.selectedStrategyMenuItemId != "idMenuItemTotM")
             return;
         //var url = "http://localhost:52174/q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=SRS-URE&rebalanceFrequency=5d";
         //var url = "http://localhost:52174/q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + $scope.selectedEtfPairs + "&rebalancingFrequency=" + $scope.rebalancingFrequency;
         //var url = "///q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + $scope.selectedEtfPairs + "&rebalancingFrequency=" + $scope.rebalancingFrequency;
         //var url = "/q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + $scope.selectedEtfPairs + "&rebalancingFrequency=" + $scope.rebalancingFrequency;
-        var url = "/q/qt?jsonp=JSON_CALLBACK&strategy=" + $scope.selectedStrategyWebApiName + "&BullishTradingInstrument=" + $scope.selectedBullishTradingInstrument
+        var url = "/q/qt?jsonp=JSON_CALLBACK" + generalInputParameters + "&strategy=" + $scope.selectedStrategyWebApiName + "&BullishTradingInstrument=" + $scope.selectedBullishTradingInstrument
             + "&DailyMarketDirectionMaskTotM=" + $scope.dailyMarketDirectionMaskTotM + "&DailyMarketDirectionMaskTotMM=" + $scope.dailyMarketDirectionMaskTotMM;
             
 

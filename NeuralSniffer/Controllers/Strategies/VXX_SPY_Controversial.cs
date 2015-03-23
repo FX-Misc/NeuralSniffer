@@ -10,7 +10,7 @@ namespace NeuralSniffer.Controllers.Strategies
 {
     public class VXX_SPY_Controversial
     {
-        public static async Task<string> GenerateQuickTesterResponse(string p_strategyName, string p_params)
+        public static async Task<string> GenerateQuickTesterResponse(GeneralStrategyParameters p_generalParams, string p_strategyName, string p_params)
         {
             Stopwatch stopWatchTotalResponse = Stopwatch.StartNew();
 
@@ -82,7 +82,7 @@ namespace NeuralSniffer.Controllers.Strategies
 
 
             Stopwatch stopWatch = Stopwatch.StartNew();
-            var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync((new string[] { "VXX", "SPY" }).ToList());
+            var getAllQuotesTask = StrategiesCommon.GetHistoricalAndRealtimesQuotesAsync(p_generalParams, (new string[] { "VXX", "SPY" }).ToList());
             // Control returns here before GetHistoricalQuotesAsync() returns.  // ... Prompt the user.
             Console.WriteLine("Please wait patiently while I do SQL and realtime price queries.");
             var getAllQuotesData = await getAllQuotesTask;

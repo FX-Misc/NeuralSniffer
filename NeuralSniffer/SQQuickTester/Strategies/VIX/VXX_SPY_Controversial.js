@@ -38,7 +38,7 @@ AngularInit_VXX = function ($scope, $http) {
         //var url = "http://localhost:52174/q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + $scope.selectedEtfPairs + "&rebalancingFrequency=" + $scope.rebalancingFrequency;
         //var url = "///q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + $scope.selectedEtfPairs + "&rebalancingFrequency=" + $scope.rebalancingFrequency;
         //var url = "/q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + $scope.selectedEtfPairs + "&rebalancingFrequency=" + $scope.rebalancingFrequency;
-        var url = "/q/qt?jsonp=JSON_CALLBACK&strategy=" + $scope.selectedStrategyWebApiName + "&SpyMinPctMove=" + $scope.spyMinPctMove + "&VxxMinPctMove=" + $scope.vxxMinPctMove + "&LongOrShortTrade=" + $scope.selectedVXXLongOrShortTrade;
+        var url = "/q/qt?jsonp=JSON_CALLBACK" + generalInputParameters + "&strategy=" + $scope.selectedStrategyWebApiName + "&SpyMinPctMove=" + $scope.spyMinPctMove + "&VxxMinPctMove=" + $scope.vxxMinPctMove + "&LongOrShortTrade=" + $scope.selectedVXXLongOrShortTrade;
 
 
         $http.jsonp(url).
