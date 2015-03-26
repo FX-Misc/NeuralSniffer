@@ -10,10 +10,15 @@ AngularInit_TotM = function ($scope, $http) {
     //$scope.totMLongOrShortWhenBullish = ["Long", "Short"];
     //$scope.selectedTotMLongOrShortWhenBullish = "Long";
 
-    $scope.dailyMarketDirectionMaskSummerTotM = "D.UUU00DD";  //Mask: D0.UU, Up: Market Up, D: Down, 0:Cash (B is not good because Bullish, Bearish): other option Comma separation, but not necessary here
-    $scope.dailyMarketDirectionMaskSummerTotMM = "DDUU.UU";
-    $scope.dailyMarketDirectionMaskWinterTotM = "D.UUU00DD";
-    $scope.dailyMarketDirectionMaskWinterTotMM = "DDUU.UU";
+    //$scope.dailyMarketDirectionMaskSummerTotM = "D.UUU00DD";  //Mask: D0.UU, Up: Market Up, D: Down, 0:Cash (B is not good because Bullish, Bearish): other option Comma separation, but not necessary here
+    //$scope.dailyMarketDirectionMaskSummerTotMM = "DDUU.UU";
+    //$scope.dailyMarketDirectionMaskWinterTotM = "D.UUU00DD";
+    //$scope.dailyMarketDirectionMaskWinterTotMM = "DDUU.UU";
+
+    $scope.dailyMarketDirectionMaskWinterTotM = "UUUD.UUU";//Mask: D0.UU, Up: Market Up, D: Down, 0:Cash (B is not good because Bullish, Bearish): other option Comma separation, but not necessary here
+    $scope.dailyMarketDirectionMaskWinterTotMM = "DDUU.UU00UU";
+    $scope.dailyMarketDirectionMaskSummerTotM = "DDDDUUD.UDD";
+    $scope.dailyMarketDirectionMaskSummerTotMM = "DDUU.UU00DDD";
     //$scope.dailyMarketDirectionMaskTotMM = "";
 
 
