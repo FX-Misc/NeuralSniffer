@@ -6,15 +6,20 @@
     <thead>
         <tr>
             <th>Trading instrument<br />on bullish day</th>
-            <th>Daily market direction<br />mask(TotM, rel.to 1st day)</th>
-            <th>Daily market direction<br />mask(TotMM, rel.to 15th day)</th>
+            <th>Daily mask, Summer<br />(TotM, rel.to 1st day)</th>
+            <th>Daily mask, Summer<br />(TotMM, rel.to 15th day)</th>
+            <th>Daily mask, Winter<br />(TotM, rel.to 1st day)</th>
+            <th>Daily mask, Winter<br />(TotMM, rel.to 15th day)</th>
+            
         </tr>
     </thead>
     <tbody>
         <tr>
             <td><select ng-model="selectedBullishTradingInstrument" ng-options="opt as opt for opt in bullishTradingInstrument" ng-change="bullishTradingInstrumentChanged()"></select></td>
-            <td><input type="text" ng-model="dailyMarketDirectionMaskTotM" style="width: 140px; padding: 2px; border: 1px solid #A0A0A0" /></td>
-            <td><input type="text" ng-model="dailyMarketDirectionMaskTotMM" style="width: 140px; padding: 2px; border: 1px solid #A0A0A0" /></td>
+            <td><input type="text" ng-model="dailyMarketDirectionMaskSummerTotM" style="width: 140px; padding: 2px; border: 1px solid #A0A0A0" onkeypress="OnParameterInputKeypress(event);" /></td>
+            <td><input type="text" ng-model="dailyMarketDirectionMaskSummerTotMM" style="width: 140px; padding: 2px; border: 1px solid #A0A0A0" onkeypress="OnParameterInputKeypress(event);" /></td>
+            <td><input type="text" ng-model="dailyMarketDirectionMaskWinterTotM" style="width: 140px; padding: 2px; border: 1px solid #A0A0A0" onkeypress="OnParameterInputKeypress(event);" /></td>
+            <td><input type="text" ng-model="dailyMarketDirectionMaskWinterTotMM" style="width: 140px; padding: 2px; border: 1px solid #A0A0A0" onkeypress="OnParameterInputKeypress(event);" /></td>
         </tr>
     </tbody>
 </table>

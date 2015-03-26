@@ -375,16 +375,13 @@ TradingView.onready(function()
 })
 
 function MenuItemStartBacktestClicked() {
-
     var controllerElement = document.querySelector('body');
     var controllerScope = angular.element(controllerElement).scope();
 
     controllerScope.StartBacktest();
 }
 
-
-function MenuItemStrategyClick(element)
-{
+function MenuItemStrategyClick(element) {
     $(".sqMenuBarLevel2").hide();
     $(".sqMenuBarLevel1").hide();
 
@@ -393,11 +390,9 @@ function MenuItemStrategyClick(element)
 
     //http://jimhoskins.com/2012/12/17/angularjs-and-apply.html
     controllerScope.$apply(controllerScope.SelectStrategy(element.id));  // use Apply from MenuClick, but you don't have to use it from an Angular function
-    
 }
 
 function MenuItemVersionInfoClicked() {
-
     var controllerElement = document.querySelector('body');
     var controllerScope = angular.element(controllerElement).scope();
 
@@ -416,3 +411,12 @@ function MenuItemVersionInfoClicked() {
          switchElement.innerHTML = "- Hide " + switchDisplayText;
      }
  }
+
+
+ function OnParameterInputKeypress(event) {
+     var chCode = ('charCode' in event) ? event.charCode : event.keyCode;
+     if (chCode == 13)
+         MenuItemStartBacktestClicked();
+     //alert("The Unicode character code is: " + chCode);
+ }
+ 

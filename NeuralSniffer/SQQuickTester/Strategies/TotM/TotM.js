@@ -1,7 +1,7 @@
 ﻿
 AngularInit_TotM = function ($scope, $http) {
 
-    $scope.bullishTradingInstrument = ["Long SPY", "Long ^GSPC", "Long QQQ", "Long QLD", "Long TQQQ", "Long IWM", "Short VXX"];
+    $scope.bullishTradingInstrument = ["Long SPY", "Long ^GSPC", "Long ^IXIC", "Long ^RUT", "Long QQQ", "Long QLD", "Long TQQQ", "Long IWM", "Short VXX"];
     $scope.selectedBullishTradingInstrument = $scope.bullishTradingInstrument[0];
 
     //$scope.totMStock = ["SPY", "QQQ", "VXX"];
@@ -10,8 +10,10 @@ AngularInit_TotM = function ($scope, $http) {
     //$scope.totMLongOrShortWhenBullish = ["Long", "Short"];
     //$scope.selectedTotMLongOrShortWhenBullish = "Long";
 
-    $scope.dailyMarketDirectionMaskTotM = "D.UUU00DD";  //Mask: D0.UU, Up: Market Up, D: Down, 0:Cash (B is not good because Bullish, Bearish): other option Comma separation, but not necessary here
-    $scope.dailyMarketDirectionMaskTotMM = "DDUU.UU";
+    $scope.dailyMarketDirectionMaskSummerTotM = "D.UUU00DD";  //Mask: D0.UU, Up: Market Up, D: Down, 0:Cash (B is not good because Bullish, Bearish): other option Comma separation, but not necessary here
+    $scope.dailyMarketDirectionMaskSummerTotMM = "DDUU.UU";
+    $scope.dailyMarketDirectionMaskWinterTotM = "D.UUU00DD";
+    $scope.dailyMarketDirectionMaskWinterTotMM = "DDUU.UU";
     //$scope.dailyMarketDirectionMaskTotMM = "";
 
 
@@ -36,7 +38,8 @@ AngularInit_TotM = function ($scope, $http) {
         //var url = "///q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + $scope.selectedEtfPairs + "&rebalancingFrequency=" + $scope.rebalancingFrequency;
         //var url = "/q/qt?jsonp=JSON_CALLBACK&strategy=LETFDiscrepancy1&ETFPairs=" + $scope.selectedEtfPairs + "&rebalancingFrequency=" + $scope.rebalancingFrequency;
         var url = "/q/qt?jsonp=JSON_CALLBACK" + generalInputParameters + "&strategy=" + $scope.selectedStrategyWebApiName + "&BullishTradingInstrument=" + $scope.selectedBullishTradingInstrument
-            + "&DailyMarketDirectionMaskTotM=" + $scope.dailyMarketDirectionMaskTotM + "&DailyMarketDirectionMaskTotMM=" + $scope.dailyMarketDirectionMaskTotMM;
+            + "&DailyMarketDirectionMaskSummerTotM=" + $scope.dailyMarketDirectionMaskSummerTotM + "&DailyMarketDirectionMaskSummerTotMM=" + $scope.dailyMarketDirectionMaskSummerTotMM
+            + "&DailyMarketDirectionMaskWinterTotM=" + $scope.dailyMarketDirectionMaskWinterTotM + "&DailyMarketDirectionMaskWinterTotMM=" + $scope.dailyMarketDirectionMaskWinterTotMM;
             
 
         $http.jsonp(url).

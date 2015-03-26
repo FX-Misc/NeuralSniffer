@@ -12,7 +12,7 @@
     <tbody>
         <tr>
             <td><select ng-model="selectedEtfPairs" ng-options="opt as opt for opt in etfPairs" ng-change="etfPairsChanged()"></select></td>
-            <td><input type="text" ng-model="rebalancingFrequency" /></td>
+            <td><input type="text" ng-model="rebalancingFrequency" onkeypress="OnParameterInputKeypress(event);" /></td>
         </tr>
     </tbody>
 </table>
