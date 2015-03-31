@@ -206,7 +206,12 @@ body {
 
 
 
-#idAlwaysVisibleSwitch0 {
+/*#idAlwaysVisibleSwitch0 {
+    font-size: x-small;
+    font-weight: normal;
+}*/
+
+.alwaysVisibleSwitchClass {
     font-size: x-small;
     font-weight: normal;
 }
@@ -311,3 +316,17 @@ body {
 #statisticsTable #tdSharpe { font-weight:bold; }
 
 
+
+
+.strategyNoteTable1 th  {
+    padding: 0px 7px 0px 7px;
+    background-color: #BED5FE;
+}
+
+.strategyNoteTable1 tr.even {
+    background-color: #FEF6E0;
+}
+
+.strategyNoteTable1 td {
+    text-align: center;
+}

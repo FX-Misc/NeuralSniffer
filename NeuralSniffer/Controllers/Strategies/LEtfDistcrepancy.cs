@@ -75,7 +75,7 @@ namespace NeuralSniffer.Controllers.Strategies
             stopWatch.Stop();
 
 
-            string noteFromStrategy = "", noteToUserCheckData = "", noteToUserBacktest = "", debugMessage = "", errorMessage = "";
+            string htmlNoteFromStrategy = "", noteToUserCheckData = "", noteToUserBacktest = "", debugMessage = "", errorMessage = "";
 
             List<DailyData> pv = null;
             if (String.Equals(p_strategyName, "LETFDiscrepancy1", StringComparison.InvariantCultureIgnoreCase))
@@ -84,13 +84,13 @@ namespace NeuralSniffer.Controllers.Strategies
             }
             else
             {
-                pv = DoBacktestBasic(getAllQuotesData.Item1, bullishTicker, bearishTicker, p_strategyName, rebalancingFrequency, ref noteToUserCheckData, ref noteFromStrategy);
+                pv = DoBacktestBasic(getAllQuotesData.Item1, bullishTicker, bearishTicker, p_strategyName, rebalancingFrequency, ref noteToUserCheckData, ref htmlNoteFromStrategy);
             }
 
 
             stopWatchTotalResponse.Stop();
             StrategyResult strategyResult = StrategiesCommon.CreateStrategyResultFromPV(pv,
-                noteFromStrategy +". " + noteToUserCheckData + "***" + noteToUserBacktest, errorMessage,
+                htmlNoteFromStrategy + ". " + noteToUserCheckData + "***" + noteToUserBacktest, errorMessage,
                 debugMessage + String.Format("SQL query time: {0:000}ms", getAllQuotesData.Item2.TotalMilliseconds) + String.Format(", RT query time: {0:000}ms", getAllQuotesData.Item3.TotalMilliseconds) + String.Format(", All query time: {0:000}ms", stopWatch.Elapsed.TotalMilliseconds) + String.Format(", TotalC#Response: {0:000}ms", stopWatchTotalResponse.Elapsed.TotalMilliseconds));
             string jsonReturn = JsonConvert.SerializeObject(strategyResult);
             return jsonReturn;
@@ -122,7 +122,7 @@ namespace NeuralSniffer.Controllers.Strategies
            return pv;
         }
 
-        static List<DailyData> DoBacktestBasic(IList<List<DailyData>> p_allQuotes, string p_bullishTicker, string p_bearishTicker, string p_strategyName, string p_rebalancingFrequency, ref string p_noteToUserCheckData, ref string p_noteFromStrategy)
+        static List<DailyData> DoBacktestBasic(IList<List<DailyData>> p_allQuotes, string p_bullishTicker, string p_bearishTicker, string p_strategyName, string p_rebalancingFrequency, ref string p_noteToUserCheckData, ref string p_htmlNoteFromStrategy)
         {
             var bullishQoutes = p_allQuotes[0];    // URE, XIV, FAS, ZIV
             var bearishQoutes = p_allQuotes[1];    // SRS, VXX, FAZ, VXZ
@@ -132,11 +132,11 @@ namespace NeuralSniffer.Controllers.Strategies
 
             if (String.Equals(p_strategyName, "LETFDiscrepancy2", StringComparison.InvariantCultureIgnoreCase))
             {
-                DoBacktestInTheTimeInterval_RebalanceToNeutral(bullishQoutes, bearishQoutes, p_rebalancingFrequency, pv, ref p_noteFromStrategy);
+                DoBacktestInTheTimeInterval_RebalanceToNeutral(bullishQoutes, bearishQoutes, p_rebalancingFrequency, pv, ref p_htmlNoteFromStrategy);
             }
             else if (String.Equals(p_strategyName, "LETFDiscrepancy3", StringComparison.InvariantCultureIgnoreCase))
             {
-                DoBacktestInTheTimeInterval_AddToTheWinningSideWithLeverage(bullishQoutes, bearishQoutes, p_rebalancingFrequency, pv, ref p_noteFromStrategy);
+                DoBacktestInTheTimeInterval_AddToTheWinningSideWithLeverage(bullishQoutes, bearishQoutes, p_rebalancingFrequency, pv, ref p_htmlNoteFromStrategy);
             }
             else
             {
@@ -147,9 +147,9 @@ namespace NeuralSniffer.Controllers.Strategies
         }
 
         // every 20 days, rebalance it to market neutral;
-        private static void DoBacktestInTheTimeInterval_RebalanceToNeutral(List<DailyData> bullishQuotes, List<DailyData> bearishQuotes, string rebalancingFrequencyStr, List<DailyData> pv, ref string p_noteFromStrategy)
+        private static void DoBacktestInTheTimeInterval_RebalanceToNeutral(List<DailyData> bullishQuotes, List<DailyData> bearishQuotes, string rebalancingFrequencyStr, List<DailyData> pv, ref string p_htmlNoteFromStrategy)
         {
-            p_noteFromStrategy = "Rebalances to be market neutral with the specified frequencies.";
+            p_htmlNoteFromStrategy = "Rebalances to be market neutral with the specified frequencies.";
             DateTime pvStartDate = pv[0].Date;
             DateTime pvEndDate = pv[pv.Count() - 1].Date;
 
@@ -196,9 +196,9 @@ namespace NeuralSniffer.Controllers.Strategies
         //the overleverage of the other side.
         //Test this: every X, 20 days. Keep the other leg. Short more from the etf that is down. 
         //So, I follow the trend: put more money into the right place. That is how I played.
-        private static void DoBacktestInTheTimeInterval_AddToTheWinningSideWithLeverage(List<DailyData> bullishQuotes, List<DailyData> bearishQuotes, string rebalancingFrequencyStr, List<DailyData> pv, ref string p_noteFromStrategy)
+        private static void DoBacktestInTheTimeInterval_AddToTheWinningSideWithLeverage(List<DailyData> bullishQuotes, List<DailyData> bearishQuotes, string rebalancingFrequencyStr, List<DailyData> pv, ref string p_htmlNoteFromStrategy)
         {
-            p_noteFromStrategy = "Rebalances with the specified frequencies. But AddToTheWinningSideWithLeverage.";
+            p_htmlNoteFromStrategy = "Rebalances with the specified frequencies. But AddToTheWinningSideWithLeverage.";
             DateTime pvStartDate = pv[0].Date;
             DateTime pvEndDate = pv[pv.Count() - 1].Date;
 
@@ -264,7 +264,7 @@ namespace NeuralSniffer.Controllers.Strategies
                 pv[i].ClosePrice = pvDaily;
             }   // for
 
-            p_noteFromStrategy = p_noteFromStrategy + ". nShortMore: " + nShortMore + ",nOverLeveraged: " + nOverLeveraged;
+            p_htmlNoteFromStrategy = p_htmlNoteFromStrategy + ". nShortMore: " + nShortMore + ",nOverLeveraged: " + nOverLeveraged;
 
         }
 

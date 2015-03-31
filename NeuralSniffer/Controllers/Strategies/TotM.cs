@@ -3,11 +3,26 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 
 namespace NeuralSniffer.Controllers.Strategies
 {
+    struct MaskItem
+    {
+        public bool? IsBullish;
+        public List<double> Samples;
+        public double AMean;
+        public double WinPct;
+
+        //public MaskItem()
+        //{
+        //    IsBullish = null;
+        //    Samples = new List<double>();
+        //}
+    }
+
     public class TotM
     {
         public static async Task<string> GenerateQuickTesterResponse(GeneralStrategyParameters p_generalParams, string p_strategyName, string p_params)
@@ -133,7 +148,7 @@ namespace NeuralSniffer.Controllers.Strategies
 
             if (String.Equals(p_strategyName, "TotM", StringComparison.InvariantCultureIgnoreCase))
             {
-                DoBacktestInTheTimeInterval_TotM(stockQoutes, longOrShortOnBullish, dailyMarketDirectionMaskSummerTotM, dailyMarketDirectionMaskSummerTotMM, dailyMarketDirectionMaskWinterTotM, dailyMarketDirectionMaskWinterTotMM, pv);
+                DoBacktestInTheTimeInterval_TotM(stockQoutes, longOrShortOnBullish, dailyMarketDirectionMaskSummerTotM, dailyMarketDirectionMaskSummerTotMM, dailyMarketDirectionMaskWinterTotM, dailyMarketDirectionMaskWinterTotMM, pv, ref noteToUserBacktest);
             }
             //else if (String.Equals(p_strategyName, "LETFDiscrepancy3", StringComparison.InvariantCultureIgnoreCase))
             //{
@@ -146,8 +161,12 @@ namespace NeuralSniffer.Controllers.Strategies
 
             stopWatchTotalResponse.Stop();
             StrategyResult strategyResult = StrategiesCommon.CreateStrategyResultFromPV(pv,
-                "Bullish (Bearish) on days when mask is Up (Down)." + noteToUserCheckData + "***" + noteToUserBacktest, errorMessage,
-                debugMessage + String.Format("SQL query time: {0:000}ms", getAllQuotesData.Item2.TotalMilliseconds) + String.Format(", RT query time: {0:000}ms", getAllQuotesData.Item3.TotalMilliseconds) + String.Format(", All query time: {0:000}ms", stopWatch.Elapsed.TotalMilliseconds) + String.Format(", TotalC#Response: {0:000}ms", stopWatchTotalResponse.Elapsed.TotalMilliseconds));
+                //"Number of positions: <span> XXXX </span><br><br>test",
+                //"Number of positions: <span> {{nPositions}} </span><br><br>test",
+                "<b>Bullish</b> (Bearish) on days when mask is Up (Down).<br>" + noteToUserCheckData
+                + ((!String.IsNullOrEmpty(noteToUserCheckData) && !String.IsNullOrEmpty(noteToUserBacktest)) ? "<br>" : "")
+                + noteToUserBacktest, 
+                errorMessage, debugMessage + String.Format("SQL query time: {0:000}ms", getAllQuotesData.Item2.TotalMilliseconds) + String.Format(", RT query time: {0:000}ms", getAllQuotesData.Item3.TotalMilliseconds) + String.Format(", All query time: {0:000}ms", stopWatch.Elapsed.TotalMilliseconds) + String.Format(", TotalC#Response: {0:000}ms", stopWatchTotalResponse.Elapsed.TotalMilliseconds));
             string jsonReturn = JsonConvert.SerializeObject(strategyResult);
             return jsonReturn;
         }
@@ -157,17 +176,15 @@ namespace NeuralSniffer.Controllers.Strategies
         //UberVXX: Turn of the Month sub-strategy
         //•	Long VXX on Day -1 (last trading day of the month) with 100%;
         //•	Short VXX on Day 1-3 (first three trading days of the month) with 100%.
-        private static void DoBacktestInTheTimeInterval_TotM(List<DailyData> p_qoutes, string p_longOrShortOnBullish, string p_dailyMarketDirectionMaskSummerTotM, string p_dailyMarketDirectionMaskSummerTotMM, string p_dailyMarketDirectionMaskWinterTotM, string p_dailyMarketDirectionMaskWinterTotMM, List<DailyData> p_pv)
+        private static void DoBacktestInTheTimeInterval_TotM(List<DailyData> p_qoutes, string p_longOrShortOnBullish, string p_dailyMarketDirectionMaskSummerTotM, string p_dailyMarketDirectionMaskSummerTotMM, string p_dailyMarketDirectionMaskWinterTotM, string p_dailyMarketDirectionMaskWinterTotMM, List<DailyData> p_pv, ref string p_noteToUserBacktest)
         {
             // 1.0 parameter pre-process
             bool isTradeLongOnBullish = String.Equals(p_longOrShortOnBullish, "Long", StringComparison.InvariantCultureIgnoreCase);
 
-            bool?[] summerTotMForwardMask, summerTotMBackwardMask, summerTotMMForwardMask, summerTotMMBackwardMask;
+            MaskItem[] summerTotMForwardMask, summerTotMBackwardMask, summerTotMMForwardMask, summerTotMMBackwardMask;
             CreateBoolMasks(p_dailyMarketDirectionMaskSummerTotM, p_dailyMarketDirectionMaskSummerTotMM, out summerTotMForwardMask, out summerTotMBackwardMask, out summerTotMMForwardMask, out summerTotMMBackwardMask);
-            bool?[] winterTotMForwardMask, winterTotMBackwardMask, winterTotMMForwardMask, winterTotMMBackwardMask;
+            MaskItem[] winterTotMForwardMask, winterTotMBackwardMask, winterTotMMForwardMask, winterTotMMBackwardMask;
             CreateBoolMasks(p_dailyMarketDirectionMaskWinterTotM, p_dailyMarketDirectionMaskWinterTotMM, out winterTotMForwardMask, out winterTotMBackwardMask, out winterTotMMForwardMask, out winterTotMMBackwardMask);
-
-
 
             DateTime pvStartDate = p_qoutes[0].Date;        // when the first quote is available, PV starts at $1.0
             DateTime pvEndDate = p_qoutes[p_qoutes.Count() - 1].Date;
@@ -276,21 +293,31 @@ namespace NeuralSniffer.Controllers.Strategies
 
             for (int i = 1; i < p_qoutes.Count(); i++)  // march over on p_quotes, not pv
             {
+                double pctChg = p_qoutes[i].ClosePrice / p_qoutes[i - 1].ClosePrice - 1.0;
+
                 bool? isBullishTotMForwardMask, isBullishTotMBackwardMask, isBullishTotMMForwardMask, isBullishTotMMBackwardMask;
                 DateTime day = p_qoutes[i].Date;
                 if (IsBullishWinterDay(day))
                 {
-                    isBullishTotMForwardMask = winterTotMForwardMask[totMForwardDayOffset[i] - 1];      // T+1 offset; but the mask is 0 based indexed
-                    isBullishTotMBackwardMask = winterTotMBackwardMask[totMBackwardDayOffset[i] - 1];      // T-1 offset; but the mask is 0 based indexed
-                    isBullishTotMMForwardMask = winterTotMMForwardMask[totMMForwardDayOffset[i] - 1];      // T+1 offset; but the mask is 0 based indexed
-                    isBullishTotMMBackwardMask = winterTotMMBackwardMask[totMMBackwardDayOffset[i] - 1];      // T-1 offset; but the mask is 0 based indexed
+                    winterTotMForwardMask[totMForwardDayOffset[i] - 1].Samples.Add(pctChg);
+                    winterTotMBackwardMask[totMBackwardDayOffset[i] - 1].Samples.Add(pctChg);
+                    winterTotMMForwardMask[totMMForwardDayOffset[i] - 1].Samples.Add(pctChg);
+                    winterTotMMBackwardMask[totMMBackwardDayOffset[i] - 1].Samples.Add(pctChg);
+                    isBullishTotMForwardMask = winterTotMForwardMask[totMForwardDayOffset[i] - 1].IsBullish;      // T+1 offset; but the mask is 0 based indexed
+                    isBullishTotMBackwardMask = winterTotMBackwardMask[totMBackwardDayOffset[i] - 1].IsBullish;      // T-1 offset; but the mask is 0 based indexed
+                    isBullishTotMMForwardMask = winterTotMMForwardMask[totMMForwardDayOffset[i] - 1].IsBullish;      // T+1 offset; but the mask is 0 based indexed
+                    isBullishTotMMBackwardMask = winterTotMMBackwardMask[totMMBackwardDayOffset[i] - 1].IsBullish;      // T-1 offset; but the mask is 0 based indexed
                 }
                 else
                 {
-                    isBullishTotMForwardMask = summerTotMForwardMask[totMForwardDayOffset[i] - 1];      // T+1 offset; but the mask is 0 based indexed
-                    isBullishTotMBackwardMask = summerTotMBackwardMask[totMBackwardDayOffset[i] - 1];      // T-1 offset; but the mask is 0 based indexed
-                    isBullishTotMMForwardMask = summerTotMMForwardMask[totMMForwardDayOffset[i] - 1];      // T+1 offset; but the mask is 0 based indexed
-                    isBullishTotMMBackwardMask = summerTotMMBackwardMask[totMMBackwardDayOffset[i] - 1];      // T-1 offset; but the mask is 0 based indexed
+                    summerTotMForwardMask[totMForwardDayOffset[i] - 1].Samples.Add(pctChg);
+                    summerTotMBackwardMask[totMBackwardDayOffset[i] - 1].Samples.Add(pctChg);
+                    summerTotMMForwardMask[totMMForwardDayOffset[i] - 1].Samples.Add(pctChg);
+                    summerTotMMBackwardMask[totMMBackwardDayOffset[i] - 1].Samples.Add(pctChg);
+                    isBullishTotMForwardMask = summerTotMForwardMask[totMForwardDayOffset[i] - 1].IsBullish;      // T+1 offset; but the mask is 0 based indexed
+                    isBullishTotMBackwardMask = summerTotMBackwardMask[totMBackwardDayOffset[i] - 1].IsBullish;      // T-1 offset; but the mask is 0 based indexed
+                    isBullishTotMMForwardMask = summerTotMMForwardMask[totMMForwardDayOffset[i] - 1].IsBullish;      // T+1 offset; but the mask is 0 based indexed
+                    isBullishTotMMBackwardMask = summerTotMMBackwardMask[totMMBackwardDayOffset[i] - 1].IsBullish;      // T-1 offset; but the mask is 0 based indexed
                 }
                 
                 
@@ -341,8 +368,6 @@ namespace NeuralSniffer.Controllers.Strategies
                 {
                     bool isBullishDayToday = (nBullishVotesToday > 0);
 
-                    double pctChg = p_qoutes[i].ClosePrice / p_qoutes[i - 1].ClosePrice - 1.0;
-
                     bool isTradeLong = (isBullishDayToday && isTradeLongOnBullish) || (!isBullishDayToday && !isTradeLongOnBullish);
 
                     if (isTradeLong)
@@ -359,7 +384,272 @@ namespace NeuralSniffer.Controllers.Strategies
 
                 p_pv[i].ClosePrice = pvDaily;
             }
+
+            p_noteToUserBacktest = BuildHtmlTable("Winter, TotM", winterTotMForwardMask, winterTotMBackwardMask)
+                + BuildHtmlTable("Winter, TotMM", winterTotMMForwardMask, winterTotMMBackwardMask)
+                + BuildHtmlTable("Summer, TotM", summerTotMForwardMask, summerTotMBackwardMask)
+                + BuildHtmlTable("Summer, TotMM", summerTotMMForwardMask, summerTotMMBackwardMask);
+
+            //p_noteToUserBacktest = @"<table style=""width:100%"">  <tr>    <td>Smith</td>     <td>50</td>  </tr>  <tr>   <td>Jackson</td>     <td>94</td>  </tr></table>";
         }
+
+        private static string BuildHtmlTable(string p_tableTitle, MaskItem[] p_forwardMask, MaskItem[] p_backwardMask)
+        {
+            StringBuilder sb = new StringBuilder(@"<b>" + p_tableTitle + @":</b><br> <table class=""strategyNoteTable1"">");
+            sb.Append("<th>Day</th><th>nSamples</th><th>aMean</th><th>WinPct</th>");
+
+            bool isRowEven = false;     // 1st Row is Odd
+            for (int i = 16; i >= 0; i--)   // write only from T-17 to T+17
+            {
+                if (p_backwardMask[i].Samples.Count() == 0)
+                    continue;
+
+                CalculateSampleStats(ref p_backwardMask[i]);
+                BuildHtmlTableRow("T-" + (i + 1).ToString(), isRowEven, ref p_backwardMask[i], sb);
+                isRowEven = !isRowEven;
+            }
+
+            for (int i = 0; i <= 16; i++)  // write only from T-17 to T+17
+            {
+                if (p_forwardMask[i].Samples.Count() == 0)
+                    continue;
+                CalculateSampleStats(ref p_forwardMask[i]);
+                BuildHtmlTableRow("T+" + (i + 1).ToString(), isRowEven, ref p_forwardMask[i], sb);
+                isRowEven = !isRowEven;
+            }
+
+            sb.Append("</table>");
+            return sb.ToString();
+        }
+
+        private static void BuildHtmlTableRow(string p_rowTitle, bool p_isRowEven, ref MaskItem p_maskItem, StringBuilder p_sb)
+        {
+            p_sb.AppendFormat("<tr{0}><td>" + p_rowTitle + "</td>", (p_isRowEven)? " class='even'":"");
+            p_sb.Append("<td>" + p_maskItem.Samples.Count() + "</td>");
+            p_sb.Append("<td>" + p_maskItem.AMean.ToString("#0.000%") + "</td>");
+            p_sb.Append("<td>" + p_maskItem.WinPct.ToString("#0.0%") + "</td>");
+
+            p_sb.Append("</tr>");
+        }
+
+        private static void CalculateSampleStats(ref MaskItem p_maskItem)
+        {
+            p_maskItem.AMean = p_maskItem.Samples.Average();
+            p_maskItem.WinPct = (double)p_maskItem.Samples.Count(r => r > 0) / p_maskItem.Samples.Count();
+        }
+
+
+        //UberVXX: Turn of the Month sub-strategy
+        //•	Long VXX on Day -1 (last trading day of the month) with 100%;
+        //•	Short VXX on Day 1-3 (first three trading days of the month) with 100%.
+        //private static void DoBacktestInTheTimeInterval_TotM_20150327(List<DailyData> p_qoutes, string p_longOrShortOnBullish, string p_dailyMarketDirectionMaskSummerTotM, string p_dailyMarketDirectionMaskSummerTotMM, string p_dailyMarketDirectionMaskWinterTotM, string p_dailyMarketDirectionMaskWinterTotMM, List<DailyData> p_pv, ref string p_noteToUserBacktest)
+        //{
+        //    // 1.0 parameter pre-process
+        //    bool isTradeLongOnBullish = String.Equals(p_longOrShortOnBullish, "Long", StringComparison.InvariantCultureIgnoreCase);
+
+        //    bool?[] summerTotMForwardMask, summerTotMBackwardMask, summerTotMMForwardMask, summerTotMMBackwardMask;
+        //    CreateBoolMasks(p_dailyMarketDirectionMaskSummerTotM, p_dailyMarketDirectionMaskSummerTotMM, out summerTotMForwardMask, out summerTotMBackwardMask, out summerTotMMForwardMask, out summerTotMMBackwardMask);
+        //    bool?[] winterTotMForwardMask, winterTotMBackwardMask, winterTotMMForwardMask, winterTotMMBackwardMask;
+        //    CreateBoolMasks(p_dailyMarketDirectionMaskWinterTotM, p_dailyMarketDirectionMaskWinterTotMM, out winterTotMForwardMask, out winterTotMBackwardMask, out winterTotMMForwardMask, out winterTotMMBackwardMask);
+
+
+
+        //    DateTime pvStartDate = p_qoutes[0].Date;        // when the first quote is available, PV starts at $1.0
+        //    DateTime pvEndDate = p_qoutes[p_qoutes.Count() - 1].Date;
+
+        //    // 2.0 DayOffsets (T-1, T+1...)
+        //    // advice: if it is a fixed size, use array; faster; not list; List is painful to initialize; re-grow, etc. http://stackoverflow.com/questions/466946/how-to-initialize-a-listt-to-a-given-size-as-opposed-to-capacity
+        //    // "List is not a replacement for Array. They solve distinctly separate problems. If you want a fixed size, you want an Array. If you use a List, you are Doing It Wrong."
+        //    int[] totMForwardDayOffset = new int[p_qoutes.Count()]; //more efficient (in execution time; it's worse in memory) by creating an array than "Enumerable.Repeat(value, count).ToList();"
+        //    int[] totMBackwardDayOffset = new int[p_qoutes.Count()];
+        //    int[] totMMForwardDayOffset = new int[p_qoutes.Count()];
+        //    int[] totMMBackwardDayOffset = new int[p_qoutes.Count()];
+
+        //    // 2.1 calculate totMForwardDayOffset
+        //    DateTime iDate = new DateTime(pvStartDate.Year, pvStartDate.Month, 1);
+        //    iDate = NextTradingDayInclusive(iDate); // this is day T+1
+        //    int iDateOffset = 1;    // T+1
+        //    while (iDate < pvStartDate) // marching forward until iDate = startDate
+        //    {
+        //        iDate = NextTradingDayExclusive(iDate);
+        //        iDateOffset++;
+        //    }
+        //    totMForwardDayOffset[0] = iDateOffset;
+        //    for (int i = 1; i < p_qoutes.Count(); i++)  // march over on p_quotes, not pv
+        //    {
+        //        if (p_qoutes[i].Date.Month != p_qoutes[i - 1].Date.Month)
+        //            iDateOffset = 1;    // T+1
+        //        else
+        //            iDateOffset++;
+        //        totMForwardDayOffset[i] = iDateOffset;
+        //    }
+
+        //    // 2.2 calculate totMBackwardDayOffset
+        //    iDate = new DateTime(pvEndDate.Year, pvEndDate.Month, 1);
+        //    iDate = iDate.AddMonths(1);     // next month can be in the following year; this is the first calendar day of the next month
+        //    iDate = PrevTradingDayExclusive(iDate); // this is day T-1
+        //    iDateOffset = 1;    // T-1
+        //    while (iDate > pvEndDate)   // marching backward until iDate == endDate
+        //    {
+        //        iDate = PrevTradingDayExclusive(iDate);
+        //        iDateOffset++;
+        //    }
+        //    totMBackwardDayOffset[p_qoutes.Count() - 1] = iDateOffset;  // last day (today) is set
+        //    for (int i = p_qoutes.Count() - 2; i >= 0; i--)  // march over on p_quotes, not pv
+        //    {
+        //        if (p_qoutes[i].Date.Month != p_qoutes[i + 1].Date.Month)   // what if market closes for 3 months (or we don't have the data in DB)
+        //            iDateOffset = 1;    // T-1
+        //        else
+        //            iDateOffset++;
+        //        totMBackwardDayOffset[i] = iDateOffset;
+        //    }
+
+        //    // 2.3 calculate totMMForwardDayOffset
+        //    iDate = new DateTime(pvStartDate.Year, pvStartDate.Month, 15);
+        //    if (iDate > pvStartDate)
+        //        iDate = iDate.AddMonths(-1);
+        //    iDate = NextTradingDayInclusive(iDate); // this is day T+1
+        //    iDateOffset = 1;    // T+1
+        //    while (iDate < pvStartDate) // marching forward until iDate = startDate
+        //    {
+        //        iDate = NextTradingDayExclusive(iDate);
+        //        iDateOffset++;
+        //    }
+        //    totMMForwardDayOffset[0] = iDateOffset;
+        //    for (int i = 1; i < p_qoutes.Count(); i++)  // march over on p_quotes, not pv
+        //    {
+        //        if (((p_qoutes[i].Date.Month == p_qoutes[i - 1].Date.Month) && p_qoutes[i].Date.Day >= 15 && p_qoutes[i - 1].Date.Day < 15) ||  // what if market closes for 3 months (or we don't have the data in DB)
+        //            (p_qoutes[i].Date.Month != p_qoutes[i - 1].Date.Month) && p_qoutes[i].Date.Day >= 15)   // if some months are skipped from data
+        //            iDateOffset = 1;    // T+1
+        //        else
+        //            iDateOffset++;
+        //        totMMForwardDayOffset[i] = iDateOffset;
+        //    }
+
+        //    // 2.4 calculate totMBackwardDayOffset
+        //    iDate = new DateTime(pvEndDate.Year, pvEndDate.Month, 15);
+        //    if (iDate <= pvEndDate)
+        //        iDate = iDate.AddMonths(1); // next month can be in the following year; better to use AddMonths();
+        //    iDate = PrevTradingDayExclusive(iDate); // this is day T-1
+        //    iDateOffset = 1;    // T-1
+        //    while (iDate > pvEndDate)   // marching backward until iDate == endDate
+        //    {
+        //        iDate = PrevTradingDayExclusive(iDate);
+        //        iDateOffset++;
+        //    }
+        //    totMMBackwardDayOffset[p_qoutes.Count() - 1] = iDateOffset;  // last day (today) is set
+        //    for (int i = p_qoutes.Count() - 2; i >= 0; i--)  // march over on p_quotes, not pv
+        //    {
+        //        if (((p_qoutes[i].Date.Month == p_qoutes[i + 1].Date.Month) && p_qoutes[i].Date.Day < 15 && p_qoutes[i + 1].Date.Day >= 15) ||  // what if market closes for 3 months (or we don't have the data in DB)
+        //            (p_qoutes[i].Date.Month != p_qoutes[i + 1].Date.Month) && p_qoutes[i].Date.Day < 15)   // if some months are skipped from data
+        //            iDateOffset = 1;    // T-1
+        //        else
+        //            iDateOffset++;
+        //        totMMBackwardDayOffset[i] = iDateOffset;
+        //    }
+
+
+
+
+        //    double pvDaily = 100.0;
+        //    p_pv[0].ClosePrice = pvDaily; // on the date when the quotes available: At the end of the first day, PV will be 1.0, because we trade at Market Close
+
+
+
+        //    // create a separate List<int> for dayOffset (T-10...T+10). Out of that bounds, we don't care now; yes, we do
+        //    // create 2 lists, a Forward list, a backward list (maybe later to test day T+12..T+16) Jay's "Monthly 10", which is 4 days in the middle month
+
+        //    for (int i = 1; i < p_qoutes.Count(); i++)  // march over on p_quotes, not pv
+        //    {
+        //        bool? isBullishTotMForwardMask, isBullishTotMBackwardMask, isBullishTotMMForwardMask, isBullishTotMMBackwardMask;
+        //        DateTime day = p_qoutes[i].Date;
+        //        if (IsBullishWinterDay(day))
+        //        {
+        //            isBullishTotMForwardMask = winterTotMForwardMask[totMForwardDayOffset[i] - 1];      // T+1 offset; but the mask is 0 based indexed
+        //            isBullishTotMBackwardMask = winterTotMBackwardMask[totMBackwardDayOffset[i] - 1];      // T-1 offset; but the mask is 0 based indexed
+        //            isBullishTotMMForwardMask = winterTotMMForwardMask[totMMForwardDayOffset[i] - 1];      // T+1 offset; but the mask is 0 based indexed
+        //            isBullishTotMMBackwardMask = winterTotMMBackwardMask[totMMBackwardDayOffset[i] - 1];      // T-1 offset; but the mask is 0 based indexed
+        //        }
+        //        else
+        //        {
+        //            isBullishTotMForwardMask = summerTotMForwardMask[totMForwardDayOffset[i] - 1];      // T+1 offset; but the mask is 0 based indexed
+        //            isBullishTotMBackwardMask = summerTotMBackwardMask[totMBackwardDayOffset[i] - 1];      // T-1 offset; but the mask is 0 based indexed
+        //            isBullishTotMMForwardMask = summerTotMMForwardMask[totMMForwardDayOffset[i] - 1];      // T+1 offset; but the mask is 0 based indexed
+        //            isBullishTotMMBackwardMask = summerTotMMBackwardMask[totMMBackwardDayOffset[i] - 1];      // T-1 offset; but the mask is 0 based indexed
+        //        }
+
+
+
+
+        //        // We have to allow conflicting signals without Exception, because in 2001, market was closed for 4 days, because of the NY terrorist event. TotM-T+2 can conflict with TotMM-T-4 easily. so, let them compete.
+        //        //2001-08-31, TotMM-T-6
+        //        //2001-09-04, TotMM-T-5, TotM-T+1
+        //        //2001-09-05, TotMM-T-4, TotM-T+2 // if there is conflict: TotM wins. Priority. That is the stronger effect.// OR if there is conflict: go to Cash // or they can cancel each other out
+        //        //2001-09-06, TotMM-T-3, TotM-T+3
+        //        //2001-09-07, TotMM-T-2, TotM-T+4
+        //        //2001-09-10, TotMM-T-1, TotM-T+5
+        //        //2001-09-17,
+
+        //        int nBullishVotesToday = 0;
+        //        if (isBullishTotMForwardMask != null)
+        //        {
+        //            if ((bool)isBullishTotMForwardMask)
+        //                nBullishVotesToday++;
+        //            else
+        //                nBullishVotesToday--;
+        //        }
+        //        if (isBullishTotMBackwardMask != null)
+        //        {
+        //            if ((bool)isBullishTotMBackwardMask)
+        //                nBullishVotesToday++;
+        //            else
+        //                nBullishVotesToday--;
+        //        }
+        //        if (isBullishTotMMForwardMask != null)
+        //        {
+        //            if ((bool)isBullishTotMMForwardMask)
+        //                nBullishVotesToday++;
+        //            else
+        //                nBullishVotesToday--;
+        //        }
+        //        if (isBullishTotMMBackwardMask != null)
+        //        {
+        //            if ((bool)isBullishTotMMBackwardMask)
+        //                nBullishVotesToday++;
+        //            else
+        //                nBullishVotesToday--;
+        //        }
+
+
+
+        //        if (nBullishVotesToday != 0)
+        //        {
+        //            bool isBullishDayToday = (nBullishVotesToday > 0);
+
+        //            double pctChg = p_qoutes[i].ClosePrice / p_qoutes[i - 1].ClosePrice - 1.0;
+
+        //            bool isTradeLong = (isBullishDayToday && isTradeLongOnBullish) || (!isBullishDayToday && !isTradeLongOnBullish);
+
+        //            if (isTradeLong)
+        //                pvDaily = pvDaily * (1.0 + pctChg);
+        //            else
+        //            {
+        //                double newNAV = 2 * pvDaily - (pctChg + 1.0) * pvDaily;     // 2 * pvDaily is the cash
+        //                pvDaily = newNAV;
+        //            }
+        //        }
+
+
+
+
+        //        p_pv[i].ClosePrice = pvDaily;
+        //    }
+
+
+
+        //    p_noteToUserBacktest = @"<table style=""width:100%"">  <tr>    <td>Smith</td>     <td>50</td>  </tr>  <tr>   <td>Jackson</td>     <td>94</td>  </tr></table>";
+        //}
+
 
         // "period from November to April inclusive has significantly stronger growth on average than the other months.". Stocks are sold at the start of May. "between April 30 and October 30, 2009, the FTSE 100 gained 20%"
         // Grim Reaper: I overfitted (SPY, from 1993): 1st May was Bullish, 1st November Bearish. I set up the range according to this. Bearish range: "(1st May, 1st November]". Later this was changed to "(1st May, 25th October]"
@@ -385,12 +675,19 @@ namespace NeuralSniffer.Controllers.Strategies
                 return true;       //1st November will come here, as Bullish.
         }
 
-        private static void CreateBoolMasks(string p_dailyMarketDirectionMaskTotM, string p_dailyMarketDirectionMaskTotMM, out bool?[] totMForwardMask, out bool?[] totMBackwardMask, out bool?[] totMMForwardMask, out bool?[] totMMBackwardMask)
+        private static void CreateBoolMasks(string p_dailyMarketDirectionMaskTotM, string p_dailyMarketDirectionMaskTotMM, out MaskItem[] totMForwardMask, out MaskItem[] totMBackwardMask, out MaskItem[] totMMForwardMask, out MaskItem[] totMMBackwardMask)
         {
-            totMForwardMask = new bool?[30]; // (initialized to null: Neutral, not bullish, not bearish)   // trading days; max. 25 is expected.
-            totMBackwardMask = new bool?[30];
-            totMMForwardMask = new bool?[30];
-            totMMBackwardMask = new bool?[30];
+            totMForwardMask = new MaskItem[30]; // (initialized to null: Neutral, not bullish, not bearish)   // trading days; max. 25 is expected.
+            totMBackwardMask = new MaskItem[30];
+            totMMForwardMask = new MaskItem[30];
+            totMMBackwardMask = new MaskItem[30];
+            for (int k = 0; k < 30; k++)
+            {
+                totMForwardMask[k].Samples = new List<double>();
+                totMBackwardMask[k].Samples = new List<double>();
+                totMMForwardMask[k].Samples = new List<double>();
+                totMMBackwardMask[k].Samples = new List<double>();
+            }
             
             int iInd = p_dailyMarketDirectionMaskTotM.IndexOf('.');
             if (iInd != -1)
@@ -401,13 +698,13 @@ namespace NeuralSniffer.Controllers.Strategies
                     switch (p_dailyMarketDirectionMaskTotM[i])
                     {
                         case 'U':
-                            totMForwardMask[i - (iInd + 1)] = true;
+                            totMForwardMask[i - (iInd + 1)].IsBullish = true;
                             break;
                         case 'D':
-                            totMForwardMask[i - (iInd + 1)] = false;
+                            totMForwardMask[i - (iInd + 1)].IsBullish = false;
                             break;
                         case '0':
-                            totMForwardMask[i - (iInd + 1)] = null;
+                            totMForwardMask[i - (iInd + 1)].IsBullish = null;
                             break;
                         default:
                             throw new Exception("Cannot interpret p_dailyMarketDirectionMaskTotM: " + p_dailyMarketDirectionMaskTotM);
@@ -420,13 +717,13 @@ namespace NeuralSniffer.Controllers.Strategies
                     switch (p_dailyMarketDirectionMaskTotM[i])
                     {
                         case 'U':
-                            totMBackwardMask[(iInd - 1) - i] = true;
+                            totMBackwardMask[(iInd - 1) - i].IsBullish = true;
                             break;
                         case 'D':
-                            totMBackwardMask[(iInd - 1) - i] = false;
+                            totMBackwardMask[(iInd - 1) - i].IsBullish = false;
                             break;
                         case '0':
-                            totMBackwardMask[(iInd - 1) - i] = null;
+                            totMBackwardMask[(iInd - 1) - i].IsBullish = null;
                             break;
                         default:
                             throw new Exception("Cannot interpret p_dailyMarketDirectionMaskTotM: " + p_dailyMarketDirectionMaskTotM);
@@ -443,13 +740,13 @@ namespace NeuralSniffer.Controllers.Strategies
                     switch (p_dailyMarketDirectionMaskTotMM[i])
                     {
                         case 'U':
-                            totMMForwardMask[i - (iInd + 1)] = true;
+                            totMMForwardMask[i - (iInd + 1)].IsBullish = true;
                             break;
                         case 'D':
-                            totMMForwardMask[i - (iInd + 1)] = false;
+                            totMMForwardMask[i - (iInd + 1)].IsBullish = false;
                             break;
                         case '0':
-                            totMMForwardMask[i - (iInd + 1)] = null;
+                            totMMForwardMask[i - (iInd + 1)].IsBullish = null;
                             break;
                         default:
                             throw new Exception("Cannot interpret p_dailyMarketDirectionMaskTotMM: " + p_dailyMarketDirectionMaskTotMM);
@@ -462,13 +759,13 @@ namespace NeuralSniffer.Controllers.Strategies
                     switch (p_dailyMarketDirectionMaskTotMM[i])
                     {
                         case 'U':
-                            totMMBackwardMask[(iInd - 1) - i] = true;
+                            totMMBackwardMask[(iInd - 1) - i].IsBullish = true;
                             break;
                         case 'D':
-                            totMMBackwardMask[(iInd - 1) - i] = false;
+                            totMMBackwardMask[(iInd - 1) - i].IsBullish = false;
                             break;
                         case '0':
-                            totMMBackwardMask[(iInd - 1) - i] = null;
+                            totMMBackwardMask[(iInd - 1) - i].IsBullish = null;
                             break;
                         default:
                             throw new Exception("Cannot interpret p_dailyMarketDirectionMaskTotMM: " + p_dailyMarketDirectionMaskTotMM);

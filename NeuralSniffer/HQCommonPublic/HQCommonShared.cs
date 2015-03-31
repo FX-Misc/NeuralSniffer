@@ -204,14 +204,14 @@ namespace HQCommonLite
     /// (central definition, avoid further duplication).
     ///
     /// Only those names have to be included here that are/may be used in HQCommonLite
-    /// (but due to technical reasons it's comfortable to include all settings for which HQCommon provides
-    /// a factory default value and it is a sensitive data).
+    /// (but due to technical reasons it may be comfortable to include all settings for which HQCommon provides
+    /// a factory default value with sensitive data).
     ///
-    /// Most of these settings have no "factory default" value in HQCommonLite, but has one in HQCommon.
+    /// Most of these settings have no "factory default" value in HQCommonLite, but have one in HQCommon.
     /// These default values are served when the .exe.config-accessing API of HQCommon is used: Utils.ExeConfig[].
     /// This works in HQCommonLite, too, and is therefore recommended, in order to foster interchangeability of
     /// source code between the two projects.
-    /// The ExeCfgSettings.Read() extension method (designed primarily for HQCommonLite) is a syntactic sugar to Utils.ExeConfig[].
+    /// The ExeCfgSettings.Read() extension method is a syntactic sugar to Utils.ExeConfig[enumMember.ToString()].
     /// </summary>
     public enum ExeCfgSettings
     {
@@ -229,6 +229,8 @@ namespace HQCommonLite
         SmsNumberLNemeth,
         SmsNumberBLukucz,
         SmsNumberRobin,
+        SmsAuthUname,
+        SmsAuthPwd,
         TwilioSid,
         TwilioToken,
         ServerHedgeQuantConnectionString,
@@ -244,9 +246,10 @@ namespace HQCommon
 {
     public static partial class Utils
     {
-        public static string Read(this HQCommonLite.ExeCfgSettings p_cfg)
+        /// <summary> Equivalent to Utils.ExeConfig[p_enumMember.ToString()].ToString() + handling of nulls. Numeric values produce null result. </summary>
+        public static string Read(this HQCommonLite.ExeCfgSettings p_enumMember)
         {
-            string key = p_cfg.ToString(); object val = null;
+            string key = p_enumMember.ToString(); object val = null;
             if (!String.IsNullOrEmpty(key) && 'A' <= key[0])    // valid enum value
                 val = Utils.ExeConfig[key];
             return (val != null) ? val.ToString() : null;
@@ -266,7 +269,8 @@ namespace HQCommonLite
         public static Action<TraceLevel, string> g_LogFn = HQCommon.Utils.HQCommonSpecific<Action<TraceLevel, string>>("GetLogger4HQCommonLite") ?? DefaultLogger;
 
         // syntactic sugar for source codes that "using HQCommonLite" only
-        public static string Read(this ExeCfgSettings p_cfg) { return HQCommon.Utils.Read(p_cfg); }
+        /// <summary> Equivalent to Utils.ExeConfig[p_enumMember.ToString()].ToString() + handling of nulls. Numeric values produce null result. </summary>
+        public static string Read(this ExeCfgSettings p_enumMember) { return HQCommon.Utils.Read(p_enumMember); }
     }
 }
 namespace HQCommon

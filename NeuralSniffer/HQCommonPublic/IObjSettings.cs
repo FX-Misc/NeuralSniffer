@@ -44,11 +44,11 @@ namespace HQCommon
                 result = System.Configuration.ConfigurationManager.AppSettings[p_key]; // returns null if not found
             else foreach (System.Configuration.ConnectionStringSettings cs in System.Configuration.ConfigurationManager.ConnectionStrings)
                 {
-                    string name = cs.Name;
+                    string name = cs.Name;  // accept either "xyConnectionString" or "something.xyConnectionString":
                     if (name == p_key || (p_key.Length + 1 < name.Length && name.EndsWith(p_key) && name[name.Length - p_key.Length - 1] == '.'))
                     {
-                        result = cs.ConnectionString;           // it's just a placeholder in..
-                        if (String.IsNullOrEmpty(result) || result.StartsWith("/*"))    // <- ..these cases..
+                        result = cs.ConnectionString;           // it may be just a placeholder:
+                        if (String.IsNullOrEmpty(result) || result.StartsWith("/*"))    // <- ..in these cases..
                             result = null;                      // ..so don't use (cf. j.mp/11XOfhL "if Windows Azure ... cannot find a connection string with a matching name..." )
                         break;
                     }

@@ -84,7 +84,7 @@
 
 
 
-    <a href="javascript:SQToggle('idGeneralParameters', 'idAlwaysVisibleSwitch0', 'General Parameters');" id="idAlwaysVisibleSwitch0">+ Show General Parameters</a>
+    <a class="alwaysVisibleSwitchClass" href="javascript:SQToggle('idGeneralParameters', 'idAlwaysVisibleSwitch0', 'General Parameters');" id="idAlwaysVisibleSwitch0">+ Show General Parameters</a>
     <br />
     <div id="idGeneralParameters" style="display: none;">
         <table id="idGeneralParametersTable">
@@ -180,12 +180,22 @@
             </tr>
         </tbody>
     </table>
-    Note from Strategy:
-    <span> {{noteFromStrategy}} </span>
-    <br>
+   
 
     <div style="width: 100%; height: 1px; background: #808080; overflow: hidden;"></div>
     <div id="tv_chart_container"></div>
+
+   
+    
+
+    <a class="alwaysVisibleSwitchClass" href="javascript:SQToggle('idNoteFromStrategyDiv', 'idAlwaysVisibleSwitch1', 'note from strategy');" id="idAlwaysVisibleSwitch1">+ Hide note from strategy</a>
+    <br />
+    <div id="idNoteFromStrategyDiv" style="display: block;">
+        <!--<span ng-bind-html="htmlNoteFromStrategy"> This needs angular-sanitize.js, if we need recursive Angular {{}}, but we don't need it. Better to stick with pure HTML5  </span>-->
+        <span id="idHtmlNoteFromStrategy">  </span>
+    </div>
+
+
     <br>
     <span id="idSpanStatistics">Holdings (as of {{endDateStr}}):</span>
     <br>
@@ -204,6 +214,7 @@
             </tr>
         </tbody>
     </table>
+    
     Holdings List:
     <span> {{holdingsListStr}} </span>
     <br><br>
@@ -217,16 +228,20 @@
     <span>JS BacktestCallback: {{profilingBacktestCallbackMSec | number}}ms, BacktestAtChartReadyStart(chart removed/created): {{profilingBacktestAtChartReadyStartMSec | number}}ms, BacktestAtChartReadyEnd(TimeFrame clicked): {{profilingBacktestAtChartReadyEndMSec | number}}ms </span>
     <br>
 
-    <br>ChartDataInStr:
-    <pre>{{chartDataInStr}} </pre>
-    <br>
 
+    <a class="alwaysVisibleSwitchClass" href="javascript:SQToggle('idDebugInfoDiv', 'idAlwaysVisibleSwitchDebug', 'debug info');" id="idAlwaysVisibleSwitchDebug">+ Show debug info</a>
+    <br />
+    <div id="idDebugInfoDiv" style="display: none;">
+        <!--<span ng-bind-html="htmlNoteFromStrategy"> This needs angular-sanitize.js, if we need recursive Angular {{}}, but we don't need it. Better to stick with pure HTML5  </span>-->
+        <span id="idDebugInfoSpan">
+            <br>ChartDataInStr:
+            <pre>{{chartDataInStr}} </pre>
+            <br> 
+        </span>
+    </div>
+
+    
     <br>
-    <br>
-    <br>
-    <br>
-    <span>
-        {{tipToUser}}
-    </span>
+    <!--<span>{{tipToUser}}</span>-->
 </body>
 </html>

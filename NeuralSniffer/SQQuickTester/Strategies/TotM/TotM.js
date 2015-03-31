@@ -1,7 +1,7 @@
 ﻿
 AngularInit_TotM = function ($scope, $http) {
 
-    $scope.bullishTradingInstrument = ["Long SPY", "Long ^GSPC", "Long ^IXIC", "Long ^RUT", "Long QQQ", "Long QLD", "Long TQQQ", "Long IWM", "Short VXX"];
+    $scope.bullishTradingInstrument = ["Long SPY", "Long ^GSPC", "Long ^IXIC", "Long ^RUT", "Long QQQ", "Long QLD", "Long TQQQ", "Long IWM", "Short VXX", "Short VXX.SQ"];
     $scope.selectedBullishTradingInstrument = $scope.bullishTradingInstrument[0];
 
     //$scope.totMStock = ["SPY", "QQQ", "VXX"];
@@ -19,8 +19,7 @@ AngularInit_TotM = function ($scope, $http) {
     $scope.dailyMarketDirectionMaskWinterTotMM = "DDUU.UU00UU";
     $scope.dailyMarketDirectionMaskSummerTotM = "DDDDUUD.UDD";
     $scope.dailyMarketDirectionMaskSummerTotMM = "DDUU.UU00DDD";
-    //$scope.dailyMarketDirectionMaskTotMM = "";
-
+    
 
     $scope.bullishTradingInstrumentChanged = function () {
         $scope.tipToUser = $scope.selectedBullishTradingInstrument;

@@ -51,7 +51,7 @@ namespace NeuralSniffer.Controllers.Strategies
         public int nPositions;
         public string holdingsListStr;  // probably comma separated
 
-        public string noteFromStrategy;
+        public string htmlNoteFromStrategy;
         public string errorMessage;
         public string debugMessage;
 
@@ -77,8 +77,14 @@ namespace NeuralSniffer.Controllers.Strategies
                 rtPrices.Add(null);
             }
 
+            //string tickerWithoutDotSQ = "";
+            //if (ticker.EndsWith(".SQ"))
+            //    tickerWithoutDotSQ = ticker.Substring(0, ticker.Length - ".SQ".Length);
+
             //string realtimeQuoteUri = "http://hqacompute.cloudapp.net/q/rtp?s=VXX,^VIX,^VXV,^GSPC,XIV,^^^VIX201410,GOOG&f=l&jsonp=myCallbackFunction";    // even if IB doesn't support ticker ^GSPC, we implemented it in the RealTime App
-            string realtimeQuoteUri = "http://hqacompute.cloudapp.net/q/rtp?s=" + String.Join(",", p_tickers) + "&f=l&jsonp=myCallbackFunction";
+            //string realtimeQuoteUri = "http://hqacompute.cloudapp.net/q/rtp?s=" + String.Join(",", p_tickers.Select(r => r.EndsWith(".SQ") ? r.Substring(0, r.Length - ".SQ".Length) : r) + "&f=l&jsonp=myCallbackFunction";
+            //string realtimeQuoteUri = "http://hqacompute.cloudapp.net/q/rtp?s=" + String.Join(",", p_tickers.Select(r =>r)) + "&f=l&jsonp=myCallbackFunction";
+            string realtimeQuoteUri = "http://hqacompute.cloudapp.net/q/rtp?s=" + String.Join(",", p_tickers.Select(r => r.EndsWith(".SQ") ? r.Substring(0, r.Length - ".SQ".Length) : r)) + "&f=l&jsonp=myCallbackFunction";
 
             try
             {
@@ -111,6 +117,8 @@ namespace NeuralSniffer.Controllers.Strategies
                                 return;
 
                             int tickerInd = p_tickers.IndexOf(symbol);
+                            if (tickerInd == -1)
+                                tickerInd = p_tickers.IndexOf(symbol + ".SQ");
                             if (tickerInd != -1)
                             {
                                 double lastPrice = 0.0;
@@ -251,17 +259,27 @@ namespace NeuralSniffer.Controllers.Strategies
 
             var sqlReturn = sqlReturnData.Item1;
             List<List<DailyData>> returnQuotes = null;
+            // sql query of "VXX.SQ" gives back tickers of VXX and also tickers of "VXX.SQ"
+            int closePriceIndex = -1;
             if (sqlReturnedColumns == QuoteRequest.TDOHLCVS)
-                returnQuotes = p_tickers.Select(ticker => sqlReturn.Where(row => (string)row[0] == ticker).Select(row => new DailyData() { Date = ((DateTime)row[1]), ClosePrice = (double)Convert.ToDecimal(row[5])}).ToList()).ToList();
+                closePriceIndex = 5;
             else if (sqlReturnedColumns == QuoteRequest.TDC)
-                returnQuotes = p_tickers.Select(ticker => sqlReturn.Where(row => (string)row[0] == ticker).Select(
-                    row => new DailyData() {
-                            Date = ((DateTime)row[1]),
-                            ClosePrice = (double)Convert.ToDecimal(row[2])  // row[2] is object(double) if it is a stock (because Adjustment multiplier), and object(float) if it is Indices. However Convert.ToDouble(row[2]) would convert 16.66 to 16.6599999
-                        }).ToList()
-                    ).ToList();
+                closePriceIndex = 2;
             else
                 throw new NotImplementedException();
+
+            returnQuotes = p_tickers.Select(ticker =>
+            {
+                string tickerWithoutDotSQ = "";
+                if (ticker.EndsWith(".SQ"))
+                    tickerWithoutDotSQ = ticker.Substring(0, ticker.Length - ".SQ".Length);
+                return sqlReturn.Where(row => (string)row[0] == ticker || (string)row[0] == tickerWithoutDotSQ).Select(
+                    row => new DailyData()
+                        {
+                            Date = ((DateTime)row[1]),
+                            ClosePrice = (double)Convert.ToDecimal(row[closePriceIndex])  // row[2] is object(double) if it is a stock (because Adjustment multiplier), and object(float) if it is Indices. However Convert.ToDouble(row[2]) would convert 16.66 to 16.6599999
+                        }).ToList();
+            }).ToList();
 
             if (realtimeReturnData != null)
             {
@@ -359,7 +377,7 @@ namespace NeuralSniffer.Controllers.Strategies
             return pv;
         }
 
-        public static StrategyResult CreateStrategyResultFromPV(List<DailyData> p_pv, string p_noteFromStrategy, string p_errorMessage, string p_debugMessage)
+        public static StrategyResult CreateStrategyResultFromPV(List<DailyData> p_pv, string p_htmlNoteFromStrategy, string p_errorMessage, string p_debugMessage)
         {
             //IEnumerable<string> chartDataToSend = pv.Select(row => row.Date.Year + "-" + row.Date.Month + "-" + row.Date.Day + "-" + String.Format("{0:0.00}", row.ClosePrice));
             IEnumerable<string> chartDataToSend = p_pv.Select(row => row.Date.Year + "-" + row.Date.Month + "-" + row.Date.Day + "-" + String.Format("{0:0.00}", row.ClosePrice >= 0 ? row.ClosePrice : 0.0));    // postprocess: TradingViewChart cannot accept negative numbers
@@ -451,7 +469,7 @@ namespace NeuralSniffer.Controllers.Strategies
 
                 chartData = chartDataToSend.ToList(),
 
-                noteFromStrategy = p_noteFromStrategy,
+                htmlNoteFromStrategy = p_htmlNoteFromStrategy,
                 errorMessage = p_errorMessage,
                 debugMessage = p_debugMessage
             };
