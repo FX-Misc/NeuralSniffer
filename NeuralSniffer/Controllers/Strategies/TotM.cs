@@ -6,6 +6,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+using System.Web.UI.DataVisualization.Charting;
 
 namespace NeuralSniffer.Controllers.Strategies
 {
@@ -13,8 +14,21 @@ namespace NeuralSniffer.Controllers.Strategies
     {
         public bool? IsBullish;
         public List<double> Samples;
-        public double AMean;
         public double WinPct;
+
+        public double AMean;
+        public double CorrectedStDev;
+        public double StandardError;
+        public double TvalueToZero;
+        public double TvalueToAMean;
+        public double PvalueToZero;
+        public double PvalueToAMean;
+    }
+
+    struct MaskItems
+    {
+        public MaskItem[] Forward;
+        public MaskItem[] Backward;
     }
 
     public class TotM
@@ -160,10 +174,13 @@ namespace NeuralSniffer.Controllers.Strategies
             // 1.0 parameter pre-process
             bool isTradeLongOnBullish = String.Equals(p_longOrShortOnBullish, "Long", StringComparison.InvariantCultureIgnoreCase);
 
-            MaskItem[] winterTotMForwardMask, winterTotMBackwardMask, winterTotMMForwardMask, winterTotMMBackwardMask;
-            CreateBoolMasks(p_dailyMarketDirectionMaskWinterTotM, p_dailyMarketDirectionMaskWinterTotMM, out winterTotMForwardMask, out winterTotMBackwardMask, out winterTotMMForwardMask, out winterTotMMBackwardMask);
-            MaskItem[] summerTotMForwardMask, summerTotMBackwardMask, summerTotMMForwardMask, summerTotMMBackwardMask;
-            CreateBoolMasks(p_dailyMarketDirectionMaskSummerTotM, p_dailyMarketDirectionMaskSummerTotMM, out summerTotMForwardMask, out summerTotMBackwardMask, out summerTotMMForwardMask, out summerTotMMBackwardMask);
+            MaskItems winterTotMMask = CreateMaskItems(p_dailyMarketDirectionMaskWinterTotM);
+            MaskItems winterTotMMMask = CreateMaskItems(p_dailyMarketDirectionMaskWinterTotMM);
+            MaskItems summerTotMMask = CreateMaskItems(p_dailyMarketDirectionMaskSummerTotM);
+            MaskItems summerTotMMMask = CreateMaskItems(p_dailyMarketDirectionMaskSummerTotMM);
+
+            MaskItems unitedTotMMask = CreateMaskItems(""); // IsBullish field is not used, just collecting Samples
+            MaskItems unitedTotMMMask = CreateMaskItems(""); // IsBullish field is not used, just colleting Samples
             
             DateTime pvStartDate = p_qoutes[0].Date;        // when the first quote is available, PV starts at $1.0
             DateTime pvEndDate = p_qoutes[p_qoutes.Count() - 1].Date;
@@ -270,33 +287,40 @@ namespace NeuralSniffer.Controllers.Strategies
             // create a separate List<int> for dayOffset (T-10...T+10). Out of that bounds, we don't care now; yes, we do
             // create 2 lists, a Forward list, a backward list (maybe later to test day T+12..T+16) Jay's "Monthly 10", which is 4 days in the middle month
 
+            double pctChgTotal = 0.0;
             for (int i = 1; i < p_qoutes.Count(); i++)  // march over on p_quotes, not pv
             {
                 double pctChg = p_qoutes[i].ClosePrice / p_qoutes[i - 1].ClosePrice - 1.0;
+                pctChgTotal += pctChg;
+
+                unitedTotMMask.Forward[totMForwardDayOffset[i] - 1].Samples.Add(pctChg);
+                unitedTotMMask.Backward[totMBackwardDayOffset[i] - 1].Samples.Add(pctChg);
+                unitedTotMMMask.Forward[totMMForwardDayOffset[i] - 1].Samples.Add(pctChg);
+                unitedTotMMMask.Backward[totMMBackwardDayOffset[i] - 1].Samples.Add(pctChg);
 
                 bool? isBullishTotMForwardMask, isBullishTotMBackwardMask, isBullishTotMMForwardMask, isBullishTotMMBackwardMask;
                 DateTime day = p_qoutes[i].Date;
                 if (IsBullishWinterDay(day))
                 {
-                    winterTotMForwardMask[totMForwardDayOffset[i] - 1].Samples.Add(pctChg);
-                    winterTotMBackwardMask[totMBackwardDayOffset[i] - 1].Samples.Add(pctChg);
-                    winterTotMMForwardMask[totMMForwardDayOffset[i] - 1].Samples.Add(pctChg);
-                    winterTotMMBackwardMask[totMMBackwardDayOffset[i] - 1].Samples.Add(pctChg);
-                    isBullishTotMForwardMask = winterTotMForwardMask[totMForwardDayOffset[i] - 1].IsBullish;      // T+1 offset; but the mask is 0 based indexed
-                    isBullishTotMBackwardMask = winterTotMBackwardMask[totMBackwardDayOffset[i] - 1].IsBullish;      // T-1 offset; but the mask is 0 based indexed
-                    isBullishTotMMForwardMask = winterTotMMForwardMask[totMMForwardDayOffset[i] - 1].IsBullish;      // T+1 offset; but the mask is 0 based indexed
-                    isBullishTotMMBackwardMask = winterTotMMBackwardMask[totMMBackwardDayOffset[i] - 1].IsBullish;      // T-1 offset; but the mask is 0 based indexed
+                    winterTotMMask.Forward[totMForwardDayOffset[i] - 1].Samples.Add(pctChg);
+                    winterTotMMask.Backward[totMBackwardDayOffset[i] - 1].Samples.Add(pctChg);
+                    winterTotMMMask.Forward[totMMForwardDayOffset[i] - 1].Samples.Add(pctChg);
+                    winterTotMMMask.Backward[totMMBackwardDayOffset[i] - 1].Samples.Add(pctChg);
+                    isBullishTotMForwardMask = winterTotMMask.Forward[totMForwardDayOffset[i] - 1].IsBullish;      // T+1 offset; but the mask is 0 based indexed
+                    isBullishTotMBackwardMask = winterTotMMask.Backward[totMBackwardDayOffset[i] - 1].IsBullish;      // T-1 offset; but the mask is 0 based indexed
+                    isBullishTotMMForwardMask = winterTotMMMask.Forward[totMMForwardDayOffset[i] - 1].IsBullish;      // T+1 offset; but the mask is 0 based indexed
+                    isBullishTotMMBackwardMask = winterTotMMMask.Backward[totMMBackwardDayOffset[i] - 1].IsBullish;      // T-1 offset; but the mask is 0 based indexed
                 }
                 else
                 {
-                    summerTotMForwardMask[totMForwardDayOffset[i] - 1].Samples.Add(pctChg);
-                    summerTotMBackwardMask[totMBackwardDayOffset[i] - 1].Samples.Add(pctChg);
-                    summerTotMMForwardMask[totMMForwardDayOffset[i] - 1].Samples.Add(pctChg);
-                    summerTotMMBackwardMask[totMMBackwardDayOffset[i] - 1].Samples.Add(pctChg);
-                    isBullishTotMForwardMask = summerTotMForwardMask[totMForwardDayOffset[i] - 1].IsBullish;      // T+1 offset; but the mask is 0 based indexed
-                    isBullishTotMBackwardMask = summerTotMBackwardMask[totMBackwardDayOffset[i] - 1].IsBullish;      // T-1 offset; but the mask is 0 based indexed
-                    isBullishTotMMForwardMask = summerTotMMForwardMask[totMMForwardDayOffset[i] - 1].IsBullish;      // T+1 offset; but the mask is 0 based indexed
-                    isBullishTotMMBackwardMask = summerTotMMBackwardMask[totMMBackwardDayOffset[i] - 1].IsBullish;      // T-1 offset; but the mask is 0 based indexed
+                    summerTotMMask.Forward[totMForwardDayOffset[i] - 1].Samples.Add(pctChg);
+                    summerTotMMask.Backward[totMBackwardDayOffset[i] - 1].Samples.Add(pctChg);
+                    summerTotMMMask.Forward[totMMForwardDayOffset[i] - 1].Samples.Add(pctChg);
+                    summerTotMMMask.Backward[totMMBackwardDayOffset[i] - 1].Samples.Add(pctChg);
+                    isBullishTotMForwardMask = summerTotMMask.Forward[totMForwardDayOffset[i] - 1].IsBullish;      // T+1 offset; but the mask is 0 based indexed
+                    isBullishTotMBackwardMask = summerTotMMask.Backward[totMBackwardDayOffset[i] - 1].IsBullish;      // T-1 offset; but the mask is 0 based indexed
+                    isBullishTotMMForwardMask = summerTotMMMask.Forward[totMMForwardDayOffset[i] - 1].IsBullish;      // T+1 offset; but the mask is 0 based indexed
+                    isBullishTotMMBackwardMask = summerTotMMMask.Backward[totMMBackwardDayOffset[i] - 1].IsBullish;      // T-1 offset; but the mask is 0 based indexed
                 }
                 
                 
@@ -364,50 +388,145 @@ namespace NeuralSniffer.Controllers.Strategies
                 p_pv[i].ClosePrice = pvDaily;
             }
 
-            // if winterMask == summerMask, create a united one
-            MaskItem[] unitedTotMForwardMask, unitedTotMBackwardMask, unitedTotMMForwardMask, unitedTotMMBackwardMask;
-            if (p_dailyMarketDirectionMaskWinterTotM.Equals(p_dailyMarketDirectionMaskSummerTotM, StringComparison.InvariantCultureIgnoreCase))
-            {
-                unitedTotMForwardMask = UniteMaskSamples(ref winterTotMForwardMask, ref summerTotMForwardMask);
-                unitedTotMBackwardMask = UniteMaskSamples(ref winterTotMBackwardMask, ref summerTotMBackwardMask);
-            }
+            double pctChgTotalAMean = (p_qoutes.Count() <= 0) ? 0.0 : pctChgTotal / (double)(p_qoutes.Count() - 1);
 
-            p_noteToUserBacktest = BuildHtmlTable("Winter, TotM", winterTotMForwardMask, winterTotMBackwardMask)
-                + BuildHtmlTable("Winter, TotMM", winterTotMMForwardMask, winterTotMMBackwardMask)
-                + BuildHtmlTable("Summer, TotM", summerTotMForwardMask, summerTotMBackwardMask)
-                + BuildHtmlTable("Summer, TotMM", summerTotMMForwardMask, summerTotMMBackwardMask);
+            p_noteToUserBacktest = @"<b>aMean(daily%Chg): " + pctChgTotalAMean.ToString("#0.000%") + @"%</b><br>" +
+                  BuildHtmlTable("Winter, TotM", winterTotMMask, pctChgTotalAMean)
+                + BuildHtmlTable("Winter, TotMM", winterTotMMMask, pctChgTotalAMean)
+                + BuildHtmlTable("Summer, TotM", summerTotMMask, pctChgTotalAMean)
+                + BuildHtmlTable("Summer, TotMM", summerTotMMMask, pctChgTotalAMean)
+                + BuildHtmlTable("United, TotM", unitedTotMMask, pctChgTotalAMean)
+                + BuildHtmlTable("United, TotMM", unitedTotMMMask, pctChgTotalAMean);
 
             //p_noteToUserBacktest = @"<table style=""width:100%"">  <tr>    <td>Smith</td>     <td>50</td>  </tr>  <tr>   <td>Jackson</td>     <td>94</td>  </tr></table>";
         }
 
-        private static MaskItem[] UniteMaskSamples(ref MaskItem[] p_winterMask, ref MaskItem[] p_summerMask)
+        private static MaskItems CreateMaskItems(string p_dailyMarketDirectionMaskStr)
         {
+            MaskItems maskItems = new MaskItems() { Forward = new MaskItem[30], Backward = new MaskItem[30] };     // (initialized to null: Neutral, not bullish, not bearish)   // trading days; max. 25 is expected.
 
-            return null;
+            for (int k = 0; k < 30; k++)
+            {
+                maskItems.Forward[k].Samples = new List<double>();
+                maskItems.Backward[k].Samples = new List<double>();
+            }
+
+            int iInd = p_dailyMarketDirectionMaskStr.IndexOf('.');
+            if (iInd != -1)
+            {
+                for (int i = iInd + 1; i < p_dailyMarketDirectionMaskStr.Length; i++)
+                {
+                    Utils.StrongAssert(i - (iInd + 1) < 30, "Mask half-length length should be less than 30: " + p_dailyMarketDirectionMaskStr);
+                    switch (p_dailyMarketDirectionMaskStr[i])
+                    {
+                        case 'U':
+                            maskItems.Forward[i - (iInd + 1)].IsBullish = true;
+                            break;
+                        case 'D':
+                            maskItems.Forward[i - (iInd + 1)].IsBullish = false;
+                            break;
+                        case '0':
+                            maskItems.Forward[i - (iInd + 1)].IsBullish = null;
+                            break;
+                        default:
+                            throw new Exception("Cannot interpret p_dailyMarketDirectionMaskTotM: " + p_dailyMarketDirectionMaskStr);
+                        //break;
+                    }
+                }
+                for (int i = iInd - 1; i >= 0; i--)
+                {
+                    Utils.StrongAssert((iInd - 1) - i < 30, "Mask half-length length should be less than 30: " + p_dailyMarketDirectionMaskStr);
+                    switch (p_dailyMarketDirectionMaskStr[i])
+                    {
+                        case 'U':
+                            maskItems.Backward[(iInd - 1) - i].IsBullish = true;
+                            break;
+                        case 'D':
+                            maskItems.Backward[(iInd - 1) - i].IsBullish = false;
+                            break;
+                        case '0':
+                            maskItems.Backward[(iInd - 1) - i].IsBullish = null;
+                            break;
+                        default:
+                            throw new Exception("Cannot interpret p_dailyMarketDirectionMaskTotM: " + p_dailyMarketDirectionMaskStr);
+                        //break;
+                    }
+                }
+            }
+
+            return maskItems;
         }
 
-        private static string BuildHtmlTable(string p_tableTitle, MaskItem[] p_forwardMask, MaskItem[] p_backwardMask)
+        // http://www.danielsoper.com/statcalc3/calc.aspx?id=8
+        // http://en.wikipedia.org/wiki/Student's_t-test
+        // http://hu.wikipedia.org/wiki/Egymint%C3%A1s_t-pr%C3%B3ba
+        //H0: assumption: real population Mean = 0  // == real daily %change on day T is 0
+        //H1: real population Mean >0  // because I chose ">", I will use the one-tailed (not two tailed test); I want to know this.
+        //calculate P-value. (with one-tailed Student-distribution)
+        //If P-value < 
+        //The decision rule is: Reject H0 if T > 1.645, which is equivalent that P < 5%.
+        //So, I reject H0.
+        //That says. The Population Mean cannot be = 0 (+- Epsilon), because that would be too unlikely that the sample mean is the value that I have for the sample.
+        //Becuse the sample mean is positive. (assume), and we rejected H0, therefore think the real population mean != 0 => it is event less likely that the population mean is negative.
+        //Therefore "the real population mean (of the daily%changes on day T) should be Positive (statistically with 95% probability), so populationMean is significantly > 0" // put this into Tooltip of Significant
+        // Tooltip: "With at least 1-P=95% probability: the real population mean (of the daily%changes on day T) > 0"
+        // "With at least 1-P=95% probability: the real population mean (of the daily%changes on day T) > allDayMean"
+        private static void CalculateSampleStats(ref MaskItem p_maskItem, double p_pctChgTotalAMean)
+        {
+            int nInt = p_maskItem.Samples.Count();
+            double n = (double)nInt;
+            double aMean = p_maskItem.Samples.Average();
+            double correcteStDev = Math.Sqrt(p_maskItem.Samples.Sum(r => (r - aMean) * (r - aMean)) / (n - 1.0));
+            double standardError = correcteStDev / Math.Sqrt(n);
+
+            p_maskItem.AMean = aMean;
+            p_maskItem.WinPct = (double)p_maskItem.Samples.Count(r => r > 0) / p_maskItem.Samples.Count();
+
+
+            
+            p_maskItem.CorrectedStDev = correcteStDev;
+            p_maskItem.StandardError = standardError;
+
+
+            p_maskItem.TvalueToZero = (p_maskItem.AMean - 0.0) / standardError;
+            p_maskItem.TvalueToAMean = (p_maskItem.AMean - p_pctChgTotalAMean) / standardError;
+
+            var chart = new Chart();
+            var statTool = chart.DataManipulator.Statistics;
+            p_maskItem.PvalueToZero = statTool.TDistribution(p_maskItem.TvalueToZero, nInt - 1, true);
+            p_maskItem.PvalueToAMean = statTool.TDistribution(p_maskItem.TvalueToAMean, nInt - 1, true);
+
+            // PvalueToZero = P = probability that the observed aMean result is due to chance 
+
+        }
+
+        private static string BuildHtmlTable(string p_tableTitle, MaskItems p_maskItems, double p_pctChgTotalAMean)
         {
             StringBuilder sb = new StringBuilder(@"<b>" + p_tableTitle + @":</b><br> <table class=""strategyNoteTable1"">");
-            sb.Append("<th>Day</th><th>nSamples</th><th>aMean</th><th>WinPct</th>");
+            sb.Append(@"<th>Day</th><th>nSamples</th><th>WinPct</th><th>aMean</th><th>StDev</th><th>StError</th><th>t-value(0)</th>" +
+                @"<th><div title=""P is calculated by one tailed, one sample T-test"">p-value(0)</div></th>" +
+                @"<th><div title=""With at least 1-P=95% probability: the real population mean (of the daily%changes on day T) > 0 {or opposite if T-value negative}"">Signif>0</div></th>" +
+                @"<th>t-value(mean)</th>" +
+                @"<th><div title=""P is calculated by one tailed, one sample T-test"">p-value(mean)</div></th>" +
+                @"<th><div title=""With at least 1-P=95% probability: the real population mean (of the daily%changes on day T) > allDayMean {or opposite if T-value negative}"">Signif>mean</div></th>");
 
             bool isRowEven = false;     // 1st Row is Odd
             for (int i = 16; i >= 0; i--)   // write only from T-17 to T+17
             {
-                if (p_backwardMask[i].Samples.Count() == 0)
+                if (p_maskItems.Backward[i].Samples.Count() == 0)
                     continue;
 
-                CalculateSampleStats(ref p_backwardMask[i]);
-                BuildHtmlTableRow("T-" + (i + 1).ToString(), isRowEven, ref p_backwardMask[i], sb);
+                CalculateSampleStats(ref p_maskItems.Backward[i], p_pctChgTotalAMean);
+                BuildHtmlTableRow("T-" + (i + 1).ToString(), isRowEven, ref p_maskItems.Backward[i], sb);
                 isRowEven = !isRowEven;
             }
 
             for (int i = 0; i <= 16; i++)  // write only from T-17 to T+17
             {
-                if (p_forwardMask[i].Samples.Count() == 0)
+                if (p_maskItems.Forward[i].Samples.Count() == 0)
                     continue;
-                CalculateSampleStats(ref p_forwardMask[i]);
-                BuildHtmlTableRow("T+" + (i + 1).ToString(), isRowEven, ref p_forwardMask[i], sb);
+                CalculateSampleStats(ref p_maskItems.Forward[i], p_pctChgTotalAMean);
+                BuildHtmlTableRow("T+" + (i + 1).ToString(), isRowEven, ref p_maskItems.Forward[i], sb);
                 isRowEven = !isRowEven;
             }
 
@@ -419,17 +538,23 @@ namespace NeuralSniffer.Controllers.Strategies
         {
             p_sb.AppendFormat("<tr{0}><td>" + p_rowTitle + "</td>", (p_isRowEven)? " class='even'":"");
             p_sb.Append("<td>" + p_maskItem.Samples.Count() + "</td>");
-            p_sb.Append("<td>" + p_maskItem.AMean.ToString("#0.000%") + "</td>");
             p_sb.Append("<td>" + p_maskItem.WinPct.ToString("#0.0%") + "</td>");
+            p_sb.Append("<td>" + p_maskItem.AMean.ToString("#0.000%") + "</td>");
+            p_sb.Append("<td>" + p_maskItem.CorrectedStDev.ToString("#0.000%") + "</td>");
+            p_sb.Append("<td>" + p_maskItem.StandardError.ToString("#0.000%") + "</td>");
+            p_sb.Append("<td>" + p_maskItem.TvalueToZero.ToString("#0.00") + "</td>");
+            p_sb.Append("<td>" + p_maskItem.PvalueToZero.ToString("#0.00%") + "</td>");
+            p_sb.Append("<td>" + ((p_maskItem.PvalueToZero < 0.05)?"Yes":"") + "</td>");
+
+            p_sb.Append("<td>" + p_maskItem.TvalueToAMean.ToString("#0.00") + "</td>");
+            p_sb.Append("<td>" + p_maskItem.PvalueToAMean.ToString("#0.00%") + "</td>");
+            p_sb.Append("<td>" + ((p_maskItem.PvalueToAMean < 0.05) ? "Yes" : "") + "</td>");
+
 
             p_sb.Append("</tr>");
         }
 
-        private static void CalculateSampleStats(ref MaskItem p_maskItem)
-        {
-            p_maskItem.AMean = p_maskItem.Samples.Average();
-            p_maskItem.WinPct = (double)p_maskItem.Samples.Count(r => r > 0) / p_maskItem.Samples.Count();
-        }
+    
 
 
         //UberVXX: Turn of the Month sub-strategy

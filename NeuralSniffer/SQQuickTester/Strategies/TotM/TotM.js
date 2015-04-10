@@ -15,11 +15,17 @@ AngularInit_TotM = function ($scope, $http) {
     //$scope.dailyMarketDirectionMaskWinterTotM = "D.UUU00DD";
     //$scope.dailyMarketDirectionMaskWinterTotMM = "DDUU.UU";
 
-    $scope.dailyMarketDirectionMaskWinterTotM = "UUUD.UUU";//Mask: D0.UU, Up: Market Up, D: Down, 0:Cash (B is not good because Bullish, Bearish): other option Comma separation, but not necessary here
-    $scope.dailyMarketDirectionMaskWinterTotMM = "DDUU.UU00UU";
-    $scope.dailyMarketDirectionMaskSummerTotM = "DDDDUUD.UDD";
-    $scope.dailyMarketDirectionMaskSummerTotMM = "DDUU.UU00DDD";
+    // before significance test: SPY: CAGR:  25.30%  Annualized StDev:  16.50%  Sharpe:  1.53; (15+19)/2=17 days per month
+    //$scope.dailyMarketDirectionMaskWinterTotM = "UUUD.UUU";//Mask: D0.UU, Up: Market Up, D: Down, 0:Cash (B is not good because Bullish, Bearish): other option Comma separation, but not necessary here
+    //$scope.dailyMarketDirectionMaskWinterTotMM = "DDUU.UU00UU";
+    //$scope.dailyMarketDirectionMaskSummerTotM = "DDDDUUD.UDD";
+    //$scope.dailyMarketDirectionMaskSummerTotMM = "DDUU.UU00DDD";
     
+    // after significance test: SPY: CAGR:  23.27%  Annualized StDev:  14.23%  Sharpe:  1.64; (15+8)/2=11.5 days per month //sharpe increased! more reliable 
+    $scope.dailyMarketDirectionMaskWinterTotM = "UUUD.UUU";//Mask: D0.UU, Up: Market Up, D: Down, 0:Cash (B is not good because Bullish, Bearish): other option Comma separation, but not necessary here
+    $scope.dailyMarketDirectionMaskWinterTotMM = "DDUU.UU00UU"; // winter didn't change after Significance test.
+    $scope.dailyMarketDirectionMaskSummerTotM = "DD00U00.U";
+    $scope.dailyMarketDirectionMaskSummerTotMM = "D0UU.0U";
 
     $scope.bullishTradingInstrumentChanged = function () {
         $scope.tipToUser = $scope.selectedBullishTradingInstrument;

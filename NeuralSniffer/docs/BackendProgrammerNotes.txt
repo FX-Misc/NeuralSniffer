@@ -1,5 +1,113 @@
 ﻿
 
+
+**************** Here is my brief result after scrutinizing Significance Test values:
+- In general: There are more (3+) significant values in the TotMM table, and only 1 in TotM table. So play the TotMM too. So play TotMM too, not only TotM.
+
+- Before Significance test, we suggested:
+    $scope.dailyMarketDirectionMaskWinterTotM = "UUUD.UUU";//Mask: D0.UU, Up: Market Up, D: Down, 0:Cash (B is not good because Bullish, Bearish): other option Comma separation, but not necessary here
+    $scope.dailyMarketDirectionMaskWinterTotMM = "DDUU.UU00UU";
+    $scope.dailyMarketDirectionMaskSummerTotM = "DDDDUUD.UDD";
+    $scope.dailyMarketDirectionMaskSummerTotMM = "DDUU.UU00DDD";
+// before significance test: SPY: CAGR:  25.30%  Annualized StDev:  16.50%  Sharpe:  1.53; (15+19)/2=17 days per month
+
+- After Significance test, we suggest:
+    $scope.dailyMarketDirectionMaskWinterTotM = "UUUD.UUU";//Mask: D0.UU, Up: Market Up, D: Down, 0:Cash (B is not good because Bullish, Bearish): other option Comma separation, but not necessary here
+    $scope.dailyMarketDirectionMaskWinterTotMM = "DDUU.UU00UU"; // winter didn't change after Significance test.
+    $scope.dailyMarketDirectionMaskSummerTotM = "DD00U00.U";
+    $scope.dailyMarketDirectionMaskSummerTotMM = "D0UU.0U";
+ // after significance test: SPY: CAGR:  23.27%  Annualized StDev:  14.23%  Sharpe:  1.64; (15+8)/2=11.5 days per month //sharpe increased! more reliable 
+ I like this better
+ VXX: CAGR:  77.78%  Annualized StDev:  44.02%  Sharpe:  1.77  
+ VXX.SQ: CAGR:  55.06%  Annualized StDev:  41.26%  Sharpe:  1.33    
+ TQQQ: CAGR:  59.14%  Annualized StDev:  35.88%  Sharpe:  1.65  
+ >This is the maximum that a combination of day-of-the-month + Helloween effect can give. But that is quite good, with averae 11.5 days invested per month.
+
+ ****** What to play after Significance test ? steps of the data crunching:
+
+*: means significant with 95% confidence level
+^: 90% confidence level
+
+1. Suggestion to play: after significance test SPY (looking at t-value(0) around 1.6 or more)
+- winter: U*UUD.U*U*U*/ DDUU.U^U*00U*U*
+- summer: D*D00U00.U*/  D*0U*U*.0U*
+- united: .U*/D*DU*U.UU* 			is suggested. Also like extra 2 days at TotM: .U*UU/D*DU*U.UU*
+
+2. Suggestion to play: after significance test VXX.SQ (looking at t-value(0) around 1.6 or more)
+- winter: D.UU*U*/ UD.0U*UU*U*U*U
+- summer: U*00./.0U*
+- united: U*0D.UUU/ UD.DU*UUUU*			// that is why Uber VXX plays D.UUU, but note the SPY is different: only plays .U
+
+
+********************* 2015-04-10: Hypothesis testing discussion, 
+
+
+- vagy vegyuk a logaritmusukat, az jobban normalis eloszlasu.
+- totalMean of the 25 years: SPY 0.03%;  VXX: -0.28
+
+H0: Az X valószínuségi változó várható értéke megegyezik m-mel. (nulla kicsi kornyezeteben van)
+vagy nulla vagy pozitiv....
+H1: Az X valószínuségi változó várható értéke kisebb m-mel.: 
+valtozo <
+
+H0: null hypothesis: assumption: population Mean = 0;
+H1: using that assumption0,  What is the P probability that the observed sample aMean result is due to chance .
+If that probability is too Low, then reject the H0 hypothesis, and say that the populationMean significantly > 0.
+(If populationMean signifinactly < 0, that is even less likely.)
+Igazabol H1-re nincs is szukseg.
+
+H0 and H1 are not complementers.
+
+http://www.ats.ucla.edu/stat/mult_pkg/faq/general/tail_tests.htm
+For example, we may wish to compare the mean of a sample to a given value x using a t-test.  Our null hypothesis is that the mean is equal to x. A two-tailed test will test both if the mean is significantly greater than x and if the mean significantly less than x. The mean is considered significantly different from x if the test statistic is in the top 2.5% or bottom 2.5% of its probability distribution, resulting in a p-value less than 0.05.     
+
+What is a one-tailed test?
+Next, let's discuss the meaning of a one-tailed test.  If you are using a significance level of .05, a one-tailed test allots all of your alpha to testing the statistical significance in the one direction of interest.  This means that .05 is in one tail of the distribution of your test statistic.
+
+When using a one-tailed test, you are testing for the possibility of the relationship in one direction and completely disregarding the possibility of a relationship in the other direction.  Let's return to our example comparing the mean of a sample to a given value x using a t-test.  Our null hypothesis is that the mean is equal to x. A one-tailed test will test either if the mean is significantly greater than x or if the mean is significantly less than x, but not both.
+
+In practice, you should use a one-tailed test only when you have good reason to expect that the difference will be in a particular direction. A two-tailed test is more conservative than a one-tailed test because a two-tailed test takes a more extreme test statistic to reject the null hypothesis.
+
+So, H0, and H1 not complementers.
+
+http://sphweb.bumc.bu.edu/otlt/MPH-Modules/BS/BS704_HypothesisTest-Means-Proportions/BS704_HypothesisTest-Means-Proportions3.html
+H1: µ > µ 0 , where µ0 is the comparator or null value (e.g., µ0 =191 in our example about weight in men in 2006) and an increase is hypothesized - this type of test is called an upper-tailed test;
+
+
+*************************  Balazs skype talk
+-  Balazs ezt hasznalta, mert Excel ezt tudja:
+http://hu.wikipedia.org/wiki/K%C3%A9tmint%C3%A1s_t-pr%C3%B3ba
+itt is irja. normalis kene, de ha 30+ folotti mintaszam, akkor centralist kozeliti, es Balazs mondja, hogy akkor megis hasznalhato
+
+H0: E(*) == 0.03, ez lenne nekem a rossz.
+H1: E(SPY napi %change day T+1) > 0.03, ez nekem a jo.
+
+egyoldali, mert csak az egyik oldalt nezem.
+
+H1: E(SPY napi %change day T+1) > 0.03 + Epsilon (5%valoszinu), ez nekem a jo.
+H0: E(*) <= 0.03, ez lenne nekem a rossz.
+
+mi van ha ez az igazi... E(*) = 0.03000000000000000000001
+
+H1: E(SPY napi %change day T+1) > 0.03, ez nekem a jo.
+H0: E(*) <= 0.03, ez lenne nekem a rossz.
+
+E^ becslesem;
+E^... kornyeken intervallum... -+ Epsilon (5%).... 0.03
+
+'= (p)' 
+
+"=1%"
+"=5%"
+
+step: calculate t = // az, hogy az az atlag*gyokN hany std dev-re van.
+step 2: calculate p? 0.051 = terulet
+- ha p < 0.05, akkor H1-et fogadom el, (mert az nekem jo)
+
+ha ketoldali van, akkor a megkapott p-t dublazom.
+
+
+
 ***************************************************************************************************************
 ********************* 2015-03-31
 "Hali Robi, 
