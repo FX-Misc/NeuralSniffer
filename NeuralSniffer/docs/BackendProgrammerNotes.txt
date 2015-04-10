@@ -1,7 +1,95 @@
-﻿*********************
+﻿
+
+***************************************************************************************************************
+********************* 2015-03-31
+"Hali Robi, 
+Visszavonom, amit irtam. False alarm.
+Azure-ra felteve, teljesen masokat kapok."
+
+SPY lehozasa, elejetol a vegeig. Remote Azure IIS, Remote Azure SQL server:
+Old code:
+DebugMessage: SQL query time: 629ms
+DebugMessage: SQL query time: 609ms 
+DebugMessage: SQL query time: 607ms
+DebugMessage: SQL query time: 606ms
+DebugMessage: SQL query time: 584ms
+DebugMessage: SQL query time: 654ms
+DebugMessage: SQL query time: 628ms
+DebugMessage: SQL query time: 580ms
+
+New code:
+DebugMessage: SQL query time: 304ms 
+DebugMessage: SQL query time: 313ms 
+DebugMessage: SQL query time: 287ms
+DebugMessage: SQL query time: 289ms 
+DebugMessage: SQL query time: 279ms
+DebugMessage: SQL query time: 286ms
+DebugMessage: SQL query time: 279ms
+DebugMessage: SQL query time: 275ms
+DebugMessage: SQL query time: 288ms
+DebugMessage: SQL query time: 286ms
+
+Brutalisan jobb az uj kod.
+Akkor ugy nez ki ez a GetAdjustmentFactorAt2() megis csak bejott.
+Szoval semmit nem kell csinalni.
+
+Kosz,
+Gy.
 
 
 
+-----Original Message-----
+From: Dr. George Antal [mailto:gyantal@gmail.com] 
+Sent: Tuesday, 31, March, 2015 22:38
+To: 'Mészáros Róbert'
+Subject: RE: Adjusted VXX
+
+Szia Robi,
+
+Hm.
+Erdekes modon en ugy merem, hogy szerintem lassabb valamivel:
+
+SPY lehozasa, elejetol a vegeig. LocalHost-on (IIS), to SQL server:
+kb.
+
+Stopwatch stopWatch = Stopwatch.StartNew();
+stocksSqlReturnTask = Tools.GetHistoricalQuotesAsync()
+stocksSqlReturn = await stocksSqlReturnTask;
+stopWatch.Stop();
+
+Probak:
+1.
+Old GetHistoricalQuotes.cs:
+DebugMessage:  SQL query time: 835ms
+DebugMessage:  SQL query time: 824ms
+DebugMessage:  SQL query time: 538ms
+DebugMessage:  SQL query time: 570ms
+DebugMessage:  SQL query time: 548ms
+DebugMessage:  SQL query time: 581ms
+DebugMessage:  SQL query time: 577ms
+DebugMessage:  SQL query time: 583ms
+DebugMessage:  SQL query time: 554ms
+Avg: 835+824+538+570+548+581+577+583+554 / 9 = 623msec
+
+2.
+New GetHistoricalQuotes.cs:
+DebugMessage:  SQL query time: 851ms
+DebugMessage:  SQL query time: 833ms
+DebugMessage:  SQL query time: 578ms
+DebugMessage:  SQL query time: 777ms
+DebugMessage:  SQL query time: 852ms
+DebugMessage:  SQL query time: 630ms
+DebugMessage:  SQL query time: 578ms
+DebugMessage:  SQL query time: 750ms
+DebugMessage:  SQL query time: 797ms
+DebugMessage:  SQL query time: 598ms
+Avg: 851+833+578+777+852+630+578+750+797+598 / 10 = 724.4msec
+
+Difference: 101msec
+
+
+
+***************************************************************************************************************
 *******2015-03-19 **********  Effect of Using only 1 SQL access, instead of 2 SQL accesses (previously Select StockID from Tickers were sent separately)
 A. Local development, localhost:
 A.1 SPY:

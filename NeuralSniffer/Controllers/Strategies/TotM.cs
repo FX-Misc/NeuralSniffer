@@ -15,12 +15,6 @@ namespace NeuralSniffer.Controllers.Strategies
         public List<double> Samples;
         public double AMean;
         public double WinPct;
-
-        //public MaskItem()
-        //{
-        //    IsBullish = null;
-        //    Samples = new List<double>();
-        //}
     }
 
     public class TotM
@@ -50,21 +44,6 @@ namespace NeuralSniffer.Controllers.Strategies
                 else
                     strategyParams = "";
             }
-            //string longOrShortOnBullish = null;
-            //if (strategyParams.StartsWith("LongOrShortOnBullish=", StringComparison.InvariantCultureIgnoreCase))
-            //{
-            //    strategyParams = strategyParams.Substring("LongOrShortOnBullish=".Length);
-            //    ind = strategyParams.IndexOf('&');
-            //    if (ind == -1)
-            //    {
-            //        ind = strategyParams.Length;
-            //    }
-            //    longOrShortOnBullish = strategyParams.Substring(0, ind);
-            //    if (ind < strategyParams.Length)
-            //        strategyParams = strategyParams.Substring(ind + 1);
-            //    else
-            //        strategyParams = "";
-            //}
             string dailyMarketDirectionMaskSummerTotM = null;
             if (strategyParams.StartsWith("DailyMarketDirectionMaskSummerTotM=", StringComparison.InvariantCultureIgnoreCase))
             {
@@ -181,11 +160,11 @@ namespace NeuralSniffer.Controllers.Strategies
             // 1.0 parameter pre-process
             bool isTradeLongOnBullish = String.Equals(p_longOrShortOnBullish, "Long", StringComparison.InvariantCultureIgnoreCase);
 
-            MaskItem[] summerTotMForwardMask, summerTotMBackwardMask, summerTotMMForwardMask, summerTotMMBackwardMask;
-            CreateBoolMasks(p_dailyMarketDirectionMaskSummerTotM, p_dailyMarketDirectionMaskSummerTotMM, out summerTotMForwardMask, out summerTotMBackwardMask, out summerTotMMForwardMask, out summerTotMMBackwardMask);
             MaskItem[] winterTotMForwardMask, winterTotMBackwardMask, winterTotMMForwardMask, winterTotMMBackwardMask;
             CreateBoolMasks(p_dailyMarketDirectionMaskWinterTotM, p_dailyMarketDirectionMaskWinterTotMM, out winterTotMForwardMask, out winterTotMBackwardMask, out winterTotMMForwardMask, out winterTotMMBackwardMask);
-
+            MaskItem[] summerTotMForwardMask, summerTotMBackwardMask, summerTotMMForwardMask, summerTotMMBackwardMask;
+            CreateBoolMasks(p_dailyMarketDirectionMaskSummerTotM, p_dailyMarketDirectionMaskSummerTotMM, out summerTotMForwardMask, out summerTotMBackwardMask, out summerTotMMForwardMask, out summerTotMMBackwardMask);
+            
             DateTime pvStartDate = p_qoutes[0].Date;        // when the first quote is available, PV starts at $1.0
             DateTime pvEndDate = p_qoutes[p_qoutes.Count() - 1].Date;
 
@@ -385,12 +364,26 @@ namespace NeuralSniffer.Controllers.Strategies
                 p_pv[i].ClosePrice = pvDaily;
             }
 
+            // if winterMask == summerMask, create a united one
+            MaskItem[] unitedTotMForwardMask, unitedTotMBackwardMask, unitedTotMMForwardMask, unitedTotMMBackwardMask;
+            if (p_dailyMarketDirectionMaskWinterTotM.Equals(p_dailyMarketDirectionMaskSummerTotM, StringComparison.InvariantCultureIgnoreCase))
+            {
+                unitedTotMForwardMask = UniteMaskSamples(ref winterTotMForwardMask, ref summerTotMForwardMask);
+                unitedTotMBackwardMask = UniteMaskSamples(ref winterTotMBackwardMask, ref summerTotMBackwardMask);
+            }
+
             p_noteToUserBacktest = BuildHtmlTable("Winter, TotM", winterTotMForwardMask, winterTotMBackwardMask)
                 + BuildHtmlTable("Winter, TotMM", winterTotMMForwardMask, winterTotMMBackwardMask)
                 + BuildHtmlTable("Summer, TotM", summerTotMForwardMask, summerTotMBackwardMask)
                 + BuildHtmlTable("Summer, TotMM", summerTotMMForwardMask, summerTotMMBackwardMask);
 
             //p_noteToUserBacktest = @"<table style=""width:100%"">  <tr>    <td>Smith</td>     <td>50</td>  </tr>  <tr>   <td>Jackson</td>     <td>94</td>  </tr></table>";
+        }
+
+        private static MaskItem[] UniteMaskSamples(ref MaskItem[] p_winterMask, ref MaskItem[] p_summerMask)
+        {
+
+            return null;
         }
 
         private static string BuildHtmlTable(string p_tableTitle, MaskItem[] p_forwardMask, MaskItem[] p_backwardMask)
