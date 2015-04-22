@@ -1,7 +1,7 @@
 ﻿
 AngularInit_TotM = function ($scope, $http) {
 
-    $scope.bullishTradingInstrument = ["Long SPY", "Long ^GSPC", "Long ^IXIC", "Long ^RUT", "Long QQQ", "Long QLD", "Long TQQQ", "Long IWM", "Short VXX", "Short VXX.SQ"];
+    $scope.bullishTradingInstrument = ["Long SPY", "Long ^GSPC", "Long ^IXIC", "Long ^RUT", "Long QQQ", "Long QLD", "Long TQQQ", "Long IWM", "Short VXX", "Short VXX.SQ", "Short VXZ", "Short VXZ.SQ"];
     $scope.selectedBullishTradingInstrument = $scope.bullishTradingInstrument[0];
 
     //$scope.totMStock = ["SPY", "QQQ", "VXX"];
@@ -82,4 +82,15 @@ AngularInit_TotM = function ($scope, $http) {
             });
 
     }
+
+}
+
+
+
+function InvertVisibilityOfTableRow(paramID) {
+    var tableRow = document.getElementById(paramID);
+    if (tableRow.style.display == 'none')
+        tableRow.style.display = 'table-row';
+    else 
+        tableRow.style.display = 'none';
 }

@@ -13,16 +13,20 @@ namespace NeuralSniffer.Controllers.Strategies
     struct MaskItem
     {
         public bool? IsBullish;
-        public List<double> Samples;
+        public List<Tuple<DateTime, double>> Samples;
         public double WinPct;
 
         public double AMean;
+        public double GMean;
+        public double Median;
         public double CorrectedStDev;
         public double StandardError;
         public double TvalueToZero;
         public double TvalueToAMean;
         public double PvalueToZero;
         public double PvalueToAMean;
+
+        public List<Tuple<string, double>> AMeanPerYear;
     }
 
     struct MaskItems
@@ -31,8 +35,10 @@ namespace NeuralSniffer.Controllers.Strategies
         public MaskItem[] Backward;
     }
 
-    public class TotM
+    public static class TotM
     {
+        static StatisticFormula g_statTool = (new Chart()).DataManipulator.Statistics;
+
         public static async Task<string> GenerateQuickTesterResponse(GeneralStrategyParameters p_generalParams, string p_strategyName, string p_params)
         {
             Stopwatch stopWatchTotalResponse = Stopwatch.StartNew();
@@ -290,22 +296,22 @@ namespace NeuralSniffer.Controllers.Strategies
             double pctChgTotal = 0.0;
             for (int i = 1; i < p_qoutes.Count(); i++)  // march over on p_quotes, not pv
             {
+                DateTime day = p_qoutes[i].Date;
                 double pctChg = p_qoutes[i].ClosePrice / p_qoutes[i - 1].ClosePrice - 1.0;
                 pctChgTotal += pctChg;
 
-                unitedTotMMask.Forward[totMForwardDayOffset[i] - 1].Samples.Add(pctChg);
-                unitedTotMMask.Backward[totMBackwardDayOffset[i] - 1].Samples.Add(pctChg);
-                unitedTotMMMask.Forward[totMMForwardDayOffset[i] - 1].Samples.Add(pctChg);
-                unitedTotMMMask.Backward[totMMBackwardDayOffset[i] - 1].Samples.Add(pctChg);
+                unitedTotMMask.Forward[totMForwardDayOffset[i] - 1].Samples.Add(new Tuple<DateTime, double>(day,pctChg));
+                unitedTotMMask.Backward[totMBackwardDayOffset[i] - 1].Samples.Add(new Tuple<DateTime, double>(day, pctChg));
+                unitedTotMMMask.Forward[totMMForwardDayOffset[i] - 1].Samples.Add(new Tuple<DateTime, double>(day, pctChg));
+                unitedTotMMMask.Backward[totMMBackwardDayOffset[i] - 1].Samples.Add(new Tuple<DateTime, double>(day, pctChg));
 
                 bool? isBullishTotMForwardMask, isBullishTotMBackwardMask, isBullishTotMMForwardMask, isBullishTotMMBackwardMask;
-                DateTime day = p_qoutes[i].Date;
                 if (IsBullishWinterDay(day))
                 {
-                    winterTotMMask.Forward[totMForwardDayOffset[i] - 1].Samples.Add(pctChg);
-                    winterTotMMask.Backward[totMBackwardDayOffset[i] - 1].Samples.Add(pctChg);
-                    winterTotMMMask.Forward[totMMForwardDayOffset[i] - 1].Samples.Add(pctChg);
-                    winterTotMMMask.Backward[totMMBackwardDayOffset[i] - 1].Samples.Add(pctChg);
+                    winterTotMMask.Forward[totMForwardDayOffset[i] - 1].Samples.Add(new Tuple<DateTime, double>(day, pctChg));
+                    winterTotMMask.Backward[totMBackwardDayOffset[i] - 1].Samples.Add(new Tuple<DateTime, double>(day, pctChg));
+                    winterTotMMMask.Forward[totMMForwardDayOffset[i] - 1].Samples.Add(new Tuple<DateTime, double>(day, pctChg));
+                    winterTotMMMask.Backward[totMMBackwardDayOffset[i] - 1].Samples.Add(new Tuple<DateTime, double>(day, pctChg));
                     isBullishTotMForwardMask = winterTotMMask.Forward[totMForwardDayOffset[i] - 1].IsBullish;      // T+1 offset; but the mask is 0 based indexed
                     isBullishTotMBackwardMask = winterTotMMask.Backward[totMBackwardDayOffset[i] - 1].IsBullish;      // T-1 offset; but the mask is 0 based indexed
                     isBullishTotMMForwardMask = winterTotMMMask.Forward[totMMForwardDayOffset[i] - 1].IsBullish;      // T+1 offset; but the mask is 0 based indexed
@@ -313,10 +319,10 @@ namespace NeuralSniffer.Controllers.Strategies
                 }
                 else
                 {
-                    summerTotMMask.Forward[totMForwardDayOffset[i] - 1].Samples.Add(pctChg);
-                    summerTotMMask.Backward[totMBackwardDayOffset[i] - 1].Samples.Add(pctChg);
-                    summerTotMMMask.Forward[totMMForwardDayOffset[i] - 1].Samples.Add(pctChg);
-                    summerTotMMMask.Backward[totMMBackwardDayOffset[i] - 1].Samples.Add(pctChg);
+                    summerTotMMask.Forward[totMForwardDayOffset[i] - 1].Samples.Add(new Tuple<DateTime, double>(day, pctChg));
+                    summerTotMMask.Backward[totMBackwardDayOffset[i] - 1].Samples.Add(new Tuple<DateTime, double>(day, pctChg));
+                    summerTotMMMask.Forward[totMMForwardDayOffset[i] - 1].Samples.Add(new Tuple<DateTime, double>(day, pctChg));
+                    summerTotMMMask.Backward[totMMBackwardDayOffset[i] - 1].Samples.Add(new Tuple<DateTime, double>(day, pctChg));
                     isBullishTotMForwardMask = summerTotMMask.Forward[totMForwardDayOffset[i] - 1].IsBullish;      // T+1 offset; but the mask is 0 based indexed
                     isBullishTotMBackwardMask = summerTotMMask.Backward[totMBackwardDayOffset[i] - 1].IsBullish;      // T-1 offset; but the mask is 0 based indexed
                     isBullishTotMMForwardMask = summerTotMMMask.Forward[totMMForwardDayOffset[i] - 1].IsBullish;      // T+1 offset; but the mask is 0 based indexed
@@ -390,6 +396,12 @@ namespace NeuralSniffer.Controllers.Strategies
 
             double pctChgTotalAMean = (p_qoutes.Count() <= 0) ? 0.0 : pctChgTotal / (double)(p_qoutes.Count() - 1);
 
+            //string javascriptInHtml = @"<script type=""text/javascript"">" +
+            //        @"function InvertVisibilityOfTableRow(paramID) {" +
+            //        @"document.getElementById(paramID).style.display = 'table-row';" +
+            //        @"}" +
+            //    @"</script>";
+
             p_noteToUserBacktest = @"<b>aMean(daily%Chg): " + pctChgTotalAMean.ToString("#0.000%") + @"%</b><br>" +
                   BuildHtmlTable("Winter, TotM", winterTotMMask, pctChgTotalAMean)
                 + BuildHtmlTable("Winter, TotMM", winterTotMMMask, pctChgTotalAMean)
@@ -407,8 +419,8 @@ namespace NeuralSniffer.Controllers.Strategies
 
             for (int k = 0; k < 30; k++)
             {
-                maskItems.Forward[k].Samples = new List<double>();
-                maskItems.Backward[k].Samples = new List<double>();
+                maskItems.Forward[k].Samples = new List<Tuple<DateTime, double>>();
+                maskItems.Backward[k].Samples = new List<Tuple<DateTime, double>>();
             }
 
             int iInd = p_dailyMarketDirectionMaskStr.IndexOf('.');
@@ -475,35 +487,57 @@ namespace NeuralSniffer.Controllers.Strategies
         {
             int nInt = p_maskItem.Samples.Count();
             double n = (double)nInt;
-            double aMean = p_maskItem.Samples.Average();
-            double correcteStDev = Math.Sqrt(p_maskItem.Samples.Sum(r => (r - aMean) * (r - aMean)) / (n - 1.0));
-            double standardError = correcteStDev / Math.Sqrt(n);
+            List<double> samples = p_maskItem.Samples.Select(r => r.Item2).ToList();
+            double aMean = samples.Average();
+            double correctedStDev = Math.Sqrt(samples.Sum(r => (r - aMean) * (r - aMean)) / (n - 1.0));
+            double standardError = correctedStDev / Math.Sqrt(n);
+
+            p_maskItem.WinPct = (double)samples.Count(r => r > 0) / n;
 
             p_maskItem.AMean = aMean;
-            p_maskItem.WinPct = (double)p_maskItem.Samples.Count(r => r > 0) / p_maskItem.Samples.Count();
-
-
-            
-            p_maskItem.CorrectedStDev = correcteStDev;
+            p_maskItem.GMean = samples.GMeanExtendingWithOne();
+            p_maskItem.Median = samples.Median();
+            p_maskItem.CorrectedStDev = correctedStDev;
             p_maskItem.StandardError = standardError;
 
 
             p_maskItem.TvalueToZero = (p_maskItem.AMean - 0.0) / standardError;
             p_maskItem.TvalueToAMean = (p_maskItem.AMean - p_pctChgTotalAMean) / standardError;
 
-            var chart = new Chart();
-            var statTool = chart.DataManipulator.Statistics;
-            p_maskItem.PvalueToZero = statTool.TDistribution(p_maskItem.TvalueToZero, nInt - 1, true);
-            p_maskItem.PvalueToAMean = statTool.TDistribution(p_maskItem.TvalueToAMean, nInt - 1, true);
+            p_maskItem.PvalueToZero = g_statTool.TDistribution(p_maskItem.TvalueToZero, nInt - 1, true);
+            p_maskItem.PvalueToAMean = g_statTool.TDistribution(p_maskItem.TvalueToAMean, nInt - 1, true);
 
             // PvalueToZero = P = probability that the observed aMean result is due to chance 
 
+            p_maskItem.AMeanPerYear = new List<Tuple<string, double>>();
+        
+            var years = p_maskItem.Samples.Select(r => r.Item1.Year).Distinct().OrderBy(r => r).ToList();
+            int nYears = years.Count();
+            int[] nSamplesPerYear = new int[nYears];
+            double[] aMeanPerYear = new double[nYears];
+            for (int i = 0; i < n; i++)
+            {
+                int iYears = years.IndexOf(p_maskItem.Samples[i].Item1.Year);
+                nSamplesPerYear[iYears]++;
+                aMeanPerYear[iYears] += p_maskItem.Samples[i].Item2;
+            }
+
+            for (int i = 0; i < nYears; i++)
+            {
+                aMeanPerYear[i] /= (double)nSamplesPerYear[i];
+                p_maskItem.AMeanPerYear.Add(new Tuple<string, double>(years[i].ToString() + "(" + nSamplesPerYear[i] + ")", aMeanPerYear[i]));
+            }
+
+
+
         }
+
+        
 
         private static string BuildHtmlTable(string p_tableTitle, MaskItems p_maskItems, double p_pctChgTotalAMean)
         {
             StringBuilder sb = new StringBuilder(@"<b>" + p_tableTitle + @":</b><br> <table class=""strategyNoteTable1"">");
-            sb.Append(@"<th>Day</th><th>nSamples</th><th>WinPct</th><th>aMean</th><th>StDev</th><th>StError</th><th>t-value(0)</th>" +
+            sb.Append(@"<th>Day</th><th>nSamples</th><th>WinPct</th><th>&nbsp; aMean &nbsp; </th><th>gMean</th><th>Median</th><th>StDev</th><th>StError</th><th>t-value(0)</th>" +
                 @"<th><div title=""P is calculated by one tailed, one sample T-test"">p-value(0)</div></th>" +
                 @"<th><div title=""With at least 1-P=95% probability: the real population mean (of the daily%changes on day T) > 0 {or opposite if T-value negative}"">Signif>0</div></th>" +
                 @"<th>t-value(mean)</th>" +
@@ -517,7 +551,7 @@ namespace NeuralSniffer.Controllers.Strategies
                     continue;
 
                 CalculateSampleStats(ref p_maskItems.Backward[i], p_pctChgTotalAMean);
-                BuildHtmlTableRow("T-" + (i + 1).ToString(), isRowEven, ref p_maskItems.Backward[i], sb);
+                BuildHtmlTableRow(p_tableTitle, "T-" + (i + 1).ToString(), isRowEven, ref p_maskItems.Backward[i], sb);
                 isRowEven = !isRowEven;
             }
 
@@ -526,7 +560,7 @@ namespace NeuralSniffer.Controllers.Strategies
                 if (p_maskItems.Forward[i].Samples.Count() == 0)
                     continue;
                 CalculateSampleStats(ref p_maskItems.Forward[i], p_pctChgTotalAMean);
-                BuildHtmlTableRow("T+" + (i + 1).ToString(), isRowEven, ref p_maskItems.Forward[i], sb);
+                BuildHtmlTableRow(p_tableTitle, "T+" + (i + 1).ToString(), isRowEven, ref p_maskItems.Forward[i], sb);
                 isRowEven = !isRowEven;
             }
 
@@ -534,12 +568,24 @@ namespace NeuralSniffer.Controllers.Strategies
             return sb.ToString();
         }
 
-        private static void BuildHtmlTableRow(string p_rowTitle, bool p_isRowEven, ref MaskItem p_maskItem, StringBuilder p_sb)
+        private static void BuildHtmlTableRow(string p_tableTitle, string p_rowTitle, bool p_isRowEven, ref MaskItem p_maskItem, StringBuilder p_sb)
         {
+            string aMeanPerYearRowId = "id" + (p_tableTitle + p_rowTitle).Replace(' ', '_').Replace(',', '_');
+            string aMeanPerYearCSV = String.Join(",", p_maskItem.AMeanPerYear.Select(r => r.Item1 + ":" + r.Item2.ToString("#0.000%")));
+
             p_sb.AppendFormat("<tr{0}><td>" + p_rowTitle + "</td>", (p_isRowEven)? " class='even'":"");
             p_sb.Append("<td>" + p_maskItem.Samples.Count() + "</td>");
             p_sb.Append("<td>" + p_maskItem.WinPct.ToString("#0.0%") + "</td>");
-            p_sb.Append("<td>" + p_maskItem.AMean.ToString("#0.000%") + "</td>");
+            //p_sb.AppendFormat(@"<td onclick=""document.getElementById('{0}').style.color = 'red'"">" + p_maskItem.AMean.ToString("#0.000%") + "</td>", aMeanPerYearRowId);
+            //p_sb.AppendFormat(@"<td onclick=""document.getElementById('{0}').style.display = 'table-row'"">" + p_maskItem.AMean.ToString("#0.000%") + @"<button onclick=""document.getElementById('{0}').style.display = 'table-row'"">*</button></td>", aMeanPerYearRowId);
+            //p_sb.AppendFormat(@"<td onclick=""document.getElementById('{0}').style.display = 'table-row'"">" + p_maskItem.AMean.ToString("#0.000%") + @"</td>", aMeanPerYearRowId);
+            //p_sb.AppendFormat(@"<td>" + p_maskItem.AMean.ToString("#0.000%") + @"<a href="""" onclick=""document.getElementById('{0}').style.display = 'table-row'"">*</a></td>", aMeanPerYearRowId);
+            //p_sb.AppendFormat(@"<td onclick=""document.getElementById('{0}').style.display = 'table-row'"">" + p_maskItem.AMean.ToString("#0.000%") + @"<span style=""color: #2581cc; font-size: x-small; vertical-align:super;"">i</span></td>", aMeanPerYearRowId);
+            p_sb.AppendFormat(@"<td onclick=""InvertVisibilityOfTableRow('{0}')"">" + p_maskItem.AMean.ToString("#0.000%") + @"<span style=""color: #2581cc; font-size: x-small; vertical-align:super;"">i</span></td>", aMeanPerYearRowId);
+            
+            
+            p_sb.Append("<td>" + p_maskItem.GMean.ToString("#0.000%") + "</td>");
+            p_sb.Append("<td>" + p_maskItem.Median.ToString("#0.000%") + "</td>");
             p_sb.Append("<td>" + p_maskItem.CorrectedStDev.ToString("#0.000%") + "</td>");
             p_sb.Append("<td>" + p_maskItem.StandardError.ToString("#0.000%") + "</td>");
             p_sb.Append("<td>" + p_maskItem.TvalueToZero.ToString("#0.00") + "</td>");
@@ -550,7 +596,11 @@ namespace NeuralSniffer.Controllers.Strategies
             p_sb.Append("<td>" + p_maskItem.PvalueToAMean.ToString("#0.00%") + "</td>");
             p_sb.Append("<td>" + ((p_maskItem.PvalueToAMean < 0.05) ? "Yes" : "") + "</td>");
 
+            p_sb.Append("</tr>");
 
+            //p_sb.AppendFormat(@"<tr{0} ID=""{1}"" style=""display:table-cell""><td colspan=""14"">{2} aMean:{3}</td>",
+            p_sb.AppendFormat(@"<tr{0} ID=""{1}"" style=""display:none;""><td colspan=""14"">{2} aMean:{3}</td>",
+                    (p_isRowEven) ? " class='even'" : "", aMeanPerYearRowId, p_rowTitle, aMeanPerYearCSV);
             p_sb.Append("</tr>");
         }
 
@@ -801,10 +851,10 @@ namespace NeuralSniffer.Controllers.Strategies
             totMMBackwardMask = new MaskItem[30];
             for (int k = 0; k < 30; k++)
             {
-                totMForwardMask[k].Samples = new List<double>();
-                totMBackwardMask[k].Samples = new List<double>();
-                totMMForwardMask[k].Samples = new List<double>();
-                totMMBackwardMask[k].Samples = new List<double>();
+                totMForwardMask[k].Samples = new List<Tuple<DateTime, double>>();
+                totMBackwardMask[k].Samples = new List<Tuple<DateTime, double>>();
+                totMMForwardMask[k].Samples = new List<Tuple<DateTime, double>>();
+                totMMBackwardMask[k].Samples = new List<Tuple<DateTime, double>>();
             }
             
             int iInd = p_dailyMarketDirectionMaskTotM.IndexOf('.');
