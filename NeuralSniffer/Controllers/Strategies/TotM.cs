@@ -581,14 +581,14 @@ namespace NeuralSniffer.Controllers.Strategies
             //p_sb.AppendFormat(@"<td onclick=""document.getElementById('{0}').style.display = 'table-row'"">" + p_maskItem.AMean.ToString("#0.000%") + @"</td>", aMeanPerYearRowId);
             //p_sb.AppendFormat(@"<td>" + p_maskItem.AMean.ToString("#0.000%") + @"<a href="""" onclick=""document.getElementById('{0}').style.display = 'table-row'"">*</a></td>", aMeanPerYearRowId);
             //p_sb.AppendFormat(@"<td onclick=""document.getElementById('{0}').style.display = 'table-row'"">" + p_maskItem.AMean.ToString("#0.000%") + @"<span style=""color: #2581cc; font-size: x-small; vertical-align:super;"">i</span></td>", aMeanPerYearRowId);
-            p_sb.AppendFormat(@"<td onclick=""InvertVisibilityOfTableRow('{0}')"">" + p_maskItem.AMean.ToString("#0.000%") + @"<span style=""color: #2581cc; font-size: x-small; vertical-align:super;"">i</span></td>", aMeanPerYearRowId);
+            p_sb.AppendFormat(@"<td{0} onclick=""InvertVisibilityOfTableRow('{1}')"">" + p_maskItem.AMean.ToString("#0.000%") + @"<span style=""color: #2581cc; font-size: x-small; vertical-align:super;"">i</span></td>", (p_maskItem.AMean > 0.0) ? " class='green'" : " class='red'", aMeanPerYearRowId);
             
             
             p_sb.Append("<td>" + p_maskItem.GMean.ToString("#0.000%") + "</td>");
             p_sb.Append("<td>" + p_maskItem.Median.ToString("#0.000%") + "</td>");
             p_sb.Append("<td>" + p_maskItem.CorrectedStDev.ToString("#0.000%") + "</td>");
             p_sb.Append("<td>" + p_maskItem.StandardError.ToString("#0.000%") + "</td>");
-            p_sb.Append("<td>" + p_maskItem.TvalueToZero.ToString("#0.00") + "</td>");
+            p_sb.AppendFormat("<td{0} >" + p_maskItem.TvalueToZero.ToString("#0.00") + "</td>", (p_maskItem.TvalueToZero >= 1.0) ? " class='green'" : ((p_maskItem.TvalueToZero <= -1.0) ? " class='red'" : ""));
             p_sb.Append("<td>" + p_maskItem.PvalueToZero.ToString("#0.00%") + "</td>");
             p_sb.Append("<td>" + ((p_maskItem.PvalueToZero < 0.05)?"Yes":"") + "</td>");
 
@@ -598,7 +598,6 @@ namespace NeuralSniffer.Controllers.Strategies
 
             p_sb.Append("</tr>");
 
-            //p_sb.AppendFormat(@"<tr{0} ID=""{1}"" style=""display:table-cell""><td colspan=""14"">{2} aMean:{3}</td>",
             p_sb.AppendFormat(@"<tr{0} ID=""{1}"" style=""display:none;""><td colspan=""14"">{2} aMean:{3}</td>",
                     (p_isRowEven) ? " class='even'" : "", aMeanPerYearRowId, p_rowTitle, aMeanPerYearCSV);
             p_sb.Append("</tr>");

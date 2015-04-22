@@ -330,3 +330,11 @@ body {
 .strategyNoteTable1 td {
     text-align: center;
 }
+
+.strategyNoteTable1 td.red {
+    background-color: #f8696b
+}
+
+.strategyNoteTable1 td.green {
+    background-color: #63be7b
+}
