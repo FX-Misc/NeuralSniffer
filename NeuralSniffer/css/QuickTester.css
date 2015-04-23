@@ -317,6 +317,9 @@ body {
 
 
 
+.strategyNoteTable1 {
+    width: 90%; /*without it, IE is OK, but in Chrome, the Table resizes to huge after showing the invisible row */
+}
 
 .strategyNoteTable1 th  {
     padding: 0px 7px 0px 7px;

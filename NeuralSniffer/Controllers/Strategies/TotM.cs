@@ -536,6 +536,7 @@ namespace NeuralSniffer.Controllers.Strategies
 
         private static string BuildHtmlTable(string p_tableTitle, MaskItems p_maskItems, double p_pctChgTotalAMean)
         {
+            //StringBuilder sb = new StringBuilder(@"<b>" + p_tableTitle + @":</b><br> <table class=""strategyNoteTable1"" width=""400"">");
             StringBuilder sb = new StringBuilder(@"<b>" + p_tableTitle + @":</b><br> <table class=""strategyNoteTable1"">");
             sb.Append(@"<th>Day</th><th>nSamples</th><th>WinPct</th><th>&nbsp; aMean &nbsp; </th><th>gMean</th><th>Median</th><th>StDev</th><th>StError</th><th>t-value(0)</th>" +
                 @"<th><div title=""P is calculated by one tailed, one sample T-test"">p-value(0)</div></th>" +
@@ -571,7 +572,7 @@ namespace NeuralSniffer.Controllers.Strategies
         private static void BuildHtmlTableRow(string p_tableTitle, string p_rowTitle, bool p_isRowEven, ref MaskItem p_maskItem, StringBuilder p_sb)
         {
             string aMeanPerYearRowId = "id" + (p_tableTitle + p_rowTitle).Replace(' ', '_').Replace(',', '_');
-            string aMeanPerYearCSV = String.Join(",", p_maskItem.AMeanPerYear.Select(r => r.Item1 + ":" + r.Item2.ToString("#0.000%")));
+            string aMeanPerYearCSV = String.Join(", ", p_maskItem.AMeanPerYear.Select(r => r.Item1 + ":" + r.Item2.ToString("#0.000%")));
 
             p_sb.AppendFormat("<tr{0}><td>" + p_rowTitle + "</td>", (p_isRowEven)? " class='even'":"");
             p_sb.Append("<td>" + p_maskItem.Samples.Count() + "</td>");
