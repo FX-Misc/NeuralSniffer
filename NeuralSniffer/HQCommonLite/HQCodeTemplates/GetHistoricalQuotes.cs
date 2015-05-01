@@ -34,20 +34,28 @@ namespace HQCodeTemplates
 #if DEBUG
         public static void GetHistoricalQuotes_example()
         {
-            Console.WriteLine("result:\n" + String.Join(Environment.NewLine,
+            Action<DateTime, IList<object[]>> printResult = (t0, result) => Console.WriteLine("result:{0}{2}{0}this was {1:f0}ms",
+                Environment.NewLine, (DateTime.UtcNow - t0).TotalMilliseconds,
+                String.Join(Environment.NewLine, result.Select(row => String.Join(",", row))));
+
+            // I observed ~500-600 msec extra time on the very first execution (JIT compilation!) i.e. the following is 10x faster if moved later in this function
+            printResult(DateTime.UtcNow,
+                GetHistoricalQuotesAsync(new[] {
+                    new QuoteRequest { Ticker = "SPY" },
+                }, HQCommon.AssetType.Stock).Result);
+
+            printResult(DateTime.UtcNow,
                 GetHistoricalQuotesAsync(new[] {
                     new QuoteRequest { Ticker = "VXX", nQuotes = 2, StartDate = new DateTime(2011,1,1), NonAdjusted = true },
                     new QuoteRequest { Ticker = "VXX.SQ", nQuotes = 10, StartDate = new DateTime(2009,1,25) },
-                    new QuoteRequest { Ticker = "SPY", nQuotes = 3 },
-                }, HQCommon.AssetType.Stock).Result
-            .Select(row => String.Join(",", row))));
+                    new QuoteRequest { SubtableID = 6956, nQuotes = 3 },
+                }, HQCommon.AssetType.Stock).Result);
 
-            Console.WriteLine("result:\n" + String.Join(Environment.NewLine,
+            printResult(DateTime.UtcNow,
                 GetHistoricalQuotesAsync(p_at: HQCommon.AssetType.BenchmarkIndex, p_reqs: new[] {
                     new QuoteRequest { Ticker = "^VIX",  nQuotes = 3, EndDate   = new DateTime(2014,2,1) },
                     new QuoteRequest { Ticker = "^GSPC", nQuotes = 2, StartDate = new DateTime(2014,1,1) }
-                }).Result
-            .Select(row => String.Join(",", row))));
+                }).Result);
 
             Console.Write("Press a key...");
             Console.ReadKey();
@@ -81,40 +89,144 @@ namespace HQCodeTemplates
         public static async Task<IList<object[]>> GetHistoricalQuotesAsync(IEnumerable<QuoteRequest> p_reqs,
             HQCommon.AssetType p_at, bool? p_isAscendingDates = null, CancellationToken p_canc = default(CancellationToken))
         {
-            const string ma = "/*ColumnsBEGIN*/", mb = "/*ColumnsEND*/";
-            string query = null, qHead = null, qTail = null, isAdj = null;
-            string[] qCols = null; var sqls = new Dictionary<string, string>(1);
-            foreach (QuoteRequest r in p_reqs)
+            var sqls = new Dictionary<string, string>(1);
+            string query = null, qHead = null, qTail = null, vars = null; string[] qCols = null;
+            Action<string> parseCols = (q) =>
             {
-                string c = r.Ticker; if (c != null) c = c.Trim().ToUpperInvariant();
-                bool isSimulated = (p_at == HQCommon.AssetType.Stock && c != null && c.EndsWith(".SQ"));
-                if (query == null || isSimulated)
+                const string ma = "/*ColumnsBEGIN*/", mb = "/*ColumnsEND*/";
+                int a = q.IndexOf(ma), b = q.IndexOf(mb); System.Diagnostics.Debug.Assert(0 <= a && (a + ma.Length) <= b);
+                qHead = q.Substring(0, a); qTail = q.Substring(b + mb.Length);
+                qCols = q.Substring(a += ma.Length, b - a).Split(',');
+            };
+            if ((p_reqs = p_reqs as IList<QuoteRequest> ?? p_reqs.ToList()).Count() < 20)   // 20: because the number of UNION-able subSELECTs is limited:
+            {   // Compose a faster query: UNION of per-ticker SELECTs                          "Limited by available resources" -- stack space limit in query optimizer. goo.gl/MGO6Nb  msdn.microsoft.com/en-us/library/ms143432.aspx
+                foreach (var grp in (p_reqs.Count() == 1) ? new[] { p_reqs } : p_reqs.ToLookup(qr => qr.ReturnedColumns)
+                    as IEnumerable<IEnumerable<QuoteRequest>>)
                 {
-                    switch (p_at)
+                    parseCols("/*ColumnsBEGIN*/Ticker,[Date],[Open],High,Low,[Close],Volume,StockID/*ColumnsEND*/");
+                    string sql = null, union = null, cols = null;
+                    foreach (QuoteRequest r in grp)
                     {
-                        case HQCommon.AssetType.BenchmarkIndex:
-                            query = Sql_GetHistoricalStockIndexQuotes; isAdj = null;
-                            break;
-                        case HQCommon.AssetType.Stock:
-                            query = isSimulated ? Sql_GetHistoricalSimulatedStockQuotes : Sql_GetHistoricalStockQuotes; isAdj = "1";
-                            break;
-                        default: throw new NotSupportedException(p_at.ToString());
-                    }
+                        string c = r.Ticker; if (c != null) c = c.Trim().ToUpperInvariant();
+                        bool isSimulated = (p_at == HQCommon.AssetType.Stock && c != null && c.EndsWith(".SQ"));
+                        #region SqlTemplates
+                        if (p_at == HQCommon.AssetType.BenchmarkIndex)
+                        {
+                            vars = @"DECLARE @ID777 INT = (SELECT ID FROM StockIndex WHERE Ticker='{0}');
+DECLARE @Ticker777 VARCHAR(20) = (SELECT Ticker FROM StockIndex WHERE ID = @ID777);";
+                            query = @"
+SELECT */*Columns*/
+FROM (SELECT /*TopN*/ [Date], OpenPrice AS [Open], HighPrice AS High 
+        , LowPrice  AS Low, ClosePrice AS [Close], Volume, StockIndexID AS StockID, @Ticker777 AS Ticker
+FROM StockIndexQuote WHERE StockIndexID = @ID777 /*AND_DateRange*/ /*TopN_orderby*/) AS t
+";
+                        }
+                        else if (p_at != HQCommon.AssetType.Stock) continue;
+                        else if (!isSimulated)
+                        {
+                            vars = @"DECLARE @ID777 INT = (SELECT ID FROM Stock WHERE Ticker='{0}');
+DECLARE @Ticker777 VARCHAR(20) = (SELECT Ticker FROM Stock WHERE ID = @ID777);";
+                            query = @"
+SELECT */*Columns*/
+FROM (SELECT /*TopN*/ [Date],   OpenPrice * adj.f AS [Open] , HighPrice * adj.f AS High
+    , LowPrice  * adj.f AS Low, ClosePrice* adj.f AS [Close], Volume, StockID, @Ticker777 AS Ticker
+FROM StockQuote
+CROSS APPLY dbo.GetAdjustmentFactorAt2(StockID, [Date]) AS adj
+WHERE StockID = @ID777 /*AND_DateRange*/ /*TopN_orderby*/) AS t
+";
+                        }
+                        else
+                        {
+                            vars = @"BEGIN TRY       -- avoid continue if error occurs
+DECLARE @id777 INT, @idsq777 INT = (SELECT ID FROM Stock WHERE Ticker='{0}');
+DECLARE @T777 VARCHAR(20), @Tsq777 VARCHAR(20) = (SELECT Ticker FROM Stock WHERE ID=@idsq777);
+SELECT @T777=Ticker, @id777=ID FROM Stock WHERE Ticker=LEFT(@Tsq777,LEN(@Tsq777)-3);
+IF (RIGHT(@Tsq777,3) <> '.SQ' OR @idsq777 IS NULL OR @id777 IS NULL)
+    -- The specified '@Tsq777' is invalid (valid values are returned by SELECT ...).
+    RAISERROR(14234,16,0,@Tsq777,'SELECT Ticker FROM Stock WHERE RIGHT(Ticker,3)=''.SQ''');
+DECLARE @msg777 VARCHAR(MAX);
+IF (EXISTS (SELECT * FROM StockSplitDividend WHERE StockID=@idsq777)) BEGIN
+    SET @msg777 = @Tsq777+' has nonzero StockSplitDividend records, which is not supported';
+    THROW 50000, @msg777, 0;
+END;
+DECLARE @Tbegin777 DATE = (SELECT TOP 1 [Date] FROM StockQuote WHERE StockID=@id777 ORDER BY [Date]);
+IF (@Tbegin777 < (SELECT TOP 1 [Date] FROM StockQuote WHERE StockID=@idsq777 ORDER BY [Date] DESC)) BEGIN
+    SET @msg777 = @T777+' has quotes before the last quote of '+@Tsq777;
+    THROW 50000, @msg777, 1;
+END;
+DECLARE @adjsq777 FLOAT = (SELECT f FROM dbo.GetAdjustmentFactorAt2(@id777,@Tbegin777));
+END TRY BEGIN CATCH THROW END CATCH;
+";
+                            query = @"
+SELECT */*Columns*/
+FROM (SELECT /*TopN*/ tt.* FROM (
+    SELECT Ticker=@Tsq777, StockID=@idsq777, [Date]=CAST([Date] AS DATE), Volume,
+        [Open] =CAST( OpenPrice*@adjsq777 AS DECIMAL(9,4)), High=CAST(HighPrice*@adjsq777 AS DECIMAL(9,4)),
+        [Close]=CAST(ClosePrice*@adjsq777 AS DECIMAL(9,4)), Low =CAST( LowPrice*@adjsq777 AS DECIMAL(9,4))
+    FROM StockQuote sq0 WHERE StockID=@idsq777
+    UNION ALL
+    SELECT Ticker=@T777, StockID=@id777, [Date]=CAST([Date] AS DATE), Volume,
+        [Open] =CAST( OpenPrice*adj.f AS DECIMAL(9,4)), High=CAST( HighPrice*adj.f AS DECIMAL(9,4)),
+        [Close]=CAST(ClosePrice*adj.f AS DECIMAL(9,4)), Low =CAST(  LowPrice*adj.f AS DECIMAL(9,4))
+    FROM StockQuote sq1
+    CROSS APPLY dbo.GetAdjustmentFactorAt2(sq1.StockID,sq1.Date) adj
+    WHERE sq1.StockID=@id777
+) AS tt WHERE 1=1 /*AND_DateRange*/ /*TopN_orderby*/) AS t
+";
+                        }
+                        #endregion
+                        string num = String.IsNullOrEmpty(sql) ? "0" : sql.Length.ToString("x");
+                        vars = vars.Replace("777", num); query = query.Replace("777", num);
+                        if (r.SubtableID.HasValue)
+                            vars = System.Text.RegularExpressions.Regex.Replace(vars, @"(?i)\(SELECT[^)]*Ticker='\{0\}'\)", "{1}");
+                        if (r.NonAdjusted)
+                            query = System.Text.RegularExpressions.Regex.Replace(query,
+                                @"(?i)(CROSS APPLY.*?dbo.GetAdjustmentFactorAt2.*?AS\s+adj\s*)|(\*\s*adj\.f\b)", "");
+                        if ((uint)r.nQuotes < int.MaxValue || r.StartDate.HasValue || r.EndDate.HasValue)
+                            query = query.Replace("/*TopN*/", "TOP " + (uint)r.nQuotes).Replace("/*TopN_orderby*/",
+                                "ORDER BY [Date]" + (r.StartDate.HasValue && !r.EndDate.HasValue ? null : " DESC"));
+                        if (r.StartDate.HasValue || r.EndDate.HasValue)
+                            query = query.Replace("/*AND_DateRange*/", String.Format(
+                                (r.StartDate.HasValue ? " AND '{0}'<=[Date]" : "") + (r.EndDate.HasValue ? " AND [Date]<='{1}'" : null),
+                                r.StartDateStr, r.EndDateStr));
+                        vars = String.Format(System.Globalization.CultureInfo.InvariantCulture, vars, c, r.SubtableID);
+                        query = query.Replace("*/*Columns*/", cols ??
+                            (cols = String.Join(",", qCols.Where((s, i) => (r.ReturnedColumns & (1 << i)) != 0))));
+                        sql = vars + Environment.NewLine + sql + union + "(" + query + ")"; union = " UNION ALL ";
+                    } //~ foreach(r in grp)
                     if (p_isAscendingDates.HasValue)
-                        query += " ORDER BY [Date]" + (p_isAscendingDates.Value ? null : " DESC");
-                    if (isSimulated)            // this query does not support multiple tickers, so
-                        query += " -- " + c;    // force queries differ
-                    int a = query.IndexOf(ma), b = query.IndexOf(mb); System.Diagnostics.Debug.Assert(0 <= a && (a + ma.Length) <= b);
-                    qHead = query.Substring(0, a); qTail = query.Substring(b + mb.Length);
-                    qCols = query.Substring(a += ma.Length, b - a).Split(',');
-                    if (isSimulated) query = null;
+                        sql += " ORDER BY [Date]" + (p_isAscendingDates.Value ? null : " DESC");
+                    sqls[sql] = null;
                 }
-                string sql = qHead + String.Join(",", qCols.Where((s, i) => (r.ReturnedColumns & (1 << i)) != 0)) + qTail;
-                string p = String.Join(",", c, r.SubtableID, r.StartDateStr, r.EndDateStr, r.nQuotes, r.NonAdjusted ? null : isAdj);
-                sqls[sql] = sqls.TryGetValue(sql, out c) ? c + "," + p : p;
             }
+            // "Slower query": supports unlimited number of tickers at once, faster for numerous tickers
+            else foreach (QuoteRequest r in p_reqs)
+                {
+                    string c = r.Ticker; if (c != null) c = c.Trim().ToUpperInvariant();
+                    bool isSimulated = (p_at == HQCommon.AssetType.Stock && c != null && c.EndsWith(".SQ"));
+                    if (query == null || isSimulated)
+                    {
+                        if (p_at == HQCommon.AssetType.BenchmarkIndex)
+                            query = Sql_GetHistoricalStockIndexQuotes;
+                        else if (p_at == HQCommon.AssetType.Stock)
+                            query = isSimulated ? Sql_GetHistoricalSimulatedStockQuotes : Sql_GetHistoricalStockQuotes;
+                        else
+                            throw new NotSupportedException(p_at.ToString());
+                        if (p_isAscendingDates.HasValue)
+                            query += " ORDER BY [Date]" + (p_isAscendingDates.Value ? null : " DESC");
+                        if (isSimulated)    // this query does not support multiple tickers, so
+                            query += new String(' ', sqls.Count);   // make up different keys into sqls[]
+                        parseCols(query);
+                        if (isSimulated) query = null;
+                    }
+                    string sql = qHead + String.Join(",", qCols.Where((s, i) => (r.ReturnedColumns & (1 << i)) != 0)) + qTail;
+                    string p = String.Join(",", c ?? "", r.SubtableID, r.StartDateStr, r.EndDateStr, r.nQuotes,
+                                                 (p_at == HQCommon.AssetType.Stock && !r.NonAdjusted) ? "1" : null);
+                    sqls[sql] = sqls.TryGetValue(sql, out c) ? c + "," + p : p;
+                }
             var result = new List<object[]>();
-            await Task.WhenAll(sqls.Select(kv => ExecuteSqlQueryAsync(kv.Key, p_params: new Dictionary<string, object> { { "@p_request", kv.Value } }, p_canc: p_canc)
+            await Task.WhenAll(sqls.Select(kv => ExecuteSqlQueryAsync(kv.Key, p_canc: p_canc,
+                    p_params: kv.Value == null ? null : new Dictionary<string, object> { { "@p_request", kv.Value } })
                     .ContinueWith(t => result.AddRange(t.Result))));
             return result;
         }
@@ -130,18 +242,18 @@ WITH req(ID,Start,[End],N,IsAdj) AS (
     FROM dbo.SplitStringToTable(@p_request,',')
   ) P PIVOT (MIN(Item) FOR M IN ([0],[1],[2],[3],[4],[5])) AS S
 )
-SELECT /*ColumnsBEGIN*/(SELECT Ticker FROM Stock WHERE Stock.ID=StockID), [Date]
-      ,OpenPrice * adj.f AS [Open], HighPrice * adj.f AS High
-      ,LowPrice  * adj.f AS Low   , ClosePrice* adj.f AS [Close], Volume, StockID /*ColumnsEND*/
+SELECT /*ColumnsBEGIN*/Ticker, [Date], OpenPrice * adj.f AS [Open]
+      , HighPrice * adj.f AS High    , LowPrice  * adj.f AS Low   
+      , ClosePrice* adj.f AS [Close] , Volume, StockID /*ColumnsEND*/
 FROM ( -- txx:
   SELECT *,(ROW_NUMBER() OVER (PARTITION BY StockID ORDER BY x)) AS xx FROM ( -- tx:
-    SELECT q.StockID, [Date], OpenPrice, HighPrice, LowPrice, ClosePrice, Volume, N, IsAdj
+    SELECT q.StockID, q.[Date], OpenPrice, HighPrice, LowPrice, ClosePrice, Volume, N, Ticker, IsAdj
         ,r.O*(ROW_NUMBER() OVER (PARTITION BY q.StockID ORDER BY q.[Date] DESC)) AS x
     FROM (
-      SELECT ID, N, (CASE WHEN req.IsAdj='1' THEN req.ID ELSE -1 END) AS IsAdj
+      SELECT req.ID, N, Stock.Ticker, (CASE WHEN req.IsAdj='1' THEN req.ID ELSE -1 END) AS IsAdj
         ,COALESCE(Start, CAST('00010101' AS DATE)) AS Start,COALESCE([End], GETDATE()) AS [End]
         ,CASE WHEN (Start IS NOT NULL AND [End] IS NULL) THEN -1 ELSE 1 END AS O
-      FROM req WHERE ID IS NOT NULL
+      FROM req INNER LOOP JOIN Stock ON (Stock.ID=req.ID) WHERE req.ID IS NOT NULL
     ) AS r JOIN StockQuote q
     ON (q.StockID = r.ID AND (q.[Date] BETWEEN r.Start AND r.[End]))
   ) AS tx
@@ -157,18 +269,17 @@ WITH req(ID,Start,[End],N) AS (
     FROM dbo.SplitStringToTable(@p_request,',')
   ) P PIVOT (MIN(Item) FOR M IN ([0],[1],[2],[3],[4],[5])) AS S
 )
-SELECT /*ColumnsBEGIN*/(SELECT Ticker FROM StockIndex s WHERE s.ID=t.StockIndexID), [Date]
-      ,OpenPrice AS [Open], HighPrice AS High
-      ,LowPrice  AS Low   , ClosePrice AS [Close], Volume, StockIndexID /*ColumnsEND*/
+SELECT /*ColumnsBEGIN*/ Ticker, [Date], OpenPrice AS [Open], HighPrice AS High
+      , LowPrice AS Low, ClosePrice AS [Close], Volume, StockIndexID /*ColumnsEND*/
 FROM (
   SELECT *,(ROW_NUMBER() OVER (PARTITION BY StockIndexID ORDER BY x)) AS xx FROM (
-    SELECT q.StockIndexID, [Date], OpenPrice, HighPrice, LowPrice, ClosePrice, Volume, N
+    SELECT q.StockIndexID, [Date], OpenPrice, HighPrice, LowPrice, ClosePrice, Volume, Ticker, N
         ,r.O*(ROW_NUMBER() OVER (PARTITION BY q.StockIndexID ORDER BY q.[Date] DESC)) AS x
     FROM (
-      SELECT ID, N, COALESCE([End], GETDATE()) AS [End]
+      SELECT req.ID, s.Ticker, N, COALESCE([End], GETDATE()) AS [End]
         ,COALESCE(Start, CAST('00010101' AS DATE)) AS Start
         ,CASE WHEN (Start IS NOT NULL AND [End] IS NULL) THEN -1 ELSE 1 END AS O
-      FROM req WHERE ID IS NOT NULL
+      FROM req INNER LOOP JOIN StockIndex s ON (s.ID=req.ID) WHERE req.ID IS NOT NULL
     ) AS r JOIN StockIndexQuote q
     ON (q.StockIndexID = r.ID AND (q.[Date] BETWEEN r.Start AND r.[End]))
   ) AS tx

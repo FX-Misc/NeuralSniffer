@@ -154,9 +154,9 @@
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>
     </Compile>
-    <Compile Include="HQCommonPublic\HQCodeTemplates\GetHistoricalQuotes.cs" />
-    <Compile Include="HQCommonPublic\HQCommonShared.cs" />
-    <Compile Include="HQCommonPublic\IObjSettings.cs" />
+    <Compile Include="HQCommonLite\HQCodeTemplates\GetHistoricalQuotes.cs" />
+    <Compile Include="HQCommonLite\HQCommonShared.cs" />
+    <Compile Include="HQCommonLite\IObjSettings.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>

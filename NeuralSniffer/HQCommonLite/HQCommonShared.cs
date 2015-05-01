@@ -102,6 +102,10 @@ namespace HQCommon
                 //http://msdn.microsoft.com/en-us/library/aa337376.aspx
                 case 1205: return true;
 
+                //"A timeout occurred while waiting for memory resources to execute the query in resource pool '%ls' (%ld). Rerun the query."
+                //http://msdn.microsoft.com/en-us/library/cc280471.aspx  http://goo.gl/ennOZV
+                case 8645: return true;
+
                 //"A network-related or instance-specific error occurred while establishing a connection to SQL Server.
                 // The server was not found or was not accessible. Verify that the instance name is correct and that
                 // SQL Server is configured to allow remote connections. (provider: TCP Provider, error: 0 - No such host is known.)"
