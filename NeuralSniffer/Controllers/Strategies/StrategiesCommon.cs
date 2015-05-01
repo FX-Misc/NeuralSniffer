@@ -380,7 +380,7 @@ namespace NeuralSniffer.Controllers.Strategies
         public static StrategyResult CreateStrategyResultFromPV(List<DailyData> p_pv, string p_htmlNoteFromStrategy, string p_errorMessage, string p_debugMessage)
         {
             //IEnumerable<string> chartDataToSend = pv.Select(row => row.Date.Year + "-" + row.Date.Month + "-" + row.Date.Day + "-" + String.Format("{0:0.00}", row.ClosePrice));
-            IEnumerable<string> chartDataToSend = p_pv.Select(row => row.Date.Year + "-" + row.Date.Month + "-" + row.Date.Day + "-" + String.Format("{0:0.00}", row.ClosePrice >= 0 ? row.ClosePrice : 0.0));    // postprocess: TradingViewChart cannot accept negative numbers
+            IEnumerable<string> chartDataToSend = p_pv.Select(row => row.Date.Year + "-" + row.Date.Month + "-" + row.Date.Day + "," + String.Format("{0:0.00}", row.ClosePrice >= 0 ? row.ClosePrice : 0.0));    // postprocess: TradingViewChart cannot accept negative numbers
 
             DateTime startDate = p_pv[0].Date;
             DateTime endDate = p_pv[p_pv.Count() - 1].Date;

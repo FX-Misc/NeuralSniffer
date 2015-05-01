@@ -1,5 +1,95 @@
 ﻿
 
+***************************************************************************************************************
+********************* 2015-05-31, SQL speed improvement after merging Robert's new SQL queries
+
+The absolute limits for SQL queries (measured at the SQL server)
+- for Indices (not require Adjustment): 0msec,
+- for stock requires Adjustement: 235msec
+
+DECLARE @t0 DATETIME2 = SYSUTCDATETIME();
+
+DECLARE @ID0 INT = (SELECT ID FROM Stock WHERE Ticker='SPY');
+DECLARE @Ticker0 VARCHAR(20) = (SELECT Ticker FROM Stock WHERE ID = @ID0);
+(
+SELECT Ticker,[Date],[Close]
+FROM (SELECT /*TopN*/ [Date],   OpenPrice * adj.f AS [Open] , HighPrice * adj.f AS High
+    , LowPrice  * adj.f AS Low, ClosePrice* adj.f AS [Close], Volume, StockID, @Ticker0 AS Ticker
+FROM StockQuote
+CROSS APPLY dbo.GetAdjustmentFactorAt2(StockID, [Date]) AS adj
+WHERE StockID = @ID0 /*AND_DateRange*/ /*TopN_orderby*/) AS t
+) ORDER BY [Date]
+
+PRINT 'elapsed ^GSPC ms: ' + CONVERT(VARCHAR(MAX),DATEDIFF(ms, @t0, SYSUTCDATETIME()));
+(5604 row(s) affected)
+elapsed ^GSPC ms: 235
+//so that is the absolute minimum possible. It is that much because of the AdjustmentFactor2(), but we need that
+******************
+
+DECLARE @t0 DATETIME2 = SYSUTCDATETIME();
+DECLARE @ID0 INT = (SELECT ID FROM StockIndex WHERE Ticker='^GSPC');
+DECLARE @Ticker0 VARCHAR(20) = (SELECT Ticker FROM StockIndex WHERE ID = @ID0);
+(
+SELECT Ticker,[Date],[Close]
+FROM (SELECT /*TopN*/ [Date], OpenPrice AS [Open], HighPrice AS High 
+        , LowPrice  AS Low, ClosePrice AS [Close], Volume, StockIndexID AS StockID, @Ticker0 AS Ticker
+FROM StockIndexQuote WHERE StockIndexID = @ID0 /*AND_DateRange*/ /*TopN_orderby*/) AS t
+) ORDER BY [Date]
+PRINT 'elapsed ^GSPC ms: ' + CONVERT(VARCHAR(MAX),DATEDIFF(ms, @t0, SYSUTCDATETIME()));
+(16437 row(s) affected)
+elapsed ^GSPC ms: 0
+
+
+
+A. SPY lehozasa, elejetol a vegeig. Locale IIS, Remote Azure SQL server:
+Old code:
+DebugMessage:  SQL query time: 352ms, RT query time: 211ms, All query time: 354ms, TotalC#Response: 401ms
+DebugMessage:  SQL query time: 341ms, RT query time: 211ms, All query time: 374ms, TotalC#Response: 408ms
+DebugMessage:  SQL query time: 638ms, RT query time: 207ms, All query time: 641ms, TotalC#Response: 696ms
+DebugMessage:  SQL query time: 324ms, RT query time: 187ms, All query time: 329ms, TotalC#Response: 413ms
+DebugMessage:  SQL query time: 682ms, RT query time: 215ms, All query time: 683ms, TotalC#Response: 732ms
+DebugMessage:  SQL query time: 516ms, RT query time: 359ms, All query time: 520ms, TotalC#Response: 573ms 
+DebugMessage:  SQL query time: 367ms, RT query time: 194ms, All query time: 370ms, TotalC#Response: 421ms 
+DebugMessage:  SQL query time: 329ms, RT query time: 217ms, All query time: 333ms, TotalC#Response: 400ms
+New code:
+DebugMessage:  SQL query time: 305ms, RT query time: 210ms, All query time: 310ms, TotalC#Response: 396ms 
+DebugMessage:  SQL query time: 518ms, RT query time: 203ms, All query time: 523ms, TotalC#Response: 582ms
+DebugMessage:  SQL query time: 280ms, RT query time: 203ms, All query time: 283ms, TotalC#Response: 360ms 
+DebugMessage:  SQL query time: 407ms, RT query time: 226ms, All query time: 408ms, TotalC#Response: 445ms 
+DebugMessage:  SQL query time: 489ms, RT query time: 286ms, All query time: 492ms, TotalC#Response: 550ms
+DebugMessage:  SQL query time: 405ms, RT query time: 226ms, All query time: 406ms, TotalC#Response: 455ms
+DebugMessage:  SQL query time: 284ms, RT query time: 198ms, All query time: 286ms, TotalC#Response: 343ms
+DebugMessage:  SQL query time: 261ms, RT query time: 199ms, All query time: 266ms, TotalC#Response: 351ms 
+
+
+B. SPY lehozasa, elejetol a vegeig. Remote Azure IIS, Remote Azure SQL server:
+Old code:
+DebugMessage: SQL query time: 270ms, RT query time: 195ms, All query time: 272ms, TotalC#Response: 433ms
+DebugMessage: SQL query time: 310ms, RT query time: 206ms, All query time: 313ms, TotalC#Response: 465ms
+DebugMessage: SQL query time: 296ms, RT query time: 204ms, All query time: 298ms, TotalC#Response: 419ms 
+DebugMessage: SQL query time: 1039ms, RT query time: 201ms, All query time: 1041ms, TotalC#Response: 1243ms
+DebugMessage: SQL query time: 310ms, RT query time: 284ms, All query time: 311ms, TotalC#Response: 432ms 
+DebugMessage: SQL query time: 278ms, RT query time: 127ms, All query time: 280ms, TotalC#Response: 441ms 
+DebugMessage: SQL query time: 2593ms, RT query time: 186ms, All query time: 2597ms, TotalC#Response: 2708ms
+DebugMessage: SQL query time: 269ms, RT query time: 192ms, All query time: 271ms, TotalC#Response: 407ms 
+New code:
+DebugMessage: SQL query time: 227ms, RT query time: 277ms, All query time: 280ms, TotalC#Response: 430ms 
+DebugMessage: SQL query time: 239ms, RT query time: 213ms, All query time: 241ms, TotalC#Response: 363ms
+DebugMessage: SQL query time: 324ms, RT query time: 212ms, All query time: 326ms, TotalC#Response: 475ms 
+DebugMessage: SQL query time: 237ms, RT query time: 207ms, All query time: 240ms, TotalC#Response: 401ms
+DebugMessage: SQL query time: 233ms, RT query time: 218ms, All query time: 235ms, TotalC#Response: 366ms
+DebugMessage: SQL query time: 245ms, RT query time: 206ms, All query time: 246ms, TotalC#Response: 372ms
+DebugMessage: SQL query time: 238ms, RT query time: 209ms, All query time: 240ms, TotalC#Response: 386ms
+DebugMessage: SQL query time: 312ms, RT query time: 196ms, All query time: 313ms, TotalC#Response: 438ms 
+
+C. ^GSPC Index lehozasa, elejetol a vegeig. Remote Azure IIS, Remote Azure SQL server:
+DebugMessage: SQL query time: 045ms, RT query time: 106ms, All query time: 110ms, TotalC#Response: 399ms
+DebugMessage: SQL query time: 033ms, RT query time: 126ms, All query time: 130ms, TotalC#Response: 438ms 
+DebugMessage: SQL query time: 041ms, RT query time: 345ms, All query time: 349ms, TotalC#Response: 621ms
+DebugMessage: SQL query time: 044ms, RT query time: 104ms, All query time: 108ms, TotalC#Response: 382ms
+>that is good, because that means the 44msec is about the communication time over the same Data center.
+
+
 
 **************** Here is my brief result after scrutinizing Significance Test values:
 - In general: There are more (3+) significant values in the TotMM table, and only 1 in TotM table. So play the TotMM too. So play TotMM too, not only TotM.

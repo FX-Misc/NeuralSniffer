@@ -240,12 +240,13 @@ app.controller('QuickTesterCtrl', function ($scope, $http) {   // runs after Ang
         $scope.chartDataToChart = [];
         var prevDayClose = null;
         for (var i = 0; i < strategyResult.chartData.length; i++) {
-            var rowParts = strategyResult.chartData[i].split("-");
-            var dateUtc = new Date(Date.UTC(parseInt(rowParts[0]), parseInt(rowParts[1]) - 1, parseInt(rowParts[2]), 0, 0, 0));
+            var rowParts = strategyResult.chartData[i].split(",");
+            var dateParts = rowParts[0].split("-");
+            var dateUtc = new Date(Date.UTC(parseInt(dateParts[0]), parseInt(dateParts[1]) - 1, parseInt(dateParts[2]), 0, 0, 0));
             
             var barValue = {
                 time: dateUtc.getTime(),  // gives back the miliseconds, so it is OK.  //time: data.t[i] * 1000,
-                close: parseFloat(rowParts[3])
+                close: parseFloat(rowParts[1])
             };
 
             if (i == 0) {
