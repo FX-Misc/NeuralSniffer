@@ -8,8 +8,8 @@ var app = angular.module('QuickTesterApp', []);
 
 app.controller('QuickTesterCtrl', function ($scope, $http) {   // runs after Angular.run()
     console.log('app.controller()');
-    $scope.versionShortInfo = "v0.2.28";
-    $scope.versionLongInfo = "SQ QuickTester  \nVersion 0.2.28  \nDeployed: 2015-05-01T21:00Z";  // Z means Zero UTC offset, so, it is the UTC time, http://en.wikipedia.org/wiki/ISO_8601
+    $scope.versionShortInfo = "v0.2.29";
+    $scope.versionLongInfo = "SQ QuickTester  \nVersion 0.2.29  \nDeployed: 2015-07-06T21:00Z";  // Z means Zero UTC offset, so, it is the UTC time, http://en.wikipedia.org/wiki/ISO_8601
     $scope.tipToUser = "Select Strategy and press 'Start Backtest'...";
     $scope.tradingViewChartWidget = null;
 
