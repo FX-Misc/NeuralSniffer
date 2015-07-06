@@ -1,7 +1,7 @@
 ﻿
 AngularInit_TotM = function ($scope, $http) {
 
-    $scope.bullishTradingInstrument = ["Long SPY", "Long ^GSPC", "Long ^IXIC", "Long ^RUT", "Long QQQ", "Long QLD", "Long TQQQ", "Long IWM", "Short VXX", "Short VXX.SQ", "Short VXZ", "Short VXZ.SQ"];
+    $scope.bullishTradingInstrument = ["Long SPY", "Long ^GSPC", "Long ^IXIC", "Long ^RUT", "Long QQQ", "Long QLD", "Long TQQQ", "Long IWM", "Long IYR", "Short VXX", "Short VXX.SQ", "Short VXZ", "Short VXZ.SQ"];
     $scope.selectedBullishTradingInstrument = $scope.bullishTradingInstrument[0];
 
     //$scope.totMStock = ["SPY", "QQQ", "VXX"];
@@ -31,6 +31,45 @@ AngularInit_TotM = function ($scope, $http) {
         $scope.tipToUser = $scope.selectedBullishTradingInstrument;
     };
 
+    $scope.MenuItemPresetMasksClicked = function (predefMaskString) {
+
+        switch (predefMaskString) {
+            case "BuyHold":
+                $scope.dailyMarketDirectionMaskWinterTotM = "UUUUUUUUUUUUUUUUUUUU.UUUUUUUUUUUUUUUUUUUU";    // 20 days before and 20 days after is set (to be sure)
+                $scope.dailyMarketDirectionMaskWinterTotMM = "UUUUUUUUUUUUUUUUUUUU.UUUUUUUUUUUUUUUUUUUU";
+                $scope.dailyMarketDirectionMaskSummerTotM = "UUUUUUUUUUUUUUUUUUUU.UUUUUUUUUUUUUUUUUUUU";
+                $scope.dailyMarketDirectionMaskSummerTotMM = "UUUUUUUUUUUUUUUUUUUU.UUUUUUUUUUUUUUUUUUUU";
+                break;
+            case "UberVXXOld":
+                // TotM:
+                //•	Long VXX on Day -1 (last trading day of the month) with 100%;
+                //•	Short VXX on Day 1-3 (first three trading days of the month) with 100%.
+                $scope.dailyMarketDirectionMaskWinterTotM = "D.UUU";
+                $scope.dailyMarketDirectionMaskWinterTotMM = ".";
+                $scope.dailyMarketDirectionMaskSummerTotM = "D.UUU";
+                $scope.dailyMarketDirectionMaskSummerTotMM = ".";
+                break;
+            case "UberVXXNew":      // Correlation and Significance Analysis of Uber VXX Strategy Parts.docx
+                // TotM:
+                //•	Day -1: long VXX - both in winter and summer;
+                //•	Day +1: short VXX only at turn of the quarter - both in winter and summer;
+                //•	Day +2-+3: short VXX only in winter.
+                // TotMM: 
+                //•	Day +2: short VXX - both in winter and summer;
+                //•	Day +3-+7: short VXX only in winter.
+                $scope.dailyMarketDirectionMaskWinterTotM = "D.UUU";      // "• Day +1: short VXX only at turn of the quarter - both in winter and summer;", but I put it as Bullish anyway
+                $scope.dailyMarketDirectionMaskWinterTotMM = ".0UUUUUU";
+                $scope.dailyMarketDirectionMaskSummerTotM = "D.U";      // "• Day +1: short VXX only at turn of the quarter - both in winter and summer;", but I put it as Bullish anyway
+                $scope.dailyMarketDirectionMaskSummerTotMM = ".0U";
+                break;
+            default:    //SPYDerived
+                $scope.dailyMarketDirectionMaskWinterTotM = "UUUD.UUU";//Mask: D0.UU, Up: Market Up, D: Down, 0:Cash (B is not good because Bullish, Bearish): other option Comma separation, but not necessary here
+                $scope.dailyMarketDirectionMaskWinterTotMM = "DDUU.UU00UU"; // winter didn't change after Significance test.
+                $scope.dailyMarketDirectionMaskSummerTotM = "DD00U00.U";
+                $scope.dailyMarketDirectionMaskSummerTotMM = "D0UU.0U";
+        }
+
+    }
  
     $scope.SubStrategySelected_TotM = function () {
         if ($scope.selectedStrategyMenuItemId == "idMenuItemTotM") {
@@ -93,4 +132,11 @@ function InvertVisibilityOfTableRow(paramID) {
         tableRow.style.display = 'table-row';
     else 
         tableRow.style.display = 'none';
+}
+
+
+function MenuItemPresetMasksClicked(predefMaskString) {
+    var controllerElement = document.querySelector('body');
+    var controllerScope = angular.element(controllerElement).scope();
+    controllerScope.$apply(controllerScope.MenuItemPresetMasksClicked(predefMaskString));  // use Apply from MenuClick, but you don't have to use it from an Angular function
 }

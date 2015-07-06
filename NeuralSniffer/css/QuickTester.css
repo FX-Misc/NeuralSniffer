@@ -204,6 +204,22 @@ body {
 }
 
 
+#idTotMButtonLi {
+    width: 50px; /* width is the property of <li>*/
+    border-radius: 1px;
+}
+
+#idTotMButtonA {
+    color: #ffea00;
+
+    background-color: #45a1ec;
+    background-image: -webkit-gradient(linear, 0% 0%, 0% 100%, from(#2B7BC1), to(#214258));
+    background-image: -moz-linear-gradient(19% 75% 90deg,#214258, #2B7BC1);
+    box-shadow: inset 0 1px 0 0 #a5b9d9;
+}
+
+
+
 
 
 /*#idAlwaysVisibleSwitch0 {

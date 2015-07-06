@@ -504,8 +504,15 @@ namespace NeuralSniffer.Controllers.Strategies
             p_maskItem.TvalueToZero = (p_maskItem.AMean - 0.0) / standardError;
             p_maskItem.TvalueToAMean = (p_maskItem.AMean - p_pctChgTotalAMean) / standardError;
 
-            p_maskItem.PvalueToZero = g_statTool.TDistribution(p_maskItem.TvalueToZero, nInt - 1, true);
-            p_maskItem.PvalueToAMean = g_statTool.TDistribution(p_maskItem.TvalueToAMean, nInt - 1, true);
+            if (!Double.IsNaN(p_maskItem.TvalueToZero))
+                p_maskItem.PvalueToZero = g_statTool.TDistribution(p_maskItem.TvalueToZero, nInt - 1, true);
+            else
+                p_maskItem.PvalueToZero = Double.NaN;
+
+            if (!Double.IsNaN(p_maskItem.TvalueToAMean))
+                p_maskItem.PvalueToAMean = g_statTool.TDistribution(p_maskItem.TvalueToAMean, nInt - 1, true);
+            else
+                p_maskItem.PvalueToAMean = Double.NaN;
 
             // PvalueToZero = P = probability that the observed aMean result is due to chance 
 

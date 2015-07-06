@@ -1,4 +1,5 @@
-<table id="inputTable" ng-show="selectedStrategyMenuItemId === 'idMenuItemTotM'">
+
+<table id="inputTable" ng-show="selectedStrategyMenuItemId === 'idMenuItemTotM'" align="left">
     <colgroup>
         <col class="column1" />
         <col class="column2" />
@@ -22,3 +23,17 @@
         </tr>
     </tbody>
 </table>
+
+<span class="navigation">
+    <ul class="sqMenuNav">
+        <li class="sqMenuItemLevel0" id="idTotMButtonLi">
+            <a href="" id="idTotMButtonA">Masks</a>
+            <ul class="sqMenuBarLevel1">
+                <li><a href="" onclick="MenuItemPresetMasksClicked('BuyHold')">Buy&Hold</a></li>
+                <li><a href="" onclick="MenuItemPresetMasksClicked('UberVXXOld')">UberVXX old</a></li>
+                <li><a href="" onclick="MenuItemPresetMasksClicked('UberVXXNew')">UberVXX new</a></li>
+                <li><a href="" onclick="MenuItemPresetMasksClicked('SPYDerived')">SPY derived</a></li>
+            </ul>
+        </li>
+    </ul>
+</span>

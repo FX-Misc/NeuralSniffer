@@ -89,6 +89,9 @@
     <Content Include="SQQuickTester\Strategies\TotM\TotM.js" />
     <Content Include="SQQuickTester\Strategies\VIX\VXX_SPY_Controversial.htm" />
     <Content Include="SQQuickTester\Strategies\VIX\VXX_SPY_Controversial.js" />
+    <Content Include="SQTemplates\AngularMaterialExample.css" />
+    <Content Include="SQTemplates\AngularMaterialExample.htm" />
+    <Content Include="SQTemplates\AngularMaterialExample.js" />
     <Content Include="SQTemplates\datafeedSQTradingViewChart1.js" />
     <Content Include="charting_library\datafeed\udf\datafeed.js" />
     <Content Include="charting_library\static\chart-client\css\images\bartype-icons.png" />
