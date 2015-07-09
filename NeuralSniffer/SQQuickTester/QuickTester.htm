@@ -167,12 +167,14 @@
             </tr>
             <tr class='even'>
                 <td>Max Drawdown: <span> {{100*maxDD | number:2}}% </span></td>
+                <td><a target="_blank" href="http://en.wikipedia.org/wiki/Ulcer_index">Ulcer</a> (Vol=qMean DD): <span> {{100*ulcerInd | number:2}}% </span></td>
                 <td>Max.TradingDays in Drawdown: <span> {{maxTradingDaysInDD}} </span></td>
                 <td></td>
             </tr>
             <tr>
                 <td>Winners: <span> {{winnersStr}} </span></td>
                 <td>Losers: <span> {{losersStr}} </span></td>
+                <td>Annualized <a target="_blank" href="http://www.redrockcapital.com/Sortino__A__Sharper__Ratio_Red_Rock_Capital.pdf">Sortino</a>: <span> {{sortinoRatio | number:2}} </span></td>
                 <td></td>
             </tr>
             <tr class='even'>

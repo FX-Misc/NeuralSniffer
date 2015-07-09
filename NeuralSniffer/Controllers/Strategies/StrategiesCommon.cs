@@ -33,7 +33,9 @@ namespace NeuralSniffer.Controllers.Strategies
         public double cagr;
         public double annualizedStDev;
         public double sharpeRatio;
+        public double sortinoRatio;
         public double maxDD;
+        public double ulcerInd;    // Ulcer = qMean DD
         public int maxTradingDaysInDD;
         public string winnersStr;    //write: (405/621) 65.22%) probably better if it is a whole String, 51%  (if we are in cash, that day is not a profit day.)
         public string losersStr;
@@ -377,6 +379,13 @@ namespace NeuralSniffer.Controllers.Strategies
             return pv;
         }
 
+        // Sortino calculation from here: http://www.redrockcapital.com/Sortino__A__Sharper__Ratio_Red_Rock_Capital.pdf
+        //The main reason we wrote this article is because in both literature and trading software packages,
+        //we have seen the Sortino ratio, and in particular the target downside deviation, calculated
+        //incorrectly more often than not. Most often, we see the target downside deviation calculated
+        //by “throwing away all the positive returns and take the standard deviation of negative returns”.
+        //We hope that by reading this article, you can see how this is incorrect
+        // George: a little problem to me, but left it like this: underPerfFromTarget is distance from Zero, while in StDev, it was distance from Avg.
         public static StrategyResult CreateStrategyResultFromPV(List<DailyData> p_pv, string p_htmlNoteFromStrategy, string p_errorMessage, string p_debugMessage)
         {
             //IEnumerable<string> chartDataToSend = pv.Select(row => row.Date.Year + "-" + row.Date.Month + "-" + row.Date.Day + "-" + String.Format("{0:0.00}", row.ClosePrice));
@@ -394,29 +403,48 @@ namespace NeuralSniffer.Controllers.Strategies
             double totalGainPct = pvEnd/pvStart - 1.0;
             double cagr = Math.Pow(totalGainPct + 1, 1.0 / nYears) - 1.0;
 
-            var dailyReturns = new List<double>(p_pv.Count() - 1);
+            var dailyReturns = new double[p_pv.Count() - 1];
             for (int i = 0; i < p_pv.Count() - 1; i++)
             {
-                dailyReturns.Add(p_pv[i + 1].ClosePrice / p_pv[i].ClosePrice - 1.0);
+                dailyReturns[i] = p_pv[i + 1].ClosePrice / p_pv[i].ClosePrice - 1.0;
             }
             double avgReturn = dailyReturns.Average();
             double dailyStdDev = Math.Sqrt(dailyReturns.Sum(r => (r - avgReturn) * (r - avgReturn)) / ((double)dailyReturns.Count() - 1.0));    //http://www.styleadvisor.com/content/standard-deviation, "Morningstar uses the sample standard deviation method: divide by n-1
             double annualizedStDev = dailyStdDev * Math.Sqrt(252.0);    //http://en.wikipedia.org/wiki/Trading_day, http://www.styleadvisor.com/content/annualized-standard-deviation
 
-            double sharpeRatio = cagr / annualizedStDev;
+            double annualizedSharpeRatio = cagr / annualizedStDev;
 
-            var drawdowns = new List<double>(p_pv.Count());
+            
+            double sortinoDailyTargetReturn = 0.0;       // assume investor is happy with any positive return
+            double sortinoAnnualizedTargetReturn = Math.Pow(sortinoDailyTargetReturn, 252.0);       // maybe around annual 3-6% is expected by investor
+            double dailyTargetDownsideDeviation = 0.0;
+            for (int i = 0; i < dailyReturns.Length; i++)
+            {
+                double underPerfFromTarget = dailyReturns[i] - sortinoDailyTargetReturn;
+                if (underPerfFromTarget < 0.0)
+                    dailyTargetDownsideDeviation += underPerfFromTarget * underPerfFromTarget;
+            }
+            dailyTargetDownsideDeviation = Math.Sqrt(dailyTargetDownsideDeviation / (double)dailyReturns.Length);   // see Sortino PDF for explanation why we use the 0 samples too for the Average
+            double annualizedDailyTargetDownsideDeviation = dailyTargetDownsideDeviation * Math.Sqrt(252.0); //http://en.wikipedia.org/wiki/Trading_day, http://www.styleadvisor.com/content/annualized-standard-deviation
+            //double dailySortinoRatio = (avgReturn - sortinoDailyTargetReturn) / dailyTargetDownsideDeviation;   // daily gave too small values
+            double annualizedSortinoRatio = (cagr - sortinoAnnualizedTargetReturn) / annualizedDailyTargetDownsideDeviation;   // 
+
+            var drawdowns = new double[p_pv.Count()];
             double maxPv = Double.NegativeInfinity;
             double maxDD = Double.PositiveInfinity;
+            double quadraticMeanDD = 0.0;
             for (int i = 0; i < p_pv.Count(); i++)
             {
                 if (p_pv[i].ClosePrice > maxPv)
                     maxPv = p_pv[i].ClosePrice;
-                drawdowns.Add(p_pv[i].ClosePrice / maxPv - 1.0);
-
-                if (drawdowns[i] < maxDD)
+                double dd = p_pv[i].ClosePrice / maxPv - 1.0;
+                drawdowns[i] = dd;
+                quadraticMeanDD += dd * dd;
+                if (dd < maxDD)
                     maxDD = drawdowns[i];
             }
+
+            double ulcerInd = Math.Sqrt(quadraticMeanDD / (double)nTradingDays);
 
             int maxTradingDaysInDD = 0;
             int daysInDD = 0;
@@ -453,8 +481,10 @@ namespace NeuralSniffer.Controllers.Strategies
                 totalGainPct = totalGainPct,
                 cagr = cagr,
                 annualizedStDev = annualizedStDev,
-                sharpeRatio = sharpeRatio,
+                sharpeRatio = annualizedSharpeRatio,
+                sortinoRatio = annualizedSortinoRatio,
                 maxDD = maxDD,
+                ulcerInd = ulcerInd,
                 maxTradingDaysInDD = maxTradingDaysInDD,
                 winnersStr = String.Format("({0}/{1})  {2:0.00}%", winnersCount, dailyReturns.Count(), 100.0 * (double)winnersCount / dailyReturns.Count()),
                 losersStr = String.Format("({0}/{1})  {2:0.00}%", losersCount, dailyReturns.Count(), 100.0 * (double)losersCount / dailyReturns.Count()),

@@ -41,7 +41,9 @@ app.controller('QuickTesterCtrl', function ($scope, $http) {   // runs after Ang
     $scope.cagr = 1;
     $scope.annualizedStDev = 1;
     $scope.sharpeRatio = 1;
+    $scope.sortinoRatio = 1;
     $scope.maxDD = 1;
+    $scope.ulcerInd = 1;// = qMean DD
     $scope.maxTradingDaysInDD = 1;
     $scope.winnersStr = 1;
     $scope.losersStr = 1;
@@ -216,7 +218,9 @@ app.controller('QuickTesterCtrl', function ($scope, $http) {   // runs after Ang
         $scope.cagr = strategyResult.cagr;
         $scope.annualizedStDev = strategyResult.annualizedStDev;
         $scope.sharpeRatio = strategyResult.sharpeRatio;
+        $scope.sortinoRatio = strategyResult.sortinoRatio;
         $scope.maxDD = strategyResult.maxDD;
+        $scope.ulcerInd = strategyResult.ulcerInd;
         $scope.maxTradingDaysInDD = strategyResult.maxTradingDaysInDD;
         $scope.winnersStr = strategyResult.winnersStr;
         $scope.losersStr = strategyResult.losersStr;
