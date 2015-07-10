@@ -39,15 +39,17 @@ Datafeeds.UDFCompatibleDatafeed.prototype._logMessage = function (message) {
 //	The functions set below is the implementation of JavaScript API. https://github.com/tradingview/charting_library/wiki/JS-Api
 
 
+var gDatafeedObject = null;
 
-Datafeeds.UDFCompatibleDatafeed.prototype.setup = function (studyEngineOptions, callback) {
+//Datafeeds.UDFCompatibleDatafeed.prototype.setup = function (studyEngineOptions, callback) {
+Datafeeds.UDFCompatibleDatafeed.prototype.onReady = function(callback) {
 
-    this._configuration.engine = studyEngineOptions;
+    //this._configuration.engine = studyEngineOptions;
     callback(this._configuration);
 
 
     // this is the real-time price Updater part
-    var that = this;
+    gDatafeedObject = this;
     setInterval(function (datafeedParam) {
 
         var todayDate = new Date();
@@ -73,9 +75,11 @@ Datafeeds.UDFCompatibleDatafeed.prototype.setup = function (studyEngineOptions, 
         lastBar.high = lastBar.close + 0.25;
         lastBar.low = lastBar.close - 0.55;
 
-        var rtSubsc = that.realtimeUpdater;
-        if (rtSubsc != null) {
-            rtSubsc.listeners[0](lastBar)
+        if (gDatafeedObject != null) {
+            var rtSubsc = gDatafeedObject.realtimeUpdater;
+            if (rtSubsc != null) {
+                rtSubsc.listeners[0](lastBar)
+            }
         }
 
     }, 10 * 1000); // Pulse every 10 seconds

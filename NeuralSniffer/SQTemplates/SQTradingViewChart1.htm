@@ -7,10 +7,11 @@
 		<!-- Fix for iOS Safari zooming bug -->
 		<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0">
 
+        <script type="text/javascript" src="//code.jquery.com/jquery-2.1.0.min.js"></script>
         <script type="text/javascript" src="../charting_library/charting_library.min-deobfuscated.js"></script>
         <script type="text/javascript" src="datafeedSQTradingViewChart1.js"></script>
 
-		<script type="text/javascript" src="//code.jquery.com/jquery-2.1.0.min.js"></script>
+		
 
 		<script type="text/javascript">
 
@@ -103,8 +104,10 @@
 
 				        // this is better than the gTradingViewChartWidget.postMessage.post(gTradingViewChartWidget._messageTarget(), "loadRangeAgy", because the 'loading data' bug doesn't effect it, and because I can use the minified TV library
 				        // however, Chart Cache-s the getBars() data for every Time-Frame button, so it will not ask later for the new data. So, Removing(), Creating() chart is still necessary
+				        // note how to locate the <DIV> element: dateRangeDiv.OuterHTML = "<div class="chart-controls-bar-buttons date-range-wrapper"><a>61m</a><a>6y</a><a>6000d</a><a>50y</a><a>3y</a><a>8m</a><a>2m</a></div>"
 				        var z1 = document.getElementById("tv_chart_container");
-				        var dateRangeDiv = z1.children[0].contentDocument.childNodes['1'].children['1'].children['library-container'].children['2'].children['chart-area'].children['0'].children['1'].children['1'];
+				        //var dateRangeDiv = z1.children[0].contentDocument.childNodes['1'].children['1'].children['library-container'].children['2'].children['chart-area'].children['0'].children['1'].children['1'];
+				        var dateRangeDiv = z1.children[0].contentDocument.childNodes['1'].children['1'].children['library-container'].children['2'].children['chart-area'].children['0'].children['0'].children['1'];
 				        dateRangeDiv.children['0'].click();
 				        dateRangeDiv.children['0'].innerHTML = "All";   // it takes effect, but if I click it Afterwards, than it will change back to original; so modify the Text After the Click
 				    }
@@ -169,6 +172,7 @@
 
             document.getElementById("startButton").onclick = function () {
 
+                gBacktestIsReady = true;
                 
                 //var z2 = z1.getElementsByTagName("tradingview_63a16");
 
@@ -186,41 +190,58 @@
 
                 ////gConnorStrategy.pvToPlot = pvToPlot;    // after that, we may widget.remove the Chart, and create a completely new Chart every time, we re-run the backtest
 
-
-                ////// 1. Refresh TVChart (make it call the getBars()), version 1: //After #178 chart supports loading chart without iframe reloading.
+                // 1. Refresh TVChart (make it call the getBars()), version 1: //After #178 chart supports loading chart without iframe reloading.
                 ////// This will redraw only the innear area of the chart, not the Toolbars. Quick, but sometimes it is not enough. When you want to change the TimeFrames for example.
                 ////gTradingViewChartWidget.save(function (json) {
                 ////    gTradingViewChartWidget.load(json);
                 ////});
+                // Problem: id doesn't refresh the TimeFrames toolbar
 
-                ////gTradingViewChartWidget.setSymbol("SQTickerOrStrategySymbol", "D,870D"); it crashes, and without 870D it didn't crash, but didn't work either.
+                /*
+                // 2. setSymbol()
+                //gTradingViewChartWidget.setSymbol("SQTickerOrStrategySymbol", "D,870D"); //it crashes, and without 870D it didn't crash, but didn't work either.
+                //gTradingViewChartWidget.setSymbol("SQTickerOrStrategySymbol", "870D"); //it doesn't crash, but 1 bar = 870Days
+                //gTradingViewChartWidget.setSymbol("SQTickerOrStrategySymbol", "20D"); //it doesn't crash, but 1 bar = 2Days
+                //gTradingViewChartWidget.setSymbol("SQTickerOrStrategySymbol", "D"); //it doesn't crash, but 1 bar = 1 day
+                //gTradingViewChartWidget.setSymbol("SQTickerOrStrategySymbol", "30"); //it doesn't crash, but 1 bar = 30 min
+                gTradingViewChartWidget.setSymbol("SQTickerOrStrategySymbol", "2D"); //it doesn't crash, but 1 bar = 1 day
+                //Conclusion: setSymbol is only for changing the Frequency of the bar (daily, weekly, 30min), but not for saying how many bars do I want on the screen
+                // checked for TradingView 1.2
+                */
 
-                ////***!!!!This is the best if we have to work with the official Chart, but postMessage works without this
-                gBacktestIsReady = true;
-                // 2. Refresh TVChart (make it call the getBars()), version 2: idea stolen from widget.setLangue() inner implementation. It will redraw the Toolbars too, not only the inner area. But it can change TimeFrames Toolbar
-                gTradingViewChartWidget.remove();       // this is the way to the widget.options to be effective
-                //gTradingViewChartWidget.options.time_frames[0].text = "All";    // cannot be "All"; it crashes.
-                gTradingViewChartWidget.options.time_frames[0].text = "61m";    // I can calculate dynamically, but not important now.
-                gTradingViewChartWidget.options.time_frames[1].text = "6y";
-                //gTradingViewChartWidget.options.width = "50%";        // works too in Remove(), Create()
-                gTradingViewChartWidget.create()
+                // 3.
+                //gTradingViewChartWidget.getVisibleRange(function (range) {
+                //    //    alert(range.from + "/" +  range.to);
+                //});
+                //var now = new Date();
+                //var utcNowUnixSeconds = Math.round(now.getTime() / 1000);
+                //var startTimeUtcUnixSeconds = utcNowUnixSeconds - 60 * 60 * 24 * 20;     // take away 250 days for startDate
+                //// left visible bar will be found with lower_bound algo and right one-- with upper_bound
+                ////var newRange = { from: 1325100036, to: 1436556096 };     //unixTimeUTC
+                //var newRange = { from: utcNowUnixSeconds, to: startTimeUtcUnixSeconds };     //unixTimeUTC
+                //gTradingViewChartWidget.setVisibleRange(newRange, function onReadyCallback() {
+                //    // alert('setVisibleRange() callback onReady');
+                //});
+                // However, there is no Error message in the Javascript Console, but it didn't set the Visible range.
+                // Even if it sets it there is a message in the code: console.warn("This method doesn't support moving to not loaded history bars now");
+                // so, forget it. It doesn't work. I think the guy didn't test it, just wrote the code.
+                // checked for TradingView 1.2
 
+                // 4.
                 //***!!!! This can be used only with the updated Chart, but the time-frame bar will not update visually, but re-creation will not Blink, as it will not create a short-term version of the chart for 1second
                 //***!!! cannot be used.... because once it goes to the 'loading data' bug, after, it will never refresh the chart. Because it will not ask getBars() ever. So, we have to re-create the chart.
                 //gTradingViewChartWidget.postMessage.post(gTradingViewChartWidget._messageTarget(), "loadRangeAgy", {  // don't post this message until the chart is ready() again. Post it later in the onReady() callback.
                 //    res: "D",
                 //    val: "121m"
                 //})
-
-                //// this is better than the gTradingViewChartWidget.postMessage.post(gTradingViewChartWidget._messageTarget(), "loadRangeAgy", because the 'loading data' bug doesn't effect it, and because I can use the minified TV library
+                //// this is similar than postMessage(), but a bit better than the gTradingViewChartWidget.postMessage.post(gTradingViewChartWidget._messageTarget(), "loadRangeAgy", because the 'loading data' bug doesn't effect it, and because I can use the minified TV library
                 //// however, Chart Cache-s the getBars() data for every Time-Frame button, so it will not ask later for the new data. So, Removing(), Creating() chart is still necessary
                 //var z1 = document.getElementById("tv_chart_container");
                 //var dateRangeDiv = z1.children[0].contentDocument.childNodes['1'].children['1'].children['library-container'].children['2'].children['chart-area'].children['0'].children['1'].children['1'];
                 //dateRangeDiv.children['0'].click();
                 //dateRangeDiv.children['0'].innerHTML = "All";   // it takes effect, but if I click it Afterwards, than it will change back to original; so modify the Text After the Click
 
-
-                //// 3. Refresh TVChart (make it call the getBars()), version 3: parent.removeChild(iFrame); and append again, // good for resize() iframe, but doesn't rebuild the Toolbars
+                //// 5. Refresh TVChart (make it call the getBars()), version 3: parent.removeChild(iFrame); and append again, // good for resize() iframe, but doesn't rebuild the Toolbars
                 ////redraw chart, see https://github.com/tradingview/charting_library/issues/155 ,but changing options.width doesn't work for me; for that you have to do it on the iFrame
                 //var container = document.getElementById('tv_chart_container');
                 //var iframe = container.querySelector('iframe');
@@ -230,7 +251,20 @@
                 ////gTradingViewChartWidget.options.time_frames[1].text = "61m";    // I can calculate dynamically, but not important now.
                 //container.removeChild(iframe);
                 //container.appendChild(iframe);
+                // Problem: id doesn't refresh the TimeFrames toolbar
 
+                
+                // 6. Refresh TVChart (make it call the getBars()), version 2: idea stolen from widget.setLangue() inner implementation. It will redraw the Toolbars too, not only the inner area. But it can change TimeFrames Toolbar
+                ////***!!!!This is the best if we have to work with the official Chart, but postMessage works without this
+                // this part will set up the Timeframes bar properly, but later is chart.onChartReady() you have to click the first button by "dateRangeDiv.children['0'].click();"
+                gDatafeedObject = null; // purge it, so setInterval() will not update the Chart every 10 seconds
+                gTradingViewChartWidget.remove();       // this is the way to the widget.options to be effective
+                //gTradingViewChartWidget.options.time_frames[0].text = "All";    // cannot be "All"; it crashes.
+                gTradingViewChartWidget.options.time_frames[0].text = "61m";    // I can calculate dynamically, but not important now.
+                gTradingViewChartWidget.options.time_frames[1].text = "6y";
+                //gTradingViewChartWidget.options.width = "50%";        // works too in Remove(), Create()
+                gTradingViewChartWidget.create()
+           
             }
 
         </script>

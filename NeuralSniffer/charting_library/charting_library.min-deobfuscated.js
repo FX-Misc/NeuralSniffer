@@ -1,9 +1,77 @@
-function inherit(g, f) {
+(function (g) {
+    "function" === typeof define && define.amd ? define(["jquery"], g) : g(jQuery)
+})(function (g) {
+    if (!g.support.cors && g.ajaxTransport && window.XDomainRequest) {
+        var k = /^https?:\/\//i,
+            d = /^get|post$/i,
+            a = new RegExp("^" + location.protocol, "i");
+        g.ajaxTransport("* text html xml json", function (b, c, h) {
+            if (b.crossDomain && b.async && d.test(b.type) && k.test(b.url) && a.test(b.url)) {
+                var f = null;
+                return {
+                    send: function (a, d) {
+                        var e = "",
+                            l = (c.dataType || "").toLowerCase();
+                        f = new XDomainRequest;
+                        /^\d+$/.test(c.timeout) && (f.timeout = c.timeout);
+                        f.ontimeout = function () {
+                            d(500, "timeout")
+                        };
+                        f.onload = function () {
+                            var a = "Content-Length: " + f.responseText.length + "\r\nContent-Type: " + f.contentType,
+                                b = 200,
+                                c = "success",
+                                e = {
+                                    text: f.responseText
+                                };
+                            try {
+                                if ("html" === l || /text\/html/i.test(f.contentType)) e.html = f.responseText;
+                                else if ("json" === l || "text" !== l && /\/json/i.test(f.contentType)) try {
+                                    e.json = g.parseJSON(f.responseText)
+                                } catch (n) {
+                                    b = 500, c = "parseerror"
+                                } else if ("xml" === l || "text" !== l && /\/xml/i.test(f.contentType)) {
+                                    var h = new ActiveXObject("Microsoft.XMLDOM");
+                                    h.async = !1;
+                                    try {
+                                        h.loadXML(f.responseText)
+                                    } catch (k) {
+                                        h = void 0
+                                    }
+                                    if (!h || !h.documentElement || h.getElementsByTagName("parsererror").length) throw b = 500, c = "parseerror", "Invalid XML: " + f.responseText;
+                                    e.xml = h
+                                }
+                            } catch (m) {
+                                throw m;
+                            } finally {
+                                d(b, c, e, a)
+                            }
+                        };
+                        f.onprogress = function () { };
+                        f.onerror = function () {
+                            d(500, "error", {
+                                text: f.responseText
+                            })
+                        };
+                        c.data && (e = "string" === g.type(c.data) ? c.data : g.param(c.data));
+                        f.open(b.type, b.url);
+                        f.send(e)
+                    },
+                    abort: function () {
+                        f && f.abort()
+                    }
+                }
+            }
+        })
+    }
+});
+
+function inherit(g, k) {
     var d = function () { };
-    d.prototype = f.prototype;
+    d.prototype = k.prototype;
     g.prototype = new d;
     g.prototype.constructor = g;
-    g.prototype.superclass = f
+    g.prototype.superclass = k
 }
 (function () {
     function g(a) {
@@ -12,15 +80,21 @@ function inherit(g, f) {
         })
     }
     if (!window.TradingView) {
-        var f = {
+        var k = {
             mobile: {
                 disabledFeatures: "left_toolbar header_widget timeframes_toolbar edit_buttons_in_legend context_menus control_bar border_around_the_chart".split(" "),
                 enabledFeatures: ["narrow_chart_enabled"]
             }
         },
             d = {
+                BARS: 0,
+                CANDLES: 1,
+                LINE: 2,
+                AREA: 3,
+                HEIKEN_ASHI: 8,
+                HOLLOW_CANDLES: 9,
                 version: function () {
-                    return "1.1 (internal id a393597d @ 2014-11-26 15:41:23.751000)"
+                    return "1.2 (internal id b9174b06 @ 2015-07-02 09:49:35.539000)"
                 },
                 gEl: function (a) {
                     return document.getElementById(a)
@@ -33,17 +107,16 @@ function inherit(g, f) {
                 },
                 css: function (a) {
                     var b = document.getElementsByTagName("head")[0],
-                        e = document.createElement("style");
-                    e.type = "text/css";
-                    e.styleSheet ? e.styleSheet.cssText = a : (a = document.createTextNode(a), e.appendChild(a));
-                    b.appendChild(e)
+                        c = document.createElement("style");
+                    c.type = "text/css";
+                    c.styleSheet ? c.styleSheet.cssText = a : (a = document.createTextNode(a), c.appendChild(a));
+                    b.appendChild(c)
                 },
-                bindEvent: function (a,
-                    b, e) {
-                    a.addEventListener ? a.addEventListener(b, e, !1) : a.attachEvent && a.attachEvent("on" + b, e)
+                bindEvent: function (a, b, c) {
+                    a.addEventListener ? a.addEventListener(b, c, !1) : a.attachEvent && a.attachEvent("on" + b, c)
                 },
-                unbindEvent: function (a, b, e) {
-                    a.removeEventListener ? a.removeEventListener(b, e, !1) : a.detachEvent && a.detachEvent("on" + b, e)
+                unbindEvent: function (a, b, c) {
+                    a.removeEventListener ? a.removeEventListener(b, c, !1) : a.detachEvent && a.detachEvent("on" + b, c)
                 },
                 widget: function (a) {
                     this.id = d.gId();
@@ -74,7 +147,9 @@ function inherit(g, f) {
                                 default_symbols: []
                             }
                         },
-                        overrides: {},
+                        overrides: {
+                            "mainSeriesProperties.showCountdown": !1
+                        },
                         studiesOverrides: {},
                         fullscreen: !1,
                         disabledFeatures: [],
@@ -106,9 +181,13 @@ function inherit(g, f) {
                         client_id: "0",
                         user_id: "0",
                         charts_storage_url: void 0,
-                        logo: {}
+                        logo: {},
+                        favorites: {
+                            intervals: [],
+                            chartTypes: []
+                        }
                     },
-                        e = {
+                        c = {
                             width: a.width,
                             height: a.height,
                             symbol: a.symbol,
@@ -142,13 +221,14 @@ function inherit(g, f) {
                             debug: a.debug,
                             client_id: a.client_id,
                             user_id: a.user_id,
-                            charts_storage_url: a.charts_storage_url
+                            charts_storage_url: a.charts_storage_url,
+                            favorites: a.favorites
                         };
-                    g(e);
-                    this.options = $.extend(!0, b, e);
-                    this.options.time_frames =
-                        a.time_frames || b.time_frames;
-                    a.preset && (a = a.preset, f[a] ? (a = f[a], this.options.disabledFeatures = 0 < this.options.disabledFeatures.length ? this.options.disabledFeatures.concat(a.disabledFeatures) : a.disabledFeatures, this.options.enabledFeatures = 0 < this.options.enabledFeatures.length ? this.options.enabledFeatures.concat(a.enabledFeatures) : a.enabledFeatures) : console.warn("Unknown preset: `" + a + "`"));
+                    g(c);
+                    this.options = $.extend(!0, b, c);
+                    this.options.time_frames = a.time_frames || b.time_frames;
+                    a.preset && (a = a.preset, k[a] ? (a = k[a], this.options.disabledFeatures = 0 < this.options.disabledFeatures.length ? this.options.disabledFeatures.concat(a.disabledFeatures) : a.disabledFeatures, this.options.enabledFeatures = 0 < this.options.enabledFeatures.length ? this.options.enabledFeatures.concat(a.enabledFeatures) :
+                        a.enabledFeatures) : console.warn("Unknown preset: `" + a + "`"));
                     this._ready_handlers = [];
                     this.create()
                 }
@@ -158,29 +238,40 @@ function inherit(g, f) {
                 return d.gEl(this.id).contentWindow
             },
             _autoResizeChart: function () {
-                var a = d.gEl(this.id);
-                this.options.fullscreen && (a.style.height = window.innerHeight + "px", a.style.width = window.innerWidth + "px")
+                this.options.fullscreen && $(d.gEl(this.id)).css("height", $(window).height() + "px")
             },
             create: function () {
-                var a = this.render(),
-                    b = this,
-                    e;
-                this.options.container ? d.gEl(this.options.container).innerHTML = a : document.write(a);
+                function a() {
+                    d.gEl(c.id).contentWindow.W17.subscribe("chart_load_requested", function (a) {
+                        c.load(JSON.parse(a.content), a)
+                    })
+                }
+                var b = this.render(),
+                    c = this,
+                    h;
+                if (this.options.container) {
+                    var f =
+                        d.gEl(this.options.container);
+                    f.innerHTML = b
+                } else document.write(b);
+                this.options.fullscreen && (f = $(d.gEl(this.id)), f.css("width", "100%"));
                 this._autoResizeChart();
                 window.addEventListener("resize", function (a) {
-                    b._autoResizeChart()
+                    c._autoResizeChart()
                 });
-                e = d.gEl(this.id);
-                this.postMessage = d.postMessageWrapper(e.contentWindow, this.id);
-                d.bindEvent(e, "load", function () {
-                    b.postMessage.get("widgetReady", {}, function () {
-                        var a;
-                        b._ready = !0;
-                        for (a = b._ready_handlers.length; a--;) b._ready_handlers[a].call(b);
-                        b.postMessage.post(e.contentWindow, "initializationFinished");
-                        d.gEl(b.id).contentWindow.Z16.subscribe("chart_load_requested", function (a) {
-                            b.load(JSON.parse(a.content), a)
-                        })
+                h = d.gEl(this.id);
+                this.postMessage = d.postMessageWrapper(h.contentWindow, this.id);
+                d.bindEvent(h, "load", function () {
+                    c.postMessage.get("widgetReady", {
+                        client_id: this.id
+                    }, function () {
+                        var b;
+                        c._ready = !0;
+                        for (b = c._ready_handlers.length; b--;) c._ready_handlers[b].call(c);
+                        c.postMessage.post(h.contentWindow,
+                            "initializationFinished");
+                        b = d.gEl(c.id).contentWindow;
+                        b.W17 ? a() : d.bindEvent(b, "load", a)
                     })
                 })
             },
@@ -192,39 +283,61 @@ function inherit(g, f) {
                     disabledFeatures: this.options.disabledFeatures,
                     enabledFeatures: this.options.enabledFeatures,
                     enabledDrawings: this.options.enabledDrawings,
-                    disabledDrawings: this.options.disabledDrawings
+                    disabledDrawings: this.options.disabledDrawings,
+                    favorites: this.options.favorites,
+                    logo: this.options.logo
                 };
+                this.options.savedData && (window[this.options.uid].chartContent = {
+                    json: this.options.savedData
+                });
                 var a = (this.options.path || "") + "static/tv-chart-deobfuscated.html#localserver=1&symbol=" + encodeURIComponent(this.options.symbol) + "&interval=" + encodeURIComponent(this.options.interval) + (this.options.toolbar_bg ? "&toolbarbg=" + this.options.toolbar_bg.replace("#", "") : "") + "&hideSymbolSearch=" + this.options.hideSymbolSearch + "&hideSideToolbar=" + this.options.hideSideToolbar + "&enabledStudies=" + encodeURIComponent(JSON.stringify(this.options.enabledStudies)) +
                     "&disabledStudies=" + encodeURIComponent(JSON.stringify(this.options.disabledStudies)) + (this.options.studiesAccess ? "&studiesAccess=" + encodeURIComponent(JSON.stringify(this.options.studiesAccess)) : "") + "&widgetbar=" + encodeURIComponent(JSON.stringify(this.options.widgetbar)) + (this.options.drawingsAccess ? "&drawingsAccess=" + encodeURIComponent(JSON.stringify(this.options.drawingsAccess)) : "") + "&timeFrames=" + encodeURIComponent(JSON.stringify(this.options.time_frames)) + (this.options.hasOwnProperty("disableLogo") ?
-                        "&disableLogo=" + encodeURIComponent(this.options.disableLogo) : "") + (this.options.hasOwnProperty("logo") ? "&logo=" + encodeURIComponent(JSON.stringify(this.options.logo)) : "") + "&locale=" + encodeURIComponent(this.options.locale) + "&uid=" + encodeURIComponent(this.options.uid) + "&clientId=" + encodeURIComponent(this.options.client_id) + "&userId=" + encodeURIComponent(this.options.user_id) + (this.options.charts_storage_url ? "&chartsStorageUrl=" + encodeURIComponent(this.options.charts_storage_url) : "") + (this.options.indicators_file_name ?
-                        "&indicatorsFile=" + encodeURIComponent(this.options.indicators_file_name) : "") + "&debug=" + this.options.debug + (this.options.snapshotUrl ? "&snapshotUrl=" + encodeURIComponent(this.options.snapshotUrl) : "") + (this.options.timezone ? "&timezone=" + encodeURIComponent(this.options.timezone) : "");
-                this.options.savedData && (window.__TVSavedChart = this.options.savedData);
-                return '<iframe id="' + this.id + '" name="' + this.id + '"  src="' + a + '"' + (this.options.fullscreen ? "" : ' width="' + this.options.width + '" height="' + this.options.height +
-                    '"') + ' frameborder="0" allowTransparency="true" scrolling="no" allowfullscreen></iframe>'
+                        "&disableLogo=" + encodeURIComponent(this.options.disableLogo) : "") + "&locale=" + encodeURIComponent(this.options.locale) + "&uid=" + encodeURIComponent(this.options.uid) + "&clientId=" + encodeURIComponent(this.options.client_id) + "&userId=" + encodeURIComponent(this.options.user_id) + (this.options.charts_storage_url ? "&chartsStorageUrl=" + encodeURIComponent(this.options.charts_storage_url) : "") + (this.options.indicators_file_name ? "&indicatorsFile=" + encodeURIComponent(this.options.indicators_file_name) : "") + "&debug=" +
+                    this.options.debug + (this.options.snapshotUrl ? "&snapshotUrl=" + encodeURIComponent(this.options.snapshotUrl) : "") + (this.options.timezone ? "&timezone=" + encodeURIComponent(this.options.timezone) : "");
+                return '<iframe id="' + this.id + '" name="' + this.id + '"  src="' + a + '"' + (this.options.fullscreen ? "" : ' width="' + this.options.width + '" height="' + this.options.height + '"') + ' frameborder="0" allowTransparency="true" scrolling="no" allowfullscreen style="display:block;"></iframe>'
             },
             onChartReady: function (a) {
-                this._ready ? a.call(this) : this._ready_handlers.push(a)
+                this._ready ? a.call(this) :
+                    this._ready_handlers.push(a)
             },
-            setSymbol: function (a, b, e) {
+            setSymbol: function (a, b, c) {
                 this.postMessage.post(this._messageTarget(), "changeSymbol", {
                     symbol: a,
-                    interval: b
+                    interval: b + ""
                 });
-                this.postMessage.on("symbolChangeFinished", e)
+                this.postMessage.on("symbolChangeFinished", c)
             },
-            createStudy: function (a, b, e) {
-                this.postMessage.post(this._messageTarget(), "createStudy", {
-                    name: a,
-                    lock: b,
-                    forceOverlay: e
+            executeAction: function (a) {
+                this.postMessage.post(this._messageTarget(), "executeAction", {
+                    action: a
                 })
             },
-            createShape: function (a, b) {
-                this.postMessage.post(this._messageTarget(),
-                    "createShape", {
-                        point: a,
-                        options: b
-                    })
+            removeAllStudies: function () {
+                this.postMessage.post(this._messageTarget(), "removeAllStudies")
+            },
+            removeAllShapes: function () {
+                this.postMessage.post(this._messageTarget(), "removeAllShapes")
+            },
+            createStudy: function (a, b, c, h, f,
+                g) {
+                d.gEl(this.id).contentWindow.createStudy({
+                    name: a,
+                    lock: c,
+                    forceOverlay: b,
+                    inputs: h,
+                    callback: f,
+                    overrides: g
+                })
+            },
+            removeEntity: function (a) {
+                this.postMessage.post(this._messageTarget(), "removeEntity", a)
+            },
+            createShape: function (a, b, c) {
+                d.gEl(this.id).contentWindow.createShape({
+                    point: a,
+                    options: b,
+                    callback: c
+                })
             },
             createVerticalLine: function (a, b) {
                 this.createShape(a, $.extend(b, {
@@ -232,7 +345,7 @@ function inherit(g, f) {
                 }))
             },
             _lastBarPoint: function () {
-                var a = d.gEl(this.id).contentWindow.Z2,
+                var a = d.gEl(this.id).contentWindow.W3,
                     b = a.model().timeScale().m_points.lastTimePointIndex(),
                     a = a.model().mainSeries().data().valueAt(b)[4];
                 return {
@@ -241,28 +354,40 @@ function inherit(g, f) {
                 }
             },
             createOrderLine: function () {
-                var a = d.gEl(this.id).contentWindow.Z2,
+                var a = d.gEl(this.id).contentWindow.W3,
                     b = a._paneWidgets[0]._state;
                 return a.model().createLineTool(b, this._lastBarPoint(), "LineToolOrder")._adapter
             },
             createPositionLine: function () {
-                var a = d.gEl(this.id).contentWindow.Z2,
+                var a = d.gEl(this.id).contentWindow.W3,
                     b = a._paneWidgets[0]._state;
                 return a.model().createLineTool(b, this._lastBarPoint(), "LineToolPosition")._adapter
             },
             createExecutionShape: function () {
-                var a = d.gEl(this.id).contentWindow.Z2,
+                var a = d.gEl(this.id).contentWindow.W3,
                     b = a._paneWidgets[0]._state;
                 return a.model().createLineTool(b, this._lastBarPoint(), "LineToolExecution")._adapter
             },
-            createButton: function () {
-                var a = d.gEl(this.id).contentWindow.headerWidget,
-                    a = a.createGroup({
-                        single: !0
-                    }).appendTo(a._$left);
-                return $('<div class="button"></div>').appendTo(a)
+            _widgetResizeTimer: null,
+            createButton: function (a) {
+                a = a || {};
+                var b = a.align || "left";
+                a = d.gEl(this.id).contentWindow.headerWidget;
+                b = "left" == b ? a._$left : a._$right;
+                a = a.createGroup({
+                    single: !0
+                }).appendTo(b);
+                a = $('<div class="button"></div>').appendTo(a);
+                this._widgetResizeTimer && clearTimeout(this._widgetResizeTimer);
+                var c = this.postMessage,
+                    h = this._messageTarget();
+                this._widgetResizeTimer = setTimeout(function () {
+                    c.post(h,
+                        "resize", {});
+                    clearTimeout(this._widgetResizeTimer)
+                }, 5);
+                return a
             },
-            removeIcon: function (a) { },
             symbolInterval: function (a) {
                 this.postMessage.on("symbolInterval", function (b) {
                     a(JSON.parse(b))
@@ -282,19 +407,44 @@ function inherit(g, f) {
                 var a = d.gEl(this.id);
                 a.parentNode.removeChild(a)
             },
+            getVisibleRange: function (a) {
+                d.gEl(this.id).contentWindow.getVisibleRange(a)
+            },
+            setVisibleRange: function (a, b) {
+                d.gEl(this.id).contentWindow.setVisibleRange(a, b)
+            },
             onAutoSaveNeeded: function (a) {
                 this.postMessage.on("onAutoSaveNeeded", a)
             },
             onMarkClick: function (a) {
                 this.postMessage.on("onMarkClick", a)
             },
+            onScreenshotReady: function (a) {
+                this.postMessage.on("onScreenshotReady", a)
+            },
             onContextMenu: function (a) {
-                d.gEl(this.id).contentWindow.Z16.subscribe("onContextMenu", function (b) {
+                d.gEl(this.id).contentWindow.W17.subscribe("onContextMenu", function (b) {
                     b.callback(a(b.unixtime, b.price))
                 })
             },
             onGrayedObjectClicked: function (a) {
-                d.gEl(this.id).contentWindow.Z16.subscribe("onGrayedObjectClicked", a)
+                d.gEl(this.id).contentWindow.W17.subscribe("onGrayedObjectClicked",
+                    a)
+            },
+            refreshMarks: function () {
+                this.postMessage.post(this._messageTarget(), "refreshMarks")
+            },
+            clearMarks: function () {
+                this.postMessage.post(this._messageTarget(), "clearMarks")
+            },
+            setChartType: function (a) {
+                d.gEl(this.id).contentWindow.setChartType(a)
+            },
+            createStudyTemplate: function (a, b) {
+                d.gEl(this.id).contentWindow.createStudyTemplate(a, b)
+            },
+            applyStudyTemplate: function (a) {
+                d.gEl(this.id).contentWindow.applyStudyTemplate(a)
             },
             save: function (a) {
                 this.postMessage.on("onChartSaved", a);
@@ -302,11 +452,10 @@ function inherit(g, f) {
                     "saveChart", {})
             },
             load: function (a, b) {
-                window.__TVSavedChart = {
+                d.gEl(this.id).contentWindow.loadChart({
                     json: a,
                     extendedData: b
-                };
-                this.postMessage.post(this._messageTarget(), "loadChart", {})
+                })
             },
             setLanguage: function (a) {
                 this.remove();
@@ -317,51 +466,54 @@ function inherit(g, f) {
         d.postMessageWrapper = function () {
             var a = {},
                 b = {},
-                e = {},
-                d, g = 0,
-                f = 0;
-            window.addEventListener && window.addEventListener("message", function (e) {
-                var c;
+                c = {},
+                d, f = 0,
+                g = 0;
+            window.addEventListener && window.addEventListener("message", function (c) {
+                var e;
                 try {
-                    c = JSON.parse(e.data)
-                } catch (k) {
+                    e = JSON.parse(c.data)
+                } catch (f) {
                     return
                 }
-                c.provider && "TradingView" == c.provider && ("get" == c.type ? b[c.name].call(c, c.data, function (a) {
+                e.provider && "TradingView" == e.provider && ("get" == e.type ? (c = b[e.client_id]) && c[e.name].call(e, e.data, function (a) {
                     d.postMessage(JSON.stringify({
-                        id: c.id,
+                        id: e.id,
                         type: "on",
-                        name: c.name,
-                        client_id: c.client_id,
+                        name: e.name,
+                        client_id: e.client_id,
                         data: a,
                         provider: "TradingView"
                     }), "*")
-                }) : "on" == c.type ? a[c.client_id] && a[c.client_id][c.id] && (a[c.client_id][c.id].call(c, c.data), delete a[c.client_id][c.id]) : "post" == c.type && "function" === typeof b[c.name] && b[c.name].call(c, c.data, function () { }))
+                }) : "on" == e.type ? (c = a[e.client_id]) && c[e.id] && (c[e.id].call(e, e.data), delete c[e.id]) : "post" == e.type && (c = b[e.client_id]) && "function" === typeof c[e.name] && c[e.name].call(e, e.data, function () { }))
             });
-            return function (h, c) {
-                a[c] = {};
-                d = e[c] = h;
+            return function (k, e) {
+                a[e] = {};
+                b[e] = {};
+                d = c[e] = k;
                 return {
                     on: function (a, c) {
-                        b[a] = c
+                        b[e][a] = c
                     },
-                    get: function (b, d, f) {
+                    get: function (b, d, g) {
                         b = {
-                            id: g++,
+                            id: f++,
                             type: "get",
                             name: b,
-                            client_id: c,
+                            client_id: e,
                             data: d,
                             provider: "TradingView"
                         };
-                        a[c][b.id] = f;
-                        e[c].postMessage(JSON.stringify(b), "*")
+                        a[e][b.id] = g;
+                        c[e].postMessage(JSON.stringify(b), "*")
                     },
-                    post: function (a, b, c) {
+                    post: function (a,
+                        b, c) {
                         b = {
-                            id: f++,
+                            id: g++,
                             type: "post",
                             name: b,
+                            client_id: e,
                             data: c,
                             provider: "TradingView"
                         };

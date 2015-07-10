@@ -78,6 +78,7 @@
     <Content Include="charting_library\charting_library.min-deobfuscated.js" />
     <Content Include="charting_library\charting_library.min.js" />
     <Content Include="charting_library\customization.txt" />
+    <Content Include="charting_library\static\chart-client\css\images\undo-redo.png" />
     <Content Include="docs\BackendProgrammerNotes.txt" />
     <Content Include="css\QuickTester.css" />
     <Content Include="SQQuickTester\QuickTester.js" />
@@ -131,9 +132,9 @@
     <Content Include="Global.asax" />
     <Content Include="index.htm" />
     <Content Include="indexNeuralSniffer.htm" />
-    <Content Include="charting_library\ChartSamples\TradingView1.1index.html" />
+    <Content Include="charting_library\ChartSamples\TradingView1.2index.html" />
     <Content Include="SQTemplates\SQTradingViewChart1.htm" />
-    <Content Include="charting_library\ChartSamples\TradingView1.1intro.html" />
+    <Content Include="charting_library\ChartSamples\TradingView1.2intro.html" />
     <Content Include="charting_library\ChartSamples\TradingViewDemo.html" />
     <Content Include="Utils\Utils.js" />
     <Content Include="VolatilityIndicesInDifferentMonths.htm" />
@@ -164,24 +165,32 @@
     <Content Include="charting_library\static\chart-client\css\chartclient_full.less" />
     <Content Include="charting_library\static\fonts\fontawesome-webfont.ttf" />
     <Content Include="charting_library\static\fonts\fontawesome-webfont.woff" />
+    <Content Include="charting_library\static\localization\translations\ar.json" />
+    <Content Include="charting_library\static\localization\translations\cs.json" />
     <Content Include="charting_library\static\localization\translations\cs_CZ.json" />
+    <Content Include="charting_library\static\localization\translations\de.json" />
     <Content Include="charting_library\static\localization\translations\de_DE.json" />
+    <Content Include="charting_library\static\localization\translations\el.json" />
     <Content Include="charting_library\static\localization\translations\en.json" />
     <Content Include="charting_library\static\localization\translations\es.json" />
+    <Content Include="charting_library\static\localization\translations\fa.json" />
+    <Content Include="charting_library\static\localization\translations\fa_IR.json" />
     <Content Include="charting_library\static\localization\translations\fr.json" />
+    <Content Include="charting_library\static\localization\translations\he.json" />
+    <Content Include="charting_library\static\localization\translations\he_IL.json" />
     <Content Include="charting_library\static\localization\translations\it.json" />
     <Content Include="charting_library\static\localization\translations\ja.json" />
     <Content Include="charting_library\static\localization\translations\ko.json" />
+    <Content Include="charting_library\static\localization\translations\nl_NL.json" />
+    <Content Include="charting_library\static\localization\translations\pl.json" />
     <Content Include="charting_library\static\localization\translations\pt.json" />
     <Content Include="charting_library\static\localization\translations\ru.json" />
     <Content Include="charting_library\static\localization\translations\th.json" />
+    <Content Include="charting_library\static\localization\translations\th_TH.json" />
     <Content Include="charting_library\static\localization\translations\tr.json" />
+    <Content Include="charting_library\static\localization\translations\vi.json" />
     <Content Include="charting_library\static\localization\translations\zh.json" />
     <Content Include="charting_library\static\localization\translations\zh_TW.json" />
-    <Content Include="charting_library\static\localization\translations\fa_IR.json" />
-    <Content Include="charting_library\static\localization\translations\nl_NL.json" />
-    <Content Include="charting_library\static\localization\translations\th_TH.json" />
-    <Content Include="charting_library\static\localization\translations\vi.json" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

@@ -42,9 +42,9 @@ Datafeeds.UDFCompatibleDatafeed.prototype._logMessage = function (message) {
 
 
 
-Datafeeds.UDFCompatibleDatafeed.prototype.setup = function (studyEngineOptions, callback) {
+Datafeeds.UDFCompatibleDatafeed.prototype.onReady = function (callback) {
 
-    this._configuration.engine = studyEngineOptions;
+    //this._configuration.engine = studyEngineOptions;
     callback(this._configuration);
 
 

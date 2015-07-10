@@ -154,7 +154,8 @@ app.controller('QuickTesterCtrl', function ($scope, $http) {   // runs after Ang
             // this is better than the gTradingViewChartWidget.postMessage.post(gTradingViewChartWidget._messageTarget(), "loadRangeAgy", because the 'loading data' bug doesn't effect it, and because I can use the minified TV library
             // however, Chart Cache-s the getBars() data for every Time-Frame button, so it will not ask later for the new data. So, Removing(), Creating() chart is still necessary
             var z1 = document.getElementById("tv_chart_container");
-            var dateRangeDiv = z1.children[0].contentDocument.childNodes['1'].children['1'].children['library-container'].children['2'].children['chart-area'].children['0'].children['1'].children['1'];
+            //var dateRangeDiv = z1.children[0].contentDocument.childNodes['1'].children['1'].children['library-container'].children['2'].children['chart-area'].children['0'].children['1'].children['1'];
+            var dateRangeDiv = z1.children[0].contentDocument.childNodes['1'].children['1'].children['library-container'].children['2'].children['chart-area'].children['0'].children['0'].children['1'];
             dateRangeDiv.children['0'].click();
             dateRangeDiv.children['0'].innerHTML = "All";   // it takes effect, but if I click it Afterwards, than it will change back to original; so modify the Text After the Click
 
@@ -290,6 +291,7 @@ app.controller('QuickTesterCtrl', function ($scope, $http) {   // runs after Ang
 
         //////***!!!!This is the best if we have to work with the official Chart, but postMessage works without this
         //////  Refresh TVChart (make it call the getBars()), version 2: idea stolen from widget.setLangue() inner implementation. It will redraw the Toolbars too, not only the inner area. But it can change TimeFrames Toolbar
+        // this part will set up the Timeframes bar properly, but later is chart.onChartReady() you have to click the first button by "dateRangeDiv.children['0'].click();"
         $scope.tradingViewChartWidget.remove();       // this is the way to the widget.options to be effective
         //gTradingViewChartWidget.options.time_frames[0].text = "All";    // cannot be "All"; it crashes.
         $scope.tradingViewChartWidget.options.time_frames[0].text = nMonths + "m";
