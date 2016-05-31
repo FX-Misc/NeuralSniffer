@@ -185,8 +185,8 @@ namespace NeuralSniffer.Controllers.Strategies
             MaskItems summerTotMMask = CreateMaskItems(p_dailyMarketDirectionMaskSummerTotM);
             MaskItems summerTotMMMask = CreateMaskItems(p_dailyMarketDirectionMaskSummerTotMM);
 
-            MaskItems unitedTotMMask = CreateMaskItems(""); // IsBullish field is not used, just collecting Samples
-            MaskItems unitedTotMMMask = CreateMaskItems(""); // IsBullish field is not used, just colleting Samples
+            MaskItems allYearTotMMask = CreateMaskItems(""); // IsBullish field is not used, just collecting Samples
+            MaskItems allYearTotMMMask = CreateMaskItems(""); // IsBullish field is not used, just colleting Samples
             
             DateTime pvStartDate = p_qoutes[0].Date;        // when the first quote is available, PV starts at $1.0
             DateTime pvEndDate = p_qoutes[p_qoutes.Count() - 1].Date;
@@ -300,10 +300,10 @@ namespace NeuralSniffer.Controllers.Strategies
                 double pctChg = p_qoutes[i].ClosePrice / p_qoutes[i - 1].ClosePrice - 1.0;
                 pctChgTotal += pctChg;
 
-                unitedTotMMask.Forward[totMForwardDayOffset[i] - 1].Samples.Add(new Tuple<DateTime, double>(day,pctChg));
-                unitedTotMMask.Backward[totMBackwardDayOffset[i] - 1].Samples.Add(new Tuple<DateTime, double>(day, pctChg));
-                unitedTotMMMask.Forward[totMMForwardDayOffset[i] - 1].Samples.Add(new Tuple<DateTime, double>(day, pctChg));
-                unitedTotMMMask.Backward[totMMBackwardDayOffset[i] - 1].Samples.Add(new Tuple<DateTime, double>(day, pctChg));
+                allYearTotMMask.Forward[totMForwardDayOffset[i] - 1].Samples.Add(new Tuple<DateTime, double>(day,pctChg));
+                allYearTotMMask.Backward[totMBackwardDayOffset[i] - 1].Samples.Add(new Tuple<DateTime, double>(day, pctChg));
+                allYearTotMMMask.Forward[totMMForwardDayOffset[i] - 1].Samples.Add(new Tuple<DateTime, double>(day, pctChg));
+                allYearTotMMMask.Backward[totMMBackwardDayOffset[i] - 1].Samples.Add(new Tuple<DateTime, double>(day, pctChg));
 
                 bool? isBullishTotMForwardMask, isBullishTotMBackwardMask, isBullishTotMMForwardMask, isBullishTotMMBackwardMask;
                 if (IsBullishWinterDay(day))
@@ -407,8 +407,8 @@ namespace NeuralSniffer.Controllers.Strategies
                 + BuildHtmlTable("Winter, TotMM", winterTotMMMask, pctChgTotalAMean)
                 + BuildHtmlTable("Summer, TotM", summerTotMMask, pctChgTotalAMean)
                 + BuildHtmlTable("Summer, TotMM", summerTotMMMask, pctChgTotalAMean)
-                + BuildHtmlTable("United, TotM", unitedTotMMask, pctChgTotalAMean)
-                + BuildHtmlTable("United, TotMM", unitedTotMMMask, pctChgTotalAMean);
+                + BuildHtmlTable("United, TotM", allYearTotMMask, pctChgTotalAMean)
+                + BuildHtmlTable("United, TotMM", allYearTotMMMask, pctChgTotalAMean);
 
             //p_noteToUserBacktest = @"<table style=""width:100%"">  <tr>    <td>Smith</td>     <td>50</td>  </tr>  <tr>   <td>Jackson</td>     <td>94</td>  </tr></table>";
         }
@@ -483,56 +483,55 @@ namespace NeuralSniffer.Controllers.Strategies
         //Therefore "the real population mean (of the daily%changes on day T) should be Positive (statistically with 95% probability), so populationMean is significantly > 0" // put this into Tooltip of Significant
         // Tooltip: "With at least 1-P=95% probability: the real population mean (of the daily%changes on day T) > 0"
         // "With at least 1-P=95% probability: the real population mean (of the daily%changes on day T) > allDayMean"
-        private static void CalculateSampleStats(ref MaskItem p_maskItem, double p_pctChgTotalAMean)
+        private static void CalculateSampleStats(ref MaskItem p_sampleStats, double p_pctChgTotalAMean)
         {
-            int nInt = p_maskItem.Samples.Count();
+            int nInt = p_sampleStats.Samples.Count();
             double n = (double)nInt;
-            List<double> samples = p_maskItem.Samples.Select(r => r.Item2).ToList();
+            List<double> samples = p_sampleStats.Samples.Select(r => r.Item2).ToList();
             double aMean = samples.Average();
             double correctedStDev = Math.Sqrt(samples.Sum(r => (r - aMean) * (r - aMean)) / (n - 1.0));
             double standardError = correctedStDev / Math.Sqrt(n);
 
-            p_maskItem.WinPct = (double)samples.Count(r => r > 0) / n;
+            p_sampleStats.WinPct = (double)samples.Count(r => r > 0) / n;
 
-            p_maskItem.AMean = aMean;
-            p_maskItem.GMean = samples.GMeanExtendingWithOne();
-            p_maskItem.Median = samples.Median();
-            p_maskItem.CorrectedStDev = correctedStDev;
-            p_maskItem.StandardError = standardError;
+            p_sampleStats.AMean = aMean;
+            p_sampleStats.GMean = samples.GMeanExtendingWithOne();
+            p_sampleStats.Median = samples.Median();
+            p_sampleStats.CorrectedStDev = correctedStDev;
+            p_sampleStats.StandardError = standardError;
 
 
-            p_maskItem.TvalueToZero = (p_maskItem.AMean - 0.0) / standardError;
-            p_maskItem.TvalueToAMean = (p_maskItem.AMean - p_pctChgTotalAMean) / standardError;
-
-            if (!Double.IsNaN(p_maskItem.TvalueToZero))
-                p_maskItem.PvalueToZero = g_statTool.TDistribution(p_maskItem.TvalueToZero, nInt - 1, true);
-            else
-                p_maskItem.PvalueToZero = Double.NaN;
-
-            if (!Double.IsNaN(p_maskItem.TvalueToAMean))
-                p_maskItem.PvalueToAMean = g_statTool.TDistribution(p_maskItem.TvalueToAMean, nInt - 1, true);
-            else
-                p_maskItem.PvalueToAMean = Double.NaN;
+            p_sampleStats.TvalueToZero = (p_sampleStats.AMean - 0.0) / standardError;
+            p_sampleStats.TvalueToAMean = (p_sampleStats.AMean - p_pctChgTotalAMean) / standardError;
 
             // PvalueToZero = P = probability that the observed aMean result is due to chance 
+            if (!Double.IsNaN(p_sampleStats.TvalueToZero))
+                p_sampleStats.PvalueToZero = g_statTool.TDistribution(p_sampleStats.TvalueToZero, nInt - 1, true);
+            else
+                p_sampleStats.PvalueToZero = Double.NaN;
 
-            p_maskItem.AMeanPerYear = new List<Tuple<string, double>>();
+            if (!Double.IsNaN(p_sampleStats.TvalueToAMean))
+                p_sampleStats.PvalueToAMean = g_statTool.TDistribution(p_sampleStats.TvalueToAMean, nInt - 1, true);
+            else
+                p_sampleStats.PvalueToAMean = Double.NaN;
+
+            p_sampleStats.AMeanPerYear = new List<Tuple<string, double>>();
         
-            var years = p_maskItem.Samples.Select(r => r.Item1.Year).Distinct().OrderBy(r => r).ToList();
+            var years = p_sampleStats.Samples.Select(r => r.Item1.Year).Distinct().OrderBy(r => r).ToList();
             int nYears = years.Count();
             int[] nSamplesPerYear = new int[nYears];
             double[] aMeanPerYear = new double[nYears];
             for (int i = 0; i < n; i++)
             {
-                int iYears = years.IndexOf(p_maskItem.Samples[i].Item1.Year);
+                int iYears = years.IndexOf(p_sampleStats.Samples[i].Item1.Year);
                 nSamplesPerYear[iYears]++;
-                aMeanPerYear[iYears] += p_maskItem.Samples[i].Item2;
+                aMeanPerYear[iYears] += p_sampleStats.Samples[i].Item2;
             }
 
             for (int i = 0; i < nYears; i++)
             {
                 aMeanPerYear[i] /= (double)nSamplesPerYear[i];
-                p_maskItem.AMeanPerYear.Add(new Tuple<string, double>(years[i].ToString() + "(" + nSamplesPerYear[i] + ")", aMeanPerYear[i]));
+                p_sampleStats.AMeanPerYear.Add(new Tuple<string, double>(years[i].ToString() + "(" + nSamplesPerYear[i] + ")", aMeanPerYear[i]));
             }
 
 
@@ -611,7 +610,7 @@ namespace NeuralSniffer.Controllers.Strategies
             p_sb.Append("</tr>");
         }
 
-    
+
 
 
         //UberVXX: Turn of the Month sub-strategy
@@ -827,7 +826,8 @@ namespace NeuralSniffer.Controllers.Strategies
 
 
         // "period from November to April inclusive has significantly stronger growth on average than the other months.". Stocks are sold at the start of May. "between April 30 and October 30, 2009, the FTSE 100 gained 20%"
-        // Grim Reaper: I overfitted (SPY, from 1993): 1st May was Bullish, 1st November Bearish. I set up the range according to this. Bearish range: "(1st May, 1st November]". Later this was changed to "(1st May, 25th October]"
+        // Grim Reaper: I overfitted (SPY, from 1993): 1st May was Bullish, 1st November Bearish. I set up the range according to this. Bearish range: "(1st May, 1st November]". 
+        // Later this was changed to "(1st May, 25th October]"
         // - Helloween day: 31st October
         // according to this: DJI_MonthlySeasonality_on2011-07-04.png, in 20 years:
         // leave the 1st May, as it is
@@ -836,7 +836,7 @@ namespace NeuralSniffer.Controllers.Strategies
         {
             //if (p_day < new DateTime(p_day.Year, 5, 1))  3.78% (WinterMask is TotM: .UUU), 7.13% (winterMask is Buy&Hold)
             //if (p_day <= new DateTime(p_day.Year, 5, 1))  4.05% (WinterMask is TotM: .UUU), 7.40% (winterMask is Buy&Hold)    So leave this. means 1st May is Bullish.
-            if (p_day <= new DateTime(p_day.Year, 5, 1)) // 1st of May should be bullish, because that is the First day of the Month.
+            if (p_day.Date <= new DateTime(p_day.Year, 5, 1)) // 1st of May should be bullish, because that is the First day of the Month.
                 return true;
             //else if (p_day < new DateTime(p_day.Year, 11, 1)) => 3.98% (WinterMask is TotM: .UUU)  , 7.34% (winterMask is Buy&Hold)
             //else if (p_day <= new DateTime(p_day.Year, 11, 1)) => 4.05% (WinterMask is TotM: .UUU), 7.40% (winterMask is Buy&Hold), So leave this. 1st November should be in the Bearish period.
@@ -844,7 +844,7 @@ namespace NeuralSniffer.Controllers.Strategies
             //else if (p_day <= new DateTime(p_day.Year, 10, 25)) //=> 3.98% (WinterMask is TotM: .UUU), 8.64% (winterMask is Buy&Hold),
             //else if (p_day <= new DateTime(p_day.Year, 10, 20)) //=> 3.98% (WinterMask is TotM: .UUU), 8.18% (winterMask is Buy&Hold),
             //else if (p_day <= new DateTime(p_day.Year, 10, 15)) //=> 3.98% (WinterMask is TotM: .UUU), 8.67% (winterMask is Buy&Hold),
-            else if (p_day <= new DateTime(p_day.Year, 10, 25)) //=> 3.98% (WinterMask is TotM: .UUU), 8.64% (winterMask is Buy&Hold),  I would play this. So. choose this as bullish period. (so, the Helloween pre-holiday days are included into the Bullish range)
+            else if (p_day.Date <= new DateTime(p_day.Year, 10, 25)) //=> 3.98% (WinterMask is TotM: .UUU), 8.64% (winterMask is Buy&Hold),  I would play this. So. choose this as bullish period. (so, the Helloween pre-holiday days are included into the Bullish range)
                 return false;        
             else
                 return true;       //1st November will come here, as Bullish.
